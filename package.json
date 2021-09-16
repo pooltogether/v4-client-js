@@ -1,4 +1,7 @@
 {
+  "name": "@pooltogether/v4-js-client",
+  "author": "PoolTogether Inc.",
+  "module": "dist/v4-js-client.esm.js",
   "version": "0.1.0",
   "license": "MIT",
   "main": "dist/index.js",
@@ -8,10 +11,15 @@
     "src"
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">=16"
+  },
+  "repository": {
+    "url": "https://github.com/pooltogether/v4-js-client",
+    "type": "git"
   },
   "scripts": {
-    "start": "tsdx watch",
+    "start": "tsdx watch --onSuccess \"yalc push\"",
+    "reinstall": "rm -rf node_modules && yarn install",
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
@@ -19,37 +27,48 @@
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
-  "peerDependencies": {},
   "husky": {
     "hooks": {
       "pre-commit": "tsdx lint"
     }
   },
   "prettier": {
-    "printWidth": 80,
-    "semi": true,
+    "printWidth": 100,
+    "tabWidth": 2,
+    "semi": false,
     "singleQuote": true,
-    "trailingComma": "es5"
+    "quoteProps": "consistent",
+    "jsxBracketSameLine": false,
+    "jsxSingleQuote": true,
+    "arrowParens": "always",
+    "trailingComma": "none"
   },
-  "name": "v4-pool-data",
-  "author": "Dylan DesRosier",
-  "module": "dist/v4-pool-data.esm.js",
   "size-limit": [
     {
-      "path": "dist/v4-pool-data.cjs.production.min.js",
+      "path": "dist/v4-js-client.cjs.production.min.js",
       "limit": "10 KB"
     },
     {
-      "path": "dist/v4-pool-data.esm.js",
+      "path": "dist/v4-js-client.esm.js",
       "limit": "10 KB"
     }
   ],
   "devDependencies": {
     "@size-limit/preset-small-lib": "^5.0.3",
+    "@types/lodash.memoize": "^4.1.6",
+    "ethers": "^5.4.6",
     "husky": "^7.0.2",
     "size-limit": "^5.0.3",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.1",
     "typescript": "^4.4.2"
+  },
+  "dependencies": {
+    "@pooltogether/contract-list-schema": "^0.1.4",
+    "@pooltogether/etherplex": "^1.1.2",
+    "@pooltogether/v4-pool-data": "file:.yalc/@pooltogether/v4-pool-data"
+  },
+  "peerDependencies": {
+    "ethers": "^5.4.6"
   }
 }

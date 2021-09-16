@@ -1,0 +1,8 @@
+{
+  "version": "v1",
+  "packages": {
+    "@pooltogether/v4-pool-data": {
+      "signature": "3f824d292ceb9bf83aba988b1f7be55e"
+    }
+  }
+}
