@@ -1,5 +1,6 @@
 export * from './LinkedPrizePool'
 export * from './PrizePool'
 export * from './Player'
-export * from './ClaimableDraws'
+export * from './ClaimableDraw'
 export * from './types'
+export * from './utils'

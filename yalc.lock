@@ -3,6 +3,10 @@
   "packages": {
     "@pooltogether/v4-pool-data": {
       "signature": "3f824d292ceb9bf83aba988b1f7be55e"
+    },
+    "@pooltogether/draw-calculator-js-sdk": {
+      "version": "1.0.0-beta.12",
+      "signature": "e3b3f03e3aba3421121e919503b96cd0"
     }
   }
 }

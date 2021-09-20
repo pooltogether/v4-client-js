@@ -1,5 +1,5 @@
 {
-  "include": ["src", "types"],
+  "include": ["src", "types", ".yalc"],
   "compilerOptions": {
     "module": "esnext",
     "lib": ["dom", "esnext"],
@@ -7,7 +7,7 @@
     "declaration": true,
     "sourceMap": true,
     "rootDir": "./src",
-    "strict": true,
+    "strict": false,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,

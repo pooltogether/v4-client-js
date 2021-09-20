@@ -1,12 +1,27 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { PrizePool } from './PrizePool'
-import { Contract, ContractIdentifier, ContractList } from '@pooltogether/contract-list-schema'
+import { Contract, ContractList } from '@pooltogether/contract-list-schema'
 import { ContractType } from './constants'
 import { contract as etherplexContract, batch, Context } from '@pooltogether/etherplex'
 import { ethers } from 'ethers'
 import { Providers } from './types'
 import { BaseProvider } from '@ethersproject/providers'
 import ERC20Abi from './abis/ERC20Abi'
+import { extendContractWithChildren } from './utils/extendContractWithChildren'
+import { getContractsByType } from './utils/getContractsByType'
+import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByContractTypeAndChildren'
+import { sortContractsByChainId } from './utils/sortContractsByChainId'
+
+interface PrizePoolAddresses {
+  [prizePoolAddress: string]: {
+    token: string
+    ticket: string
+  }
+}
+
+interface PrizePoolAddressesByChainId {
+  [chainId: number]: PrizePoolAddresses
+}
 
 /**
  * A Linked Prize Pool (a group of Prize Pools).
@@ -21,6 +36,12 @@ export class LinkedPrizePool {
   readonly prizePools: PrizePool[]
   readonly contractList: ContractList
 
+  /**
+   *
+   * @constructor
+   * @param providers
+   * @param linkedPrizePoolContractList
+   */
   constructor(providers: Providers, linkedPrizePoolContractList: ContractList) {
     this.providers = providers
     this.contractList = linkedPrizePoolContractList
@@ -29,6 +50,12 @@ export class LinkedPrizePool {
 
   //////////////////////////// Ethers read functions ////////////////////////////
 
+  /**
+   * Fetch the users balances for all relevant tokens for all Prize Pools in the Linked Prize Pool.
+   * @param usersAddress address to get balances for
+   * @returns an array of objects containing the chain id & Prize Pool address and a balances object
+   * with the users balances for relevant tokens to the prize pool
+   */
   async getUsersPrizePoolBalances(usersAddress: string) {
     const balancesPromises = this.prizePools.map(async (prizePool) => {
       const balances = await prizePool.getUsersPrizePoolBalances(usersAddress)
@@ -42,8 +69,18 @@ export class LinkedPrizePool {
   }
 }
 
+/**
+ * Utility function to create several Prize Pools from a contract list.
+ * NOTE: Requires Prize Pool contracts to be extended with "children".
+ * @param providers
+ * @param contracts
+ * @returns
+ */
 function createPrizePools(providers: Providers, contracts: Contract[]): PrizePool[] {
-  const prizePoolContractLists = sortContractListByPrizePools(contracts)
+  const prizePoolContractLists = sortContractsByContractTypeAndChildren(
+    contracts,
+    ContractType.YieldSourcePrizePool
+  )
   return prizePoolContractLists.map((contracts) => {
     const prizePoolContract = contracts.find(
       (contract) => contract.type === ContractType.YieldSourcePrizePool
@@ -53,62 +90,18 @@ function createPrizePools(providers: Providers, contracts: Contract[]): PrizePoo
   })
 }
 
-//////////////////////////// HELPERS ////////////////////////////
-
-export function getContractsByType(contracts: Contract[], type: ContractType) {
-  return contracts.filter((contract) => contract.type === type)
-}
-
-export function sortContractsByChainId(contracts: Contract[]): { [key: number]: Contract[] } {
-  const sortedContracts = {} as { [key: number]: Contract[] }
-  const chainIds = new Set(contracts.map((c) => c.chainId))
-  chainIds.forEach((chainId) => {
-    const filteredContracts = contracts.filter((c) => c.chainId === chainId)
-    sortedContracts[chainId] = filteredContracts
-  })
-  return sortedContracts
-}
-
-export function getContractListChainIds(contracts: Contract[]): number[] {
-  return Array.from(new Set(contracts.map((c) => c.chainId)))
-}
-
-/**
- * Reads the contract list and pulls out connected contracts based on the
- * parent extension.
- *
- * TODO: We're not adding this extension for the time being since it's too
- * hard to generate it.
- */
-function sortContractListByPrizePools(contracts: Contract[]): Contract[][] {
-  const prizePoolContracts = getContractsByType(contracts, ContractType.YieldSourcePrizePool)
-  return prizePoolContracts.map((prizePoolContract) => {
-    return [prizePoolContract, ...findChildContracts(prizePoolContract, contracts)]
-  })
-}
-
-function findChildContracts(parentContract: Contract, contracts: Contract[]): Contract[] {
-  const children = parentContract.extensions?.children as ContractIdentifier[]
-  if (!children) return []
-  if (!Array.isArray(children)) throw new Error('Invalid children extension')
-
-  const childContracts = [] as Contract[]
-  children.forEach((childIdentifier) => {
-    const childContract = contracts.find((contract) =>
-      isMatchingContractIdentifier(childIdentifier, contract)
-    )
-    if (childContract) childContracts.push(childContract)
-  })
-
-  return childContracts
-}
-
 //////////////////////////// PROBABLY TEMPORARY PRIZE POOL INITIALIZATION ////////////////////////////
 
 /**
- * Fetches contract addresses on chain so we can link them to the proper
- * Prize Pool. May be replaced in the future by adding extensions into the
- * contract list.
+ * - Fetches contract addresses on chain for the provided Prize Pool contracts
+ * and extends the Prize Pool contracts with "children".
+ * - Injects a contract for the underlying ERC20 of a Prize Pool.
+ * Can be bypassed by simply adding "children" extensions into the
+ * contract list & including a "Token" contract.
+ * @constructor
+ * @param providers
+ * @param linkedPrizePoolContractList a flat contract list with no extensions
+ * @returns
  */
 export async function initializeLinkedPrizePool(
   providers: Providers,
@@ -118,6 +111,8 @@ export async function initializeLinkedPrizePool(
   const prizePoolContracts = getContractsByType(contracts, ContractType.YieldSourcePrizePool)
   const prizePoolContractsByChainId = sortContractsByChainId(prizePoolContracts)
   const chainIds = Object.keys(prizePoolContractsByChainId).map(Number)
+
+  // Fetch relevant child addresses
   const prizePoolAddressBatchRequestPromises = chainIds.map((chainId) =>
     fetchPrizePoolAddressesByChainId(
       chainId,
@@ -141,23 +136,29 @@ export async function initializeLinkedPrizePool(
   prizePoolAddresses.forEach(
     (ppa) => (prizePoolAddressesByChainId[ppa.chainId] = ppa.addressesByPrizePool)
   )
-  const contractsWithChildren = extendPrizePoolsWithChildren(contracts, prizePoolAddressesByChainId)
+
+  // Extend the contracts with the child contracts
+  const contractsWithChildren = extendContractWithChildren(
+    contracts,
+    prizePoolAddressesByChainId,
+    ContractType.YieldSourcePrizePool
+  )
+
+  // Inject a contract for the underlying token
   const contractsWithToken = extendContractsWithToken(contractsWithChildren)
   const updatedContractList = { ...linkedPrizePoolContractList, contracts: contractsWithToken }
   return new LinkedPrizePool(providers, updatedContractList)
 }
 
-interface PrizePoolAddresses {
-  [prizePoolAddress: string]: {
-    token: string
-    ticket: string
-  }
-}
-
-interface PrizePoolAddressesByChainId {
-  [chainId: number]: PrizePoolAddresses
-}
-
+/**
+ * Fetches child contracts for a Prize Pool:
+ * - Token (underlying token)
+ * - Ticket
+ * @param chainId
+ * @param provider
+ * @param prizePoolContracts
+ * @returns
+ */
 async function fetchPrizePoolAddressesByChainId(
   chainId: number,
   provider: Provider,
@@ -186,33 +187,9 @@ async function fetchPrizePoolAddressesByChainId(
 }
 
 /**
- * We aren't labelling contracts, so this tags "children" on
- * the Prize Pool contract.
- * Currently children only includes: Ticket, Token
- */
-function extendPrizePoolsWithChildren(
-  contracts: Contract[],
-  prizePoolAddressesByChainId: PrizePoolAddressesByChainId
-) {
-  return contracts.map((contract) => {
-    if (contract.type !== ContractType.YieldSourcePrizePool) return contract
-    const chainId = contract.chainId
-    const relevantAddresses = Object.values(
-      prizePoolAddressesByChainId[contract.chainId][contract.address]
-    )
-    return {
-      ...contract,
-      extensions: {
-        ...contract,
-        children: relevantAddresses.map((address) => ({ chainId, address }))
-      }
-    }
-  })
-}
-
-/**
- * We don't have the underlying token in the contract list, so this
- * injects it for the time being.
+ * Injects a contract for the underlying token into the contract list if there isn't one.
+ * @param contracts
+ * @returns
  */
 function extendContractsWithToken(contracts: Contract[]) {
   const updatedContracts = [...contracts]
@@ -271,10 +248,3 @@ function createTokenContract(chainId: number, address: string) {
 //     parent && parent.address === parentContract.address && parent.chainId === parentContract.chainId
 //   )
 // }
-
-function isMatchingContractIdentifier(contractIdentifier: ContractIdentifier, contract: Contract) {
-  return (
-    contractIdentifier.address === contract.address &&
-    contractIdentifier.chainId === contract.chainId
-  )
-}

@@ -23,3 +23,11 @@ export interface PrizePoolTokenBalances {
 export interface Providers {
   [networkId: number]: Provider
 }
+
+export interface ChildContractAddresses {
+  [chainId: number]: {
+    [contractAddress: string]: {
+      [childContractType: string]: string
+    }
+  }
+}

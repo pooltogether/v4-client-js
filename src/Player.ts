@@ -12,10 +12,16 @@ import { validateAddress, validateSignerNetwork } from './utils/validation'
  * Writes use the signer from the contructor.
  * Throws an error if a write is trigger with a signer on an
  * incorrect network.
+ * @extends PrizePool
  */
 export class Player extends PrizePool {
   readonly signer: Signer
 
+  /**
+   * Creates an instance of a Player for a specific PrizePool
+   * @param signer Signer to submit transactions with
+   * @param prizePool PrizePool that is relevant to this Player
+   */
   constructor(signer: Signer, prizePool: PrizePool) {
     super(signer, prizePool.contractMetadataList)
 
@@ -24,51 +30,65 @@ export class Player extends PrizePool {
 
   //////////////////////////// Wrapped ethers write functions ////////////////////////////
 
-  async withdrawTicket(
-    amountUnformatted: BigNumber,
-    maximumExitFeeUnformatted?: BigNumber
-  ): Promise<TransactionResponse> {
+  /**
+   * Submits a transaction to withdraw tickets from the Prize Pool.
+   * @param amount BigNumber
+   * @returns TransactionResponse
+   */
+  async withdrawTicket(amount: BigNumber): Promise<TransactionResponse> {
     const ticketAddress = this.ticket.address
-    return this.withdrawInstantlyFrom(amountUnformatted, ticketAddress, maximumExitFeeUnformatted)
+    return this.withdrawFrom(amount, ticketAddress)
   }
 
-  async depositTicket(amountUnformatted: BigNumber): Promise<TransactionResponse> {
+  /**
+   * Submits a transaction to deposit tokens into the Prize Pool.
+   * @param amount BigNumber
+   * @returns TransactionResponse
+   */
+  async depositTicket(amount: BigNumber): Promise<TransactionResponse> {
     const ticketAddress = this.ticket.address
-    return this.depositTo(amountUnformatted, ticketAddress)
+    return this.depositTo(amount, ticketAddress)
   }
 
   //////////////////////////// Ethers write functions ////////////////////////////
 
-  async withdrawInstantlyFrom(
-    amountUnformatted: BigNumber,
-    controlledTokenAddress: string,
-    maximumExitFeeUnformatted: BigNumber = ethers.constants.Zero
+  /**
+   * Submits a transaction to withdraw a controlled token from the Prize Pool.
+   * @param amount BigNumber
+   * @param controlledTokenAddress string
+   * @returns TransactionResponse
+   */
+  async withdrawFrom(
+    amount: BigNumber,
+    controlledTokenAddress: string
   ): Promise<TransactionResponse> {
-    const errorPrefix = 'Player [withdrawInstantlyFrom] | '
+    const errorPrefix = 'Player [withdrawFrom] | '
     await this.validateSignerNetwork(errorPrefix)
     await validateAddress(errorPrefix, controlledTokenAddress)
 
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.withdrawInstantlyFrom(
-      usersAddress,
-      amountUnformatted,
-      controlledTokenAddress,
-      maximumExitFeeUnformatted
-    )
+    return this.prizePoolContract.withdrawFrom(usersAddress, amount, controlledTokenAddress)
   }
 
-  async depositTo(
-    amountUnformatted: BigNumber,
-    controlledTokenAddress: string
-  ): Promise<TransactionResponse> {
+  /**
+   * Submits a transaction to deposit a controlled token into the Prize Pool.
+   * @param amount BigNumber
+   * @param controlledTokenAddress string
+   * @returns TransactionResponse
+   */
+  async depositTo(amount: BigNumber, controlledTokenAddress: string): Promise<TransactionResponse> {
     const errorPrefix = 'Player [depositTo] | '
     await this.validateSignerNetwork(errorPrefix)
     await validateAddress(errorPrefix, controlledTokenAddress)
 
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.depositTo(usersAddress, amountUnformatted, controlledTokenAddress)
+    return this.prizePoolContract.depositTo(usersAddress, amount, controlledTokenAddress)
   }
 
+  /**
+   * Submits a transaction to set an allowance for deposits into the Prize Pool.
+   * @returns TransactionResponse
+   */
   async approveDeposits(): Promise<TransactionResponse> {
     const prizePoolAddress = this.prizePool.address
     return this.tokenContract.approve(prizePoolAddress, ethers.constants.MaxUint256)
@@ -76,16 +96,28 @@ export class Player extends PrizePool {
 
   //////////////////////////// Ethers read functions ////////////////////////////
 
+  /**
+   * Returns the Players ticket balance.
+   * @returns BigNumber
+   */
   async getTicketBalance(): Promise<BigNumber> {
     const usersAddress = await this.signer.getAddress()
     return this.getUsersTicketBalance(usersAddress)
   }
 
+  /**
+   * Returns the Players token (underlying token) balance.
+   * @returns BigNumber
+   */
   async getTokenBalance(): Promise<BigNumber> {
     const usersAddress = await this.signer.getAddress()
     return this.getUsersTokenBalance(usersAddress)
   }
 
+  /**
+   * Returns the allowance the Player has for depositing into the Prize Pool.
+   * @returns BigNumber
+   */
   async getDepositAllowance() {
     const usersAddress = await this.signer.getAddress()
     return this.getUsersDepositAllowance(usersAddress)
@@ -93,6 +125,11 @@ export class Player extends PrizePool {
 
   //////////////////////////// Utility methods ////////////////////////////
 
+  /**
+   * Validates the provided signers network.
+   * Throws if it does not match the expected network.
+   * @param errorPrefix string
+   */
   async validateSignerNetwork(errorPrefix: string) {
     return validateSignerNetwork(errorPrefix, this.signer, this.chainId)
   }

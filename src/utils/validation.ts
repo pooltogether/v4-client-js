@@ -18,6 +18,13 @@ export async function validateSignerNetwork(errorPrefix: string, signer: Signer,
   }
 }
 
+export function validateIsSigner(errorPrefix: string, signerOrProvider: Provider | Signer) {
+  if (!Signer.isSigner(signerOrProvider)) {
+    throw new Error(errorPrefix + 'signerOrProvider is not a signer')
+  }
+  return signerOrProvider
+}
+
 export async function validateSignerOrProviderNetwork(
   errorPrefix: string,
   signerOrProvider: Provider | Signer,

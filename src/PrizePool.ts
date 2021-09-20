@@ -7,6 +7,7 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/BigNumber'
 import { getTokenData, getUsersERC20Balance } from './utils/contractGetters'
 import { validateAddress, validateSignerOrProviderNetwork } from './utils/validation'
+import { getMetadataAndContract } from './utils/getMetadataAndContract'
 
 /**
  * A Prize Pool.
@@ -25,17 +26,19 @@ export class PrizePool {
   readonly prizePool: ContractMetadata
   readonly ticket: ContractMetadata
   readonly token: ContractMetadata
-  // TODO: see below
-  // readonly claimableDraws: ContractMetadata[]
 
   // Ethers contracts
   readonly prizePoolContract: Contract
   readonly ticketContract: Contract
   readonly tokenContract: Contract
-  // TODO: see below
-  // readonly claimableDrawContracts: Contract[]
 
-  // TODO: Validate provider network? Can we even do this? It's an async method on the provider.
+  /**
+   * NOTE: Assumes a list of only the relevant contracts was provided.
+   * Meaning there is only 1 "Ticket", 1 "YieldSourcePrizePool", etc. in the list.
+   * @constructor
+   * @param signerOrProvider
+   * @param contractMetadataList a filtered list of relevant contract metadata.
+   */
   constructor(signerOrProvider: Provider | Signer, contractMetadataList: ContractMetadata[]) {
     // Get contract metadata & ethers contracts
     const [prizePoolContractMetadata, prizePoolContract] = getMetadataAndContract(
@@ -53,14 +56,8 @@ export class PrizePool {
       ContractType.Token,
       contractMetadataList
     )
-    // TODO: Migrated to its own class for the time being since we aren't labelling
-    // the relationships inside the linked prize pool contract list
-    // const [claimableDrawContractMetadatas, claimableDrawContracts] = getMetadataAndContracts(
-    //   signerOrProvider,
-    //   ContractType.ClaimableDraw,
-    //   contractMetadataList
-    // )
 
+    // Set data
     this.contractMetadataList = contractMetadataList
     this.signerOrProvider = signerOrProvider
     this.chainId = prizePoolContractMetadata.chainId
@@ -70,19 +67,20 @@ export class PrizePool {
     this.prizePool = prizePoolContractMetadata
     this.ticket = ticketContractMetadata
     this.token = tokenContractMetadata
-    // TODO: see above.
-    // this.claimableDraws = claimableDrawContractMetadatas
 
     // Set ethers contracts
     this.prizePoolContract = prizePoolContract
     this.ticketContract = ticketContract
     this.tokenContract = tokenContract
-    // TODO: see above
-    // this.claimableDrawContracts = claimableDrawContracts
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
 
+  /**
+   * Returns a users balances for the Prize Pool Token and Ticket.
+   * @param usersAddress string
+   * @returns token: BigNumber, ticket: BigNumber
+   */
   async getUsersPrizePoolBalances(usersAddress: string): Promise<PrizePoolTokenBalances> {
     const errorPrefix = 'PrizePool [getUsersPrizePoolBalances] | '
     await validateAddress(errorPrefix, usersAddress)
@@ -97,6 +95,11 @@ export class PrizePool {
     }
   }
 
+  /**
+   * Returns a users Ticket balance.
+   * @param usersAddress string
+   * @returns BigNumber
+   */
   async getUsersTicketBalance(usersAddress: string) {
     const errorPrefix = 'PrizePool [getUsersTicketBalance] | '
     await validateAddress(errorPrefix, usersAddress)
@@ -105,6 +108,11 @@ export class PrizePool {
     return getUsersERC20Balance(usersAddress, this.ticketContract)
   }
 
+  /**
+   * Returns a users Token (underlying token) balance.
+   * @param usersAddress string
+   * @returns BigNumber
+   */
   async getUsersTokenBalance(usersAddress: string) {
     const errorPrefix = 'PrizePool [getUsersTokenBalance] | '
     await validateAddress(errorPrefix, usersAddress)
@@ -113,6 +121,11 @@ export class PrizePool {
     return getUsersERC20Balance(usersAddress, this.tokenContract)
   }
 
+  /**
+   * Fetches a users deposit allowance for the Prize Pool.
+   * @param usersAddress string
+   * @returns allowanceUnformatted: BigNumber, isApproved: boolean
+   */
   async getUsersDepositAllowance(usersAddress: string) {
     const errorPrefix = 'PrizePool [getUsersDepositAllowance] | '
     await validateAddress(errorPrefix, usersAddress)
@@ -124,6 +137,10 @@ export class PrizePool {
     return { allowanceUnformatted, isApproved: !allowanceUnformatted.isZero() }
   }
 
+  /**
+   * Fetches decimals, name and symbol for the Token (underlying).
+   * @returns symbol: string, decimals: string, name: string
+   */
   async getTokenData(): Promise<TokenData> {
     const errorPrefix = 'PrizePool [getTokenData] | '
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
@@ -131,6 +148,10 @@ export class PrizePool {
     return getTokenData(this.tokenContract)
   }
 
+  /**
+   * Fetches decimals, name and symbol for the Ticket.
+   * @returns symbol: string, decimals: string, name: string
+   */
   async getTicketData(): Promise<TokenData> {
     const errorPrefix = 'PrizePool [getTicketData] | '
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
@@ -138,44 +159,49 @@ export class PrizePool {
     return getTokenData(this.tokenContract)
   }
 
+  /**
+   * Fetches a gas estimate for depositing from the Prize Pool.
+   * @param usersAddress string
+   * @param amount BigNumber
+   * @returns BigNumber
+   */
+  async getDepositGasEstimate(usersAddress: string, amount: BigNumber): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUsersDepositAllowance] | '
+    await validateAddress(errorPrefix, usersAddress)
+    await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
+
+    return await this.prizePoolContract.estimateGas.depositTo(
+      usersAddress,
+      amount,
+      this.ticket.address
+    )
+  }
+
+  /**
+   * Fetches a gas estimate for withdrawing from the Prize Pool.
+   * @param usersAddress string
+   * @param amount BigNumber
+   * @returns BigNumber
+   */
+  async getWithdrawGasEstimate(usersAddress: string, amount: BigNumber): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getWithdrawGasEstimate] | '
+    await validateAddress(errorPrefix, usersAddress)
+    await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
+
+    return await this.prizePoolContract.estimateGas.withdrawFrom(
+      usersAddress,
+      amount,
+      this.ticket.address
+    )
+  }
+
   //////////////////////////// Methods ////////////////////////////
 
+  /**
+   * Returns a unique id string for this Prize Pool.
+   * @returns string
+   */
   id(): string {
     return `${this.prizePool.address}-${this.prizePool.chainId}`
   }
 }
-
-//////////////////////////// Helpers ////////////////////////////
-
-function getMetadataAndContract(
-  signerOrProvider: Provider | Signer,
-  contractType: ContractType,
-  contractMetadataList: ContractMetadata[]
-): [ContractMetadata, Contract] {
-  const contractMetadata = contractMetadataList.find((contract) => contract.type === contractType)
-  if (!contractMetadata) {
-    throw new Error(`Invalid Prize Pool contract list. Missing ${contractType}.`)
-  }
-  const contract = new Contract(contractMetadata.address, contractMetadata.abi, signerOrProvider)
-
-  return [contractMetadata, contract]
-}
-
-// function getMetadataAndContracts(
-//   signerOrProvider: Provider | Signer,
-//   contractType: ContractType,
-//   contractMetadataList: ContractMetadata[]
-// ): [ContractMetadata[], Contract[]] {
-//   const contractMetadatas = contractMetadataList.filter(
-//     (contract) => contract.type === contractType
-//   )
-//   if (contractMetadatas.length === 0) {
-//     throw new Error(`Invalid Prize Pool contract list. Missing at least 1 ${contractType}.`)
-//   }
-//   const contracts = contractMetadatas.map(
-//     (contractMetadata) =>
-//       new Contract(contractMetadata.address, contractMetadata.abi, signerOrProvider)
-//   )
-
-//   return [contractMetadatas, contracts]
-// }
