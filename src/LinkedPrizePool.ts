@@ -3,7 +3,6 @@ import { PrizePool } from './PrizePool'
 import { Contract, ContractList } from '@pooltogether/contract-list-schema'
 import { ContractType } from './constants'
 import { contract as etherplexContract, batch, Context } from '@pooltogether/etherplex'
-import { ethers } from 'ethers'
 import { Providers } from './types'
 import { BaseProvider } from '@ethersproject/providers'
 import ERC20Abi from './abis/ERC20Abi'
@@ -129,7 +128,7 @@ export async function initializeLinkedPrizePool(
     if (response.status === 'fulfilled') {
       prizePoolAddresses.push(response.value)
     } else {
-      console.warn('Fetching contract addresses failed with error: ', response.reason)
+      console.error('Fetching contract addresses failed with error: ', response.reason)
     }
   })
   const prizePoolAddressesByChainId = {} as PrizePoolAddressesByChainId
@@ -172,7 +171,7 @@ async function fetchPrizePoolAddressesByChainId(
       prizePoolContract.address
     )
     // @ts-ignore: Property doesn't exist on MulticallContract
-    batchCalls.push(prizePoolEtherplexContract.token().tokenAtIndex(ethers.constants.Zero))
+    batchCalls.push(prizePoolEtherplexContract.token().ticket())
   })
   const result = await batch(provider as BaseProvider, ...batchCalls)
   const addressesByPrizePool = {} as PrizePoolAddresses
@@ -180,7 +179,7 @@ async function fetchPrizePoolAddressesByChainId(
     (prizePoolAddress: any) =>
       (addressesByPrizePool[prizePoolAddress] = {
         token: result[prizePoolAddress].token[0],
-        ticket: result[prizePoolAddress].tokenAtIndex[0]
+        ticket: result[prizePoolAddress].ticket[0]
       })
   )
   return { chainId, addressesByPrizePool }

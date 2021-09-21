@@ -4,6 +4,7 @@ export enum ContractType {
   Token = 'Token',
   ClaimableDraw = 'ClaimableDraw',
   DrawHistory = 'DrawHistory',
-  TsunamiDrawCalculator = 'TsunamiDrawCalculator'
+  TsunamiDrawCalculator = 'TsunamiDrawCalculator',
+  TsunamiDrawSettingsHistory = 'TsunamiDrawSettingsHistory'
   // ... more contract types
 }

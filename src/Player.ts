@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { ethers } from 'ethers'
 import { PrizePool } from './PrizePool'
-import { validateAddress, validateSignerNetwork } from './utils/validation'
+import { validateSignerNetwork } from './utils/validation'
 
 /**
  * A Player for a Prize Pool.
@@ -30,26 +30,6 @@ export class Player extends PrizePool {
 
   //////////////////////////// Wrapped ethers write functions ////////////////////////////
 
-  /**
-   * Submits a transaction to withdraw tickets from the Prize Pool.
-   * @param amount BigNumber
-   * @returns TransactionResponse
-   */
-  async withdrawTicket(amount: BigNumber): Promise<TransactionResponse> {
-    const ticketAddress = this.ticket.address
-    return this.withdrawFrom(amount, ticketAddress)
-  }
-
-  /**
-   * Submits a transaction to deposit tokens into the Prize Pool.
-   * @param amount BigNumber
-   * @returns TransactionResponse
-   */
-  async depositTicket(amount: BigNumber): Promise<TransactionResponse> {
-    const ticketAddress = this.ticket.address
-    return this.depositTo(amount, ticketAddress)
-  }
-
   //////////////////////////// Ethers write functions ////////////////////////////
 
   /**
@@ -58,16 +38,12 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async withdrawFrom(
-    amount: BigNumber,
-    controlledTokenAddress: string
-  ): Promise<TransactionResponse> {
-    const errorPrefix = 'Player [withdrawFrom] | '
+  async withdraw(amount: BigNumber): Promise<TransactionResponse> {
+    const errorPrefix = 'Player [withdraw] | '
     await this.validateSignerNetwork(errorPrefix)
-    await validateAddress(errorPrefix, controlledTokenAddress)
 
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.withdrawFrom(usersAddress, amount, controlledTokenAddress)
+    return this.prizePoolContract.withdrawFrom(usersAddress, amount)
   }
 
   /**
@@ -76,13 +52,12 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async depositTo(amount: BigNumber, controlledTokenAddress: string): Promise<TransactionResponse> {
+  async deposit(amount: BigNumber): Promise<TransactionResponse> {
     const errorPrefix = 'Player [depositTo] | '
     await this.validateSignerNetwork(errorPrefix)
-    await validateAddress(errorPrefix, controlledTokenAddress)
 
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.depositTo(usersAddress, amount, controlledTokenAddress)
+    return this.prizePoolContract.depositTo(usersAddress, amount)
   }
 
   /**

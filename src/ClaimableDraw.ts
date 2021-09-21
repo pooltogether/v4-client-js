@@ -1,15 +1,12 @@
 import { Contract, Event } from '@ethersproject/contracts'
 import { Result } from '@ethersproject/abi'
 import { ContractType } from './constants'
-import { Contract as ContractMetadata, ContractList } from './types'
+import { ChildContractAddresses, Contract as ContractMetadata, ContractList } from './types'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
 import { contract as etherplexContract, batch, Context } from '@pooltogether/etherplex'
 import { BaseProvider, TransactionResponse } from '@ethersproject/providers'
-import {
-  ChildContractAddresses,
-  extendContractWithChildren
-} from './utils/extendContractWithChildren'
+import { extendContractWithChildren } from './utils/extendContractWithChildren'
 import { getMetadataAndContract } from './utils/getMetadataAndContract'
 import { Claim, Draw, DrawResults, DrawSettings } from 'tempTypes'
 import { BigNumber } from '@ethersproject/bignumber'
@@ -21,11 +18,13 @@ import {
 import { getContractsByType } from './utils/getContractsByType'
 import { sortContractsByChainId } from './utils/sortContractsByChainId'
 import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByContractTypeAndChildren'
-import { validateIsSigner, validateSignerNetwork } from 'utils/validation'
+import { validateIsSigner, validateSignerNetwork } from './utils/validation'
 
 /**
  * Can be instantiated with a signer or a provider.
  * If a provider is provided, only read methods are available.
+ * NOTE: Ideally this is nested underneath a PrizePool.
+ * Then when a Player is created, so is a new ClaimableDraw with a signer all ready to go.
  */
 export class ClaimableDraw {
   readonly signerOrProvider: Provider | Signer
@@ -35,11 +34,15 @@ export class ClaimableDraw {
 
   // Contract metadata
   readonly claimableDraw: ContractMetadata
-  readonly drawHistory: ContractMetadata
+  readonly drawCalculator: ContractMetadata
+  drawHistory: ContractMetadata
+  drawSettingsHistory: ContractMetadata
 
   // Ethers contracts
   readonly claimableDrawContract: Contract
-  readonly drawHistoryContract: Contract
+  readonly drawCalculatorContract: Contract
+  drawHistoryContract: Contract
+  drawSettingsHistoryContract: Contract
 
   /**
    * NOTE: Assumes a list of only the relevant contracts was provided
@@ -54,9 +57,9 @@ export class ClaimableDraw {
       ContractType.ClaimableDraw,
       contractMetadataList
     )
-    const [drawHistoryContractMetadata, drawHistoryContract] = getMetadataAndContract(
+    const [drawCalculatorContractMetadata, drawCalculatorContract] = getMetadataAndContract(
       signerOrProvider,
-      ContractType.DrawHistory,
+      ContractType.TsunamiDrawCalculator,
       contractMetadataList
     )
 
@@ -68,11 +71,11 @@ export class ClaimableDraw {
 
     // Set metadata
     this.claimableDraw = claimableDrawContractMetadata
-    this.drawHistory = drawHistoryContractMetadata
+    this.drawCalculator = drawCalculatorContractMetadata
 
     // Set ethers contracts
     this.claimableDrawContract = claimableDrawContract
-    this.drawHistoryContract = drawHistoryContract
+    this.drawCalculatorContract = drawCalculatorContract
   }
 
   //////////////////////////// Ethers write functions ////////////////////////////
@@ -109,8 +112,8 @@ export class ClaimableDraw {
   }
 
   /**
-   *
-   * @returns
+   * Fetches claimed events for the provided user
+   * @returns Event
    */
   async getClaimedEvents() {
     const errorPrefix = 'ClaimableDraw [getClaimedEvents] |'
@@ -121,26 +124,45 @@ export class ClaimableDraw {
 
   //////////////////////////// Ethers read functions ////////////////////////////
 
+  // TODO: Get past distribution
+  // TODO: Get past prizes
+  // TODO: Our Tsunami frontend will do this outside of here since it's hardcoded.
+
   // NOTE: getNewestDraw will error if there is no draw pushed
   // Use to check if draw is ready?
   async getNewestDraw(): Promise<Draw> {
-    try {
-      const result: Result = await this.drawHistoryContract.getNewestDraw()
-      return {
-        winningRandomNumber: result[0],
-        timestamp: result[1],
-        drawId: result[2]
-      } as Draw
-    } catch (e) {
-      console.warn(e)
-      return null
+    const drawHistoryContract = await this.getDrawHistoryContract()
+    const result: Result = await drawHistoryContract.functions.getNewestDraw()
+    const draw = result[0]
+    return {
+      drawId: draw.drawId,
+      timestamp: draw.timestamp,
+      winningRandomNumber: draw.winningRandomNumber
+    }
+  }
+
+  async getOldestDraw(): Promise<Draw> {
+    const drawHistoryContract = await this.getDrawHistoryContract()
+    const result: Result = await drawHistoryContract.functions.getOldestDraw()
+    console.log('getOldestDraw - claimabledraw', result)
+    const draw = result[0]
+    return {
+      drawId: draw.drawId,
+      timestamp: draw.timestamp,
+      winningRandomNumber: draw.winningRandomNumber
     }
   }
 
   // TODO: Double check
   async getDraws(): Promise<Draw[]> {
-    const response: Result = await this.drawHistoryContract.functions.draws()
-    return response as Draw[]
+    const drawHistoryContract = await this.getDrawHistoryContract()
+    const response: Result = await drawHistoryContract.functions.draws()
+    console.log('getDraws - ClaimableDraw', response)
+    return response[0].map((draw) => ({
+      drawId: draw.drawId,
+      timestamp: draw.timestamp,
+      winningRandomNumber: draw.winningRandomNumber
+    }))
   }
 
   // // TODO: Double check
@@ -157,26 +179,15 @@ export class ClaimableDraw {
    * @returns
    */
   async getUsersPrizes(usersAddress: string, draw: Draw): Promise<DrawResults> {
-    const [drawIndex] = await this.drawHistoryContract.functions.drawIdToDrawIndex(draw.drawId)
-    // NOTE: drawCalculatorAddresses should accept the drawId not index.
-
-    // Fetch draw calculator address for the draw
-    // TODO: Need to identify what draw calculator ABI matches
-    const [
-      drawCalculatorAddress
-    ] = await this.claimableDrawContract.functions.drawCalculatorAddresses(drawIndex)
-    const [, drawCalculatorContract] = getMetadataAndContract(
-      this.signerOrProvider,
-      ContractType.TsunamiDrawCalculator,
-      this.contractMetadataList,
-      drawCalculatorAddress
-    )
+    console.log('getUsersPrizes', 'params', usersAddress, draw)
 
     // Fetch the draw settings for the draw
-    const drawSettingsResult: Result = await drawCalculatorContract.functions.getDrawSettings(
+    const drawSettingsHistoryContract = await this.getDrawSettingsHistoryContract()
+    const drawSettingsResult: Result = await drawSettingsHistoryContract.functions.getDrawSetting(
       draw.drawId
     )
     const drawSettings: DrawSettings = drawSettingsResult[0]
+    console.log('getUsersPrizes', 'drawSettings', drawSettings)
 
     // Fetch the ticket for the draw calculator
     // TODO: Need to identify what ticket ABI matches
@@ -196,6 +207,7 @@ export class ClaimableDraw {
       draw.timestamp
     )
     const balance: BigNumber = balanceResult[0]
+    console.log('getUsersPrizes', 'balance', balance)
 
     if (balance.isZero()) {
       return null
@@ -217,6 +229,52 @@ export class ClaimableDraw {
     const eventFilter = this.claimableDrawContract.filters.ClaimedDraw(usersAddress, draw.drawId)
     const events = await this.claimableDrawContract.queryFilter(eventFilter)
     return events[0]
+  }
+
+  //////////////////////////// Ethers Contracts ////////////////////////////
+
+  private async getAndSetEthersContract(
+    contractMetadataKey: string,
+    contractType: ContractType,
+    getContractAddress: () => Promise<string>
+  ): Promise<Contract> {
+    const contractKey = `${contractMetadataKey}Contract`
+    if (this[contractKey] !== undefined) return this[contractKey]
+
+    const contractAddress = await getContractAddress()
+    const [contractMetadata, contract] = getMetadataAndContract(
+      this.signerOrProvider,
+      contractType,
+      this.contractMetadataList,
+      contractAddress
+    )
+    this[contractMetadataKey] = contractMetadata
+    this[contractKey] = contract
+    return contract
+  }
+
+  async getDrawHistoryContract(): Promise<Contract> {
+    const getDrawHistoryAddress = async () => {
+      const result: Result = await this.drawCalculatorContract.functions.getDrawHistory()
+      return result[0]
+    }
+    return this.getAndSetEthersContract(
+      'drawHistory',
+      ContractType.DrawHistory,
+      getDrawHistoryAddress
+    )
+  }
+
+  async getDrawSettingsHistoryContract(): Promise<Contract> {
+    const getDrawSettingsHistoryAddress = async () => {
+      const result: Result = await this.drawCalculatorContract.functions.getTsunamiDrawSettingsHistory()
+      return result[0]
+    }
+    return this.getAndSetEthersContract(
+      'drawSettingsHistory',
+      ContractType.TsunamiDrawSettingsHistory,
+      getDrawSettingsHistoryAddress
+    )
   }
 
   //////////////////////////// Methods ////////////////////////////
@@ -275,14 +333,16 @@ export async function initializeClaimableDraws(
     if (response.status === 'fulfilled') {
       claimableDrawAddresses.push(response.value)
     } else {
-      console.warn('Fetching contract addresses failed with error: ', response.reason)
+      console.error('Fetching contract addresses failed with error: ', response.reason)
     }
   })
 
   // Sort children addresses by chain id
   const claimableDrawAddressesByChainId: ChildContractAddresses = {}
   claimableDrawAddresses.forEach(
-    (ppa) => (claimableDrawAddressesByChainId[ppa.chainId] = ppa.addressesByClaimableDraw)
+    (addressessResponse) =>
+      (claimableDrawAddressesByChainId[addressessResponse.chainId] =
+        addressessResponse.addressesByClaimableDraw)
   )
 
   // Extend contracts with children
@@ -300,24 +360,39 @@ export async function initializeClaimableDraws(
 
   // Need to inject some more contracts since they get linked later
   // TODO: Need to properly match these contracts
-  // TsunamiDrawCalculator
-  // Ticket
+  // - DrawHistory
+  // - TsunamiDrawSettingsHistory
+  // - Ticket
   const finalContractLists = []
   sortedContractLists.forEach((contractList) => {
     const chainId = contractList[0].chainId
-    // TsunamiDrawCalculator
-    const tsunamiDrawCalculatorMetadatas = getContractsByType(
-      contracts,
-      ContractType.TsunamiDrawCalculator
-    )
-    const tsunamiDrawCalculatorMetadata = tsunamiDrawCalculatorMetadatas.find(
+
+    // DrawHistory
+    const drawHistoryMetadatas = getContractsByType(contracts, ContractType.DrawHistory)
+    const drawHistoryMetadata = drawHistoryMetadatas.find(
       (contract) => contract.chainId === chainId
     )
+
+    // TsunamiDrawSettingsHistory
+    const drawSettingsHistoryMetadatas = getContractsByType(
+      contracts,
+      ContractType.TsunamiDrawSettingsHistory
+    )
+    const drawSettingsMetadata = drawSettingsHistoryMetadatas.find(
+      (contract) => contract.chainId === chainId
+    )
+
     // Ticket
     const ticketMetadatas = getContractsByType(contracts, ContractType.Ticket)
     const ticketMetadata = ticketMetadatas.find((contract) => contract.chainId === chainId)
+
     // Push contracts
-    finalContractLists.push([...contractList, tsunamiDrawCalculatorMetadata, ticketMetadata])
+    finalContractLists.push([
+      ...contractList,
+      drawHistoryMetadata,
+      ticketMetadata,
+      drawSettingsMetadata
+    ])
   })
 
   return finalContractLists.map((contractList) => {
@@ -326,6 +401,14 @@ export async function initializeClaimableDraws(
   })
 }
 
+/**
+ * Fetches relevant addresses from the ClaimableDraw to match with the provided contract list.
+ * - DrawCalculator
+ * @param chainId
+ * @param signerOrProvider
+ * @param claimableDrawContracts
+ * @returns
+ */
 async function fetchClaimableDrawAddressesByChainId(
   chainId: number,
   signerOrProvider: Signer | Provider,
@@ -339,14 +422,14 @@ async function fetchClaimableDrawAddressesByChainId(
       claimableDrawContract.address
     )
     // @ts-ignore: Property doesn't exist on MulticallContract
-    batchCalls.push(claimableDrawEtherplexContract.drawHistory())
+    batchCalls.push(claimableDrawEtherplexContract.getDrawCalculator())
   })
   const result = await batch(signerOrProvider as BaseProvider, ...batchCalls)
   const addressesByClaimableDraw = {} as { [address: string]: { [key: string]: string } }
   Object.keys(result).forEach(
     (claimableDrawAddress: any) =>
       (addressesByClaimableDraw[claimableDrawAddress] = {
-        drawHistory: result[claimableDrawAddress].drawHistory[0]
+        drawCalculator: result[claimableDrawAddress].getDrawCalculator[0]
       })
   )
   return { chainId, addressesByClaimableDraw }

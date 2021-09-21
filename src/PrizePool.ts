@@ -170,11 +170,7 @@ export class PrizePool {
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
 
-    return await this.prizePoolContract.estimateGas.depositTo(
-      usersAddress,
-      amount,
-      this.ticket.address
-    )
+    return await this.prizePoolContract.estimateGas.depositTo(usersAddress, amount)
   }
 
   /**
@@ -188,11 +184,7 @@ export class PrizePool {
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
 
-    return await this.prizePoolContract.estimateGas.withdrawFrom(
-      usersAddress,
-      amount,
-      this.ticket.address
-    )
+    return await this.prizePoolContract.estimateGas.withdrawFrom(usersAddress, amount)
   }
 
   //////////////////////////// Methods ////////////////////////////
