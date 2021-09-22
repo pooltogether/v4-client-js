@@ -8,17 +8,22 @@ import { contract as etherplexContract, batch, Context } from '@pooltogether/eth
 import { BaseProvider, TransactionResponse } from '@ethersproject/providers'
 import { extendContractWithChildren } from './utils/extendContractWithChildren'
 import { getMetadataAndContract } from './utils/getMetadataAndContract'
-import { Claim, Draw, DrawResults, DrawSettings } from 'tempTypes'
 import { BigNumber } from '@ethersproject/bignumber'
 import {
   generatePicks,
   computeDrawResults,
-  prepareClaimForUserFromDrawResult
+  prepareClaimForUserFromDrawResult,
+  Draw,
+  DrawResults,
+  Claim,
+  User,
+  DrawSettings
 } from '@pooltogether/draw-calculator-js-sdk'
 import { getContractsByType } from './utils/getContractsByType'
 import { sortContractsByChainId } from './utils/sortContractsByChainId'
 import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByContractTypeAndChildren'
 import { validateIsSigner, validateSignerNetwork } from './utils/validation'
+import { ethers } from 'ethers'
 
 /**
  * Can be instantiated with a signer or a provider.
@@ -35,14 +40,14 @@ export class ClaimableDraw {
   // Contract metadata
   readonly claimableDraw: ContractMetadata
   readonly drawCalculator: ContractMetadata
-  drawHistory: ContractMetadata
-  drawSettingsHistory: ContractMetadata
+  drawHistory: ContractMetadata | undefined
+  drawSettingsHistory: ContractMetadata | undefined
 
   // Ethers contracts
   readonly claimableDrawContract: Contract
   readonly drawCalculatorContract: Contract
-  drawHistoryContract: Contract
-  drawSettingsHistoryContract: Contract
+  drawHistoryContract: Contract | undefined
+  drawSettingsHistoryContract: Contract | undefined
 
   /**
    * NOTE: Assumes a list of only the relevant contracts was provided
@@ -76,6 +81,12 @@ export class ClaimableDraw {
     // Set ethers contracts
     this.claimableDrawContract = claimableDrawContract
     this.drawCalculatorContract = drawCalculatorContract
+
+    // Initialized later - requires a fetch
+    this.drawHistory = undefined
+    this.drawSettingsHistory = undefined
+    this.drawHistoryContract = undefined
+    this.drawSettingsHistoryContract = undefined
   }
 
   //////////////////////////// Ethers write functions ////////////////////////////
@@ -107,7 +118,10 @@ export class ClaimableDraw {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = prepareClaimForUserFromDrawResult({ address: usersAddress }, drawResults)
+    const claim: Claim = prepareClaimForUserFromDrawResult(
+      { address: usersAddress } as User,
+      drawResults
+    )
     return this.claimableDrawContract.claim(claim.userAddress, claim.drawIds, claim.data)
   }
 
@@ -153,12 +167,40 @@ export class ClaimableDraw {
     }
   }
 
+  async getValidDrawIds(): Promise<number[]> {
+    const [oldestDraw, newestDraw] = await Promise.allSettled([
+      this.getOldestDraw(),
+      this.getNewestDraw()
+    ])
+    // If newest failed, there are none
+    // TODO: Check oldest for id 0 as well
+    if (newestDraw.status === 'rejected' || oldestDraw.status === 'rejected') {
+      return []
+    }
+
+    const oldestId = oldestDraw.value.drawId
+    const newestId = newestDraw.value.drawId
+    const validIds = []
+    for (let i = oldestId; i <= newestId; i++) {
+      validIds.push(i)
+    }
+    return validIds
+  }
+
+  async getValidDraws(): Promise<Draw[]> {
+    const validDrawIds = await this.getValidDrawIds()
+    return await this.getDraws(validDrawIds)
+  }
+
   // TODO: Double check
-  async getDraws(): Promise<Draw[]> {
+  async getDraws(drawIds: number[]): Promise<Draw[]> {
+    if (!drawIds || drawIds.length === 0) {
+      return []
+    }
     const drawHistoryContract = await this.getDrawHistoryContract()
-    const response: Result = await drawHistoryContract.functions.draws()
+    const response: Result = await drawHistoryContract.functions.getDraws(drawIds)
     console.log('getDraws - ClaimableDraw', response)
-    return response[0].map((draw) => ({
+    return response[0].map((draw: Partial<Draw>) => ({
       drawId: draw.drawId,
       timestamp: draw.timestamp,
       winningRandomNumber: draw.winningRandomNumber
@@ -210,11 +252,17 @@ export class ClaimableDraw {
     console.log('getUsersPrizes', 'balance', balance)
 
     if (balance.isZero()) {
-      return null
+      return {
+        drawId: draw.drawId,
+        totalValue: ethers.constants.Zero,
+        prizes: []
+      }
     } else {
-      const picks = generatePicks(drawSettings.pickCost, usersAddress, balance)
+      const picks = generatePicks(usersAddress, drawSettings.numberOfPicks.toNumber())
+      console.log('getUsersPrizes', 'picks', picks)
       // finally call function
       const drawResults = computeDrawResults(drawSettings, draw, picks)
+      console.log('getUsersPrizes', 'drawResults', drawResults)
       return drawResults
     }
   }
@@ -239,6 +287,7 @@ export class ClaimableDraw {
     getContractAddress: () => Promise<string>
   ): Promise<Contract> {
     const contractKey = `${contractMetadataKey}Contract`
+    // @ts-ignore
     if (this[contractKey] !== undefined) return this[contractKey]
 
     const contractAddress = await getContractAddress()
@@ -248,7 +297,9 @@ export class ClaimableDraw {
       this.contractMetadataList,
       contractAddress
     )
+    // @ts-ignore
     this[contractMetadataKey] = contractMetadata
+    // @ts-ignore
     this[contractKey] = contract
     return contract
   }
@@ -363,7 +414,7 @@ export async function initializeClaimableDraws(
   // - DrawHistory
   // - TsunamiDrawSettingsHistory
   // - Ticket
-  const finalContractLists = []
+  const finalContractLists: ContractMetadata[][] = []
   sortedContractLists.forEach((contractList) => {
     const chainId = contractList[0].chainId
 
@@ -387,12 +438,11 @@ export async function initializeClaimableDraws(
     const ticketMetadata = ticketMetadatas.find((contract) => contract.chainId === chainId)
 
     // Push contracts
-    finalContractLists.push([
-      ...contractList,
-      drawHistoryMetadata,
-      ticketMetadata,
-      drawSettingsMetadata
-    ])
+    const newContractList: ContractMetadata[] = [...contractList]
+    if (drawHistoryMetadata) newContractList.push(drawHistoryMetadata)
+    if (ticketMetadata) newContractList.push(ticketMetadata)
+    if (drawSettingsMetadata) newContractList.push(drawSettingsMetadata)
+    finalContractLists.push(newContractList)
   })
 
   return finalContractLists.map((contractList) => {
@@ -434,3 +484,5 @@ async function fetchClaimableDrawAddressesByChainId(
   )
   return { chainId, addressesByClaimableDraw }
 }
+
+//////////////////////////// Temporary Methods ////////////////////////////
