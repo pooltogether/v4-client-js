@@ -23,9 +23,9 @@ export class PrizePool {
   readonly address: string
 
   // Contract metadata
-  readonly prizePool: ContractMetadata
-  readonly ticket: ContractMetadata
-  readonly token: ContractMetadata
+  readonly prizePoolMetadata: ContractMetadata
+  readonly ticketMetadata: ContractMetadata
+  readonly tokenMetadata: ContractMetadata
 
   // Ethers contracts
   readonly prizePoolContract: Contract
@@ -64,9 +64,9 @@ export class PrizePool {
     this.address = prizePoolContractMetadata.address
 
     // Set metadata
-    this.prizePool = prizePoolContractMetadata
-    this.ticket = ticketContractMetadata
-    this.token = tokenContractMetadata
+    this.prizePoolMetadata = prizePoolContractMetadata
+    this.ticketMetadata = ticketContractMetadata
+    this.tokenMetadata = tokenContractMetadata
 
     // Set ethers contracts
     this.prizePoolContract = prizePoolContract
@@ -131,7 +131,7 @@ export class PrizePool {
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
 
-    const prizePoolAddress = this.prizePool.address
+    const prizePoolAddress = this.prizePoolMetadata.address
     const result = await this.tokenContract.functions.allowance(usersAddress, prizePoolAddress)
     const allowanceUnformatted: BigNumber = result[0]
     return { allowanceUnformatted, isApproved: !allowanceUnformatted.isZero() }
@@ -194,6 +194,6 @@ export class PrizePool {
    * @returns string
    */
   id(): string {
-    return `${this.prizePool.address}-${this.prizePool.chainId}`
+    return `${this.prizePoolMetadata.address}-${this.prizePoolMetadata.chainId}`
   }
 }

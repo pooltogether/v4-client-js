@@ -38,8 +38,8 @@ export class ClaimableDraw {
   readonly address: string
 
   // Contract metadata
-  readonly claimableDraw: ContractMetadata
-  readonly drawCalculator: ContractMetadata
+  readonly claimableDrawMetadata: ContractMetadata
+  readonly drawCalculatorMetadata: ContractMetadata
   drawHistory: ContractMetadata | undefined
   drawSettingsHistory: ContractMetadata | undefined
 
@@ -75,8 +75,8 @@ export class ClaimableDraw {
     this.address = claimableDrawContractMetadata.address
 
     // Set metadata
-    this.claimableDraw = claimableDrawContractMetadata
-    this.drawCalculator = drawCalculatorContractMetadata
+    this.claimableDrawMetadata = claimableDrawContractMetadata
+    this.drawCalculatorMetadata = drawCalculatorContractMetadata
 
     // Set ethers contracts
     this.claimableDrawContract = claimableDrawContract
@@ -331,7 +331,7 @@ export class ClaimableDraw {
   //////////////////////////// Methods ////////////////////////////
 
   id(): string {
-    return `${this.claimableDraw.address}-${this.claimableDraw.chainId}`
+    return `${this.claimableDrawMetadata.address}-${this.claimableDrawMetadata.chainId}`
   }
 
   async getUsersAddress(errorPrefix = 'ClaimableDraw [getUsersAddress] |') {

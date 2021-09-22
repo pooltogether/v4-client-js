@@ -223,27 +223,3 @@ function createTokenContract(chainId: number, address: string) {
     extensions: {}
   } as Contract
 }
-
-//////////////////////////// NOT USED RIGHT NOW, SAVING FOR LATER ////////////////////////////
-
-/**
- * TODO: Probably better to switch this around and tag the parent with its children
- * Uses the parent extension, searches through all contracts and recursively finds
- * contracts with a relationship.
- */
-// function findChildContractsByParent(parentContract: Contract, contracts: Contract[]): Contract[] {
-//   const relatedContracts = contracts.filter((contract) =>
-//     isParentContract(parentContract, contract)
-//   )
-//   const relatedContractsChildContracts = relatedContracts.flatMap((contract) =>
-//     findChildContracts(contract, contracts)
-//   )
-//   return [...relatedContracts, ...relatedContractsChildContracts]
-// }
-//
-// function isParentContract(parentContract: Contract, childContract: Contract) {
-//   const parent = childContract?.extensions?.parent as ContractIdentifier
-//   return (
-//     parent && parent.address === parentContract.address && parent.chainId === parentContract.chainId
-//   )
-// }
