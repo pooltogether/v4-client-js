@@ -1471,10 +1471,10 @@
   resolved "https://registry.yarnpkg.com/@pooltogether/contract-list-schema/-/contract-list-schema-0.1.4.tgz#52a4b35e1ef1b263c643e517ca1908180cf1cb6e"
   integrity sha512-oLAu9TGfU9xf1QFJJZQxUj0hsfcRao/DMCZ1hVvDkmwOnX1PUkuhuvZfvgwLFd4hJ4m2kjdCyTJ+VJ5qvgjyww==
 
-"@pooltogether/draw-calculator-js-sdk@^1.0.0-beta.12":
-  version "1.0.0-beta.12"
-  resolved "https://registry.yarnpkg.com/@pooltogether/draw-calculator-js-sdk/-/draw-calculator-js-sdk-1.0.0-beta.12.tgz#487a35a64a8b7c5f6235bb0a44d07597b979342b"
-  integrity sha512-EGQU7l2SaYYyfpJ0W2Vo87adFvHKdF+oU/111+jNUNcXv+yCDr+UMNqpGCWiusFb3tnittjjPvbJwzfETDJw+A==
+"@pooltogether/draw-calculator-js@^1.0.0-beta.16":
+  version "1.0.0-beta.16"
+  resolved "https://registry.yarnpkg.com/@pooltogether/draw-calculator-js/-/draw-calculator-js-1.0.0-beta.16.tgz#5ca53a46b88ae6758886a79ea5e25d1b7d2f67d1"
+  integrity sha512-JyQjZAF0mTE3cwyS4k4/jjfUjdlcG7QICaVQP1p+H4UqGy1EzBtpAKbu+V7fULYKDYfOrYIpMnUZOjoBYT4eGg==
   dependencies:
     chalk "^4.1.2"
     debug "^4.3.2"

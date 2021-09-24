@@ -1,5 +1,6 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { Contract } from '@ethersproject/contracts'
+import { MaxUint256 } from '@ethersproject/constants'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
 import { PrizePoolTokenBalances, TokenData } from './types'
 import { ContractType } from './constants'
@@ -185,6 +186,19 @@ export class PrizePool {
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
 
     return await this.prizePoolContract.estimateGas.withdrawFrom(usersAddress, amount)
+  }
+
+  /**
+   * Fetches a gas estimate for approving deposits into the Prize Pool.
+   * @param usersAddress string
+   * @returns BigNumber
+   */
+  async getApprovalGasEstimate(usersAddress: string): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getApprovalGasEstimate] | '
+    await validateAddress(errorPrefix, usersAddress)
+
+    const prizePoolAddress = this.prizePoolMetadata.address
+    return await this.tokenContract.estimateGas.approve(prizePoolAddress, MaxUint256)
   }
 
   //////////////////////////// Methods ////////////////////////////

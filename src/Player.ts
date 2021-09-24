@@ -1,7 +1,7 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/bignumber'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
-import { ethers } from 'ethers'
+import { MaxUint256 } from '@ethersproject/constants'
 import { PrizePool } from './PrizePool'
 import { validateSignerNetwork } from './utils/validation'
 
@@ -65,8 +65,8 @@ export class Player extends PrizePool {
    * @returns TransactionResponse
    */
   async approveDeposits(): Promise<TransactionResponse> {
-    const prizePoolAddress = this.prizePool.address
-    return this.tokenContract.approve(prizePoolAddress, ethers.constants.MaxUint256)
+    const prizePoolAddress = this.prizePoolMetadata.address
+    return this.tokenContract.approve(prizePoolAddress, MaxUint256)
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////

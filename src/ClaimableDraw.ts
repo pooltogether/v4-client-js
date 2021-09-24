@@ -1,7 +1,16 @@
 import { Contract, Event } from '@ethersproject/contracts'
 import { Result } from '@ethersproject/abi'
 import { ContractType } from './constants'
-import { ChildContractAddresses, Contract as ContractMetadata, ContractList } from './types'
+import {
+  ChildContractAddresses,
+  Contract as ContractMetadata,
+  ContractList,
+  User,
+  Draw,
+  DrawResults,
+  Claim,
+  TsunamiDrawSettings
+} from './types'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
 import { contract as etherplexContract, batch, Context } from '@pooltogether/etherplex'
@@ -10,15 +19,9 @@ import { extendContractWithChildren } from './utils/extendContractWithChildren'
 import { getMetadataAndContract } from './utils/getMetadataAndContract'
 import { BigNumber } from '@ethersproject/bignumber'
 import {
-  generatePicks,
-  computeDrawResults,
   prepareClaimForUserFromDrawResult,
-  Draw,
-  DrawResults,
-  Claim,
-  User,
-  DrawSettings
-} from '@pooltogether/draw-calculator-js-sdk'
+  runTsunamiDrawCalculatorForSingleDraw
+} from '@pooltogether/draw-calculator-js'
 import { getContractsByType } from './utils/getContractsByType'
 import { sortContractsByChainId } from './utils/sortContractsByChainId'
 import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByContractTypeAndChildren'
@@ -192,7 +195,11 @@ export class ClaimableDraw {
     return await this.getDraws(validDrawIds)
   }
 
-  // TODO: Double check
+  async getValidDrawSettings(): Promise<TsunamiDrawSettings[]> {
+    const validDrawIds = await this.getValidDrawIds()
+    return await this.getDrawSettings(validDrawIds)
+  }
+
   async getDraws(drawIds: number[]): Promise<Draw[]> {
     if (!drawIds || drawIds.length === 0) {
       return []
@@ -204,6 +211,43 @@ export class ClaimableDraw {
       drawId: draw.drawId,
       timestamp: draw.timestamp,
       winningRandomNumber: draw.winningRandomNumber
+    }))
+  }
+
+  async getDrawSetting(drawId: number): Promise<TsunamiDrawSettings> {
+    const drawSettingsHistoryContract = await this.getDrawSettingsHistoryContract()
+    const result: Result = await drawSettingsHistoryContract.functions.getDrawSetting(drawId)
+    return {
+      matchCardinality: result[0].matchCardinality,
+      pickCost: result[0].pickCost,
+      distributions: result[0].distributions,
+      bitRangeSize: result[0].bitRangeSize,
+      maxPicksPerUser: result[0].maxPicksPerUser,
+      numberOfPicks: result[0].numberOfPicks,
+      prize: result[0].prize,
+      drawStartTimestampOffset: result[0].drawStartTimestampOffset,
+      drawEndTimestampOffset: result[0].drawEndTimestampOffset
+    }
+  }
+
+  async getDrawSettings(drawIds: number[]): Promise<TsunamiDrawSettings[]> {
+    if (!drawIds || drawIds.length === 0) {
+      return []
+    }
+    const drawSettingsHistoryContract = await this.getDrawSettingsHistoryContract()
+    const drawSettingsResults: Result = await drawSettingsHistoryContract.functions.getDrawSettings(
+      drawIds
+    )
+    return drawSettingsResults[0].map((result: Partial<TsunamiDrawSettings>) => ({
+      matchCardinality: result.matchCardinality,
+      pickCost: result.pickCost,
+      distributions: result.distributions,
+      bitRangeSize: result.bitRangeSize,
+      maxPicksPerUser: result.maxPicksPerUser,
+      numberOfPicks: result.numberOfPicks,
+      prize: result.prize,
+      drawStartTimestampOffset: result.drawStartTimestampOffset,
+      drawEndTimestampOffset: result.drawEndTimestampOffset
     }))
   }
 
@@ -228,7 +272,7 @@ export class ClaimableDraw {
     const drawSettingsResult: Result = await drawSettingsHistoryContract.functions.getDrawSetting(
       draw.drawId
     )
-    const drawSettings: DrawSettings = drawSettingsResult[0]
+    const drawSettings: TsunamiDrawSettings = drawSettingsResult[0]
     console.log('getUsersPrizes', 'drawSettings', drawSettings)
 
     // Fetch the ticket for the draw calculator
@@ -251,6 +295,11 @@ export class ClaimableDraw {
     const balance: BigNumber = balanceResult[0]
     console.log('getUsersPrizes', 'balance', balance)
 
+    const user: User = {
+      address: usersAddress,
+      normalizedBalance: balance
+    }
+
     if (balance.isZero()) {
       return {
         drawId: draw.drawId,
@@ -258,12 +307,7 @@ export class ClaimableDraw {
         prizes: []
       }
     } else {
-      const picks = generatePicks(usersAddress, drawSettings.numberOfPicks.toNumber())
-      console.log('getUsersPrizes', 'picks', picks)
-      // finally call function
-      const drawResults = computeDrawResults(drawSettings, draw, picks)
-      console.log('getUsersPrizes', 'drawResults', drawResults)
-      return drawResults
+      return runTsunamiDrawCalculatorForSingleDraw(drawSettings, draw, user)
     }
   }
 

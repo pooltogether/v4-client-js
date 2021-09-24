@@ -1,13 +1,5 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { BigNumber } from 'ethers'
-export {
-  Version,
-  Tags,
-  ABIIdentifier,
-  ContractIdentifier,
-  Contract,
-  ContractList
-} from '@pooltogether/contract-list-schema'
 
 export interface TokenData {
   name: string
@@ -31,3 +23,25 @@ export interface ChildContractAddresses {
     }
   }
 }
+
+// Forward other PoolTogether types
+export {
+  TsunamiDrawSettings,
+  Draw,
+  Pick,
+  User,
+  DrawResults,
+  PrizeAwardable,
+  PickPrize,
+  Claim,
+  UserDrawResult
+} from '@pooltogether/draw-calculator-js'
+
+export {
+  Version,
+  Tags,
+  ABIIdentifier,
+  ContractIdentifier,
+  Contract,
+  ContractList
+} from '@pooltogether/contract-list-schema'
