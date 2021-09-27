@@ -8,3 +8,5 @@ export enum ContractType {
   TsunamiDrawSettingsHistory = 'TsunamiDrawSettingsHistory'
   // ... more contract types
 }
+
+export const DECIMALS_FOR_DISTRIBUTIONS = 9

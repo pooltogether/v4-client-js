@@ -24,18 +24,24 @@ export interface ChildContractAddresses {
   }
 }
 
-// Forward other PoolTogether types
-export {
-  TsunamiDrawSettings,
-  Draw,
-  Pick,
-  User,
-  DrawResults,
-  PrizeAwardable,
-  PickPrize,
-  Claim,
-  UserDrawResult
-} from '@pooltogether/draw-calculator-js'
+// Modelled after the generated types
+
+export interface Draw {
+  drawId: number
+  timestamp: number
+  winningRandomNumber: BigNumber
+}
+
+export interface DrawSettings {
+  bitRangeSize: number
+  matchCardinality: number
+  drawStartTimestampOffset: number
+  drawEndTimestampOffset: number
+  maxPicksPerUser: number
+  numberOfPicks: BigNumber
+  distributions: number[]
+  prize: BigNumber
+}
 
 export {
   Version,
@@ -45,3 +51,16 @@ export {
   Contract,
   ContractList
 } from '@pooltogether/contract-list-schema'
+
+// Forward other PoolTogether types
+export {
+  TsunamiDrawSettings as DrawCalcDrawSettings,
+  Draw as DrawCalcDraw,
+  Pick as DrawCalcPick,
+  User as DrawCalcUser,
+  DrawResults,
+  PrizeAwardable,
+  PickPrize,
+  Claim,
+  UserDrawResult as DrawCalcUserDrawResult
+} from '@pooltogether/draw-calculator-js'

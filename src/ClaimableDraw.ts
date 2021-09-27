@@ -1,15 +1,14 @@
 import { Contract, Event } from '@ethersproject/contracts'
 import { Result } from '@ethersproject/abi'
-import { ContractType } from './constants'
+import { ContractType, DECIMALS_FOR_DISTRIBUTIONS } from './constants'
 import {
   ChildContractAddresses,
   Contract as ContractMetadata,
   ContractList,
-  User,
   Draw,
-  DrawResults,
-  Claim,
-  TsunamiDrawSettings
+  DrawCalcDraw,
+  DrawCalcDrawSettings,
+  DrawSettings
 } from './types'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
@@ -19,14 +18,18 @@ import { extendContractWithChildren } from './utils/extendContractWithChildren'
 import { getMetadataAndContract } from './utils/getMetadataAndContract'
 import { BigNumber } from '@ethersproject/bignumber'
 import {
+  Claim,
+  DrawResults,
   prepareClaimForUserFromDrawResult,
-  runTsunamiDrawCalculatorForSingleDraw
+  runTsunamiDrawCalculatorForSingleDraw,
+  User
 } from '@pooltogether/draw-calculator-js'
 import { getContractsByType } from './utils/getContractsByType'
 import { sortContractsByChainId } from './utils/sortContractsByChainId'
 import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByContractTypeAndChildren'
 import { validateIsSigner, validateSignerNetwork } from './utils/validation'
 import { ethers } from 'ethers'
+import { parseUnits } from '@ethersproject/units'
 
 /**
  * Can be instantiated with a signer or a provider.
@@ -195,9 +198,20 @@ export class ClaimableDraw {
     return await this.getDraws(validDrawIds)
   }
 
-  async getValidDrawSettings(): Promise<TsunamiDrawSettings[]> {
+  async getValidDrawSettings(): Promise<DrawSettings[]> {
     const validDrawIds = await this.getValidDrawIds()
     return await this.getDrawSettings(validDrawIds)
+  }
+
+  async getDraw(drawId: number): Promise<Draw> {
+    const drawHistoryContract = await this.getDrawHistoryContract()
+    const response: Result = await drawHistoryContract.functions.getDraw(drawId)
+    console.log('getDraw - ClaimableDraw', response)
+    return {
+      drawId: response[0].drawId,
+      timestamp: response[0].timestamp,
+      winningRandomNumber: response[0].winningRandomNumber
+    }
   }
 
   async getDraws(drawIds: number[]): Promise<Draw[]> {
@@ -214,12 +228,11 @@ export class ClaimableDraw {
     }))
   }
 
-  async getDrawSetting(drawId: number): Promise<TsunamiDrawSettings> {
+  async getDrawSetting(drawId: number): Promise<DrawSettings> {
     const drawSettingsHistoryContract = await this.getDrawSettingsHistoryContract()
     const result: Result = await drawSettingsHistoryContract.functions.getDrawSetting(drawId)
     return {
       matchCardinality: result[0].matchCardinality,
-      pickCost: result[0].pickCost,
       distributions: result[0].distributions,
       bitRangeSize: result[0].bitRangeSize,
       maxPicksPerUser: result[0].maxPicksPerUser,
@@ -230,7 +243,7 @@ export class ClaimableDraw {
     }
   }
 
-  async getDrawSettings(drawIds: number[]): Promise<TsunamiDrawSettings[]> {
+  async getDrawSettings(drawIds: number[]): Promise<DrawSettings[]> {
     if (!drawIds || drawIds.length === 0) {
       return []
     }
@@ -238,9 +251,8 @@ export class ClaimableDraw {
     const drawSettingsResults: Result = await drawSettingsHistoryContract.functions.getDrawSettings(
       drawIds
     )
-    return drawSettingsResults[0].map((result: Partial<TsunamiDrawSettings>) => ({
+    return drawSettingsResults[0].map((result: Partial<DrawSettings>) => ({
       matchCardinality: result.matchCardinality,
-      pickCost: result.pickCost,
       distributions: result.distributions,
       bitRangeSize: result.bitRangeSize,
       maxPicksPerUser: result.maxPicksPerUser,
@@ -268,11 +280,7 @@ export class ClaimableDraw {
     console.log('getUsersPrizes', 'params', usersAddress, draw)
 
     // Fetch the draw settings for the draw
-    const drawSettingsHistoryContract = await this.getDrawSettingsHistoryContract()
-    const drawSettingsResult: Result = await drawSettingsHistoryContract.functions.getDrawSetting(
-      draw.drawId
-    )
-    const drawSettings: TsunamiDrawSettings = drawSettingsResult[0]
+    const drawSettings: DrawSettings = await this.getDrawSetting(draw.drawId)
     console.log('getUsersPrizes', 'drawSettings', drawSettings)
 
     // Fetch the ticket for the draw calculator
@@ -301,14 +309,34 @@ export class ClaimableDraw {
     }
 
     if (balance.isZero()) {
+      console.log('getUsersPrizes', 'Balance is zero')
       return {
-        drawId: draw.drawId,
+        drawId: BigNumber.from(draw.drawId),
         totalValue: ethers.constants.Zero,
         prizes: []
       }
     } else {
-      return runTsunamiDrawCalculatorForSingleDraw(drawSettings, draw, user)
+      console.log(
+        'getUsersPrizes',
+        'run params',
+        toDrawCalcDrawSettings(drawSettings),
+        toDrawCalcDraw(draw),
+        user,
+        runTsunamiDrawCalculatorForSingleDraw
+      )
+      const results = runTsunamiDrawCalculatorForSingleDraw(
+        toDrawCalcDrawSettings(drawSettings),
+        toDrawCalcDraw(draw),
+        user
+      )
+      console.log('getUsersPrizes', 'results', results)
+      return results
     }
+  }
+
+  async getUsersPrizesByDrawId(usersAddress: string, drawId: number): Promise<DrawResults> {
+    const draw = await this.getDraw(drawId)
+    return this.getUsersPrizes(usersAddress, draw)
   }
 
   async getUsersClaimedEvents(usersAddress: string) {
@@ -429,6 +457,7 @@ export async function initializeClaimableDraws(
       claimableDrawAddresses.push(response.value)
     } else {
       console.error('Fetching contract addresses failed with error: ', response.reason)
+      throw new Error(response.reason)
     }
   })
 
@@ -456,7 +485,7 @@ export async function initializeClaimableDraws(
   // Need to inject some more contracts since they get linked later
   // TODO: Need to properly match these contracts
   // - DrawHistory
-  // - TsunamiDrawSettingsHistory
+  // - DrawSettingsHistory
   // - Ticket
   const finalContractLists: ContractMetadata[][] = []
   sortedContractLists.forEach((contractList) => {
@@ -468,7 +497,7 @@ export async function initializeClaimableDraws(
       (contract) => contract.chainId === chainId
     )
 
-    // TsunamiDrawSettingsHistory
+    // DrawSettingsHistory
     const drawSettingsHistoryMetadatas = getContractsByType(
       contracts,
       ContractType.TsunamiDrawSettingsHistory
@@ -530,3 +559,20 @@ async function fetchClaimableDrawAddressesByChainId(
 }
 
 //////////////////////////// Temporary Methods ////////////////////////////
+
+const toDrawCalcDrawSettings = (drawSettings: DrawSettings): DrawCalcDrawSettings => ({
+  ...drawSettings,
+  numberOfPicks: drawSettings.numberOfPicks.toNumber(),
+  distributions: drawSettings.distributions.map((d) => toDistributionBigNumber(String(d)))
+})
+
+// const toDistributionNumber = (distributionUnformatted: BigNumber) =>
+//   Number(formatUnits(distributionUnformatted, DECIMALS_FOR_DISTRIBUTIONS))
+
+const toDistributionBigNumber = (distribution: string) =>
+  parseUnits(distribution, DECIMALS_FOR_DISTRIBUTIONS)
+
+const toDrawCalcDraw = (draw: Draw): DrawCalcDraw => ({
+  ...draw,
+  drawId: BigNumber.from(draw.drawId)
+})
