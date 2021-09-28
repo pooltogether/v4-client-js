@@ -111,6 +111,8 @@ export async function initializeLinkedPrizePool(
   const prizePoolContractsByChainId = sortContractsByChainId(prizePoolContracts)
   const chainIds = Object.keys(prizePoolContractsByChainId).map(Number)
 
+  console.log('Init Linked Prize Pool')
+
   // Fetch relevant child addresses
   const prizePoolAddressBatchRequestPromises = chainIds.map((chainId) =>
     fetchPrizePoolAddressesByChainId(
@@ -120,6 +122,8 @@ export async function initializeLinkedPrizePool(
     )
   )
   const prizePoolAddressesResponses = await Promise.allSettled(prizePoolAddressBatchRequestPromises)
+  console.log(prizePoolAddressesResponses)
+
   const prizePoolAddresses: {
     chainId: number
     addressesByPrizePool: PrizePoolAddresses
@@ -135,6 +139,7 @@ export async function initializeLinkedPrizePool(
   prizePoolAddresses.forEach(
     (ppa) => (prizePoolAddressesByChainId[ppa.chainId] = ppa.addressesByPrizePool)
   )
+  console.log(prizePoolAddressesByChainId)
 
   // Extend the contracts with the child contracts
   const contractsWithChildren = extendContractWithChildren(

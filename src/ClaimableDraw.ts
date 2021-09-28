@@ -1,13 +1,11 @@
 import { Contract, Event } from '@ethersproject/contracts'
 import { Result } from '@ethersproject/abi'
-import { ContractType, DECIMALS_FOR_DISTRIBUTIONS } from './constants'
+import { ContractType } from './constants'
 import {
   ChildContractAddresses,
   Contract as ContractMetadata,
   ContractList,
   Draw,
-  DrawCalcDraw,
-  DrawCalcDrawSettings,
   DrawSettings
 } from './types'
 import { Provider } from '@ethersproject/abstract-provider'
@@ -20,16 +18,16 @@ import { BigNumber } from '@ethersproject/bignumber'
 import {
   Claim,
   DrawResults,
-  prepareClaimForUserFromDrawResult,
-  runTsunamiDrawCalculatorForSingleDraw,
-  User
+  tsunamiDrawCalculator,
+  User,
+  prepareClaims
 } from '@pooltogether/draw-calculator-js'
 import { getContractsByType } from './utils/getContractsByType'
 import { sortContractsByChainId } from './utils/sortContractsByChainId'
 import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByContractTypeAndChildren'
 import { validateIsSigner, validateSignerNetwork } from './utils/validation'
 import { ethers } from 'ethers'
-import { parseUnits } from '@ethersproject/units'
+import { toDrawCalcDraw, toDrawCalcDrawSettings } from './utils/drawCalculatorHelpers'
 
 /**
  * Can be instantiated with a signer or a provider.
@@ -65,12 +63,12 @@ export class ClaimableDraw {
     // Get contract metadata & ethers contracts
     const [claimableDrawContractMetadata, claimableDrawContract] = getMetadataAndContract(
       signerOrProvider,
-      ContractType.ClaimableDraw,
+      ContractType.DrawPrizes,
       contractMetadataList
     )
     const [drawCalculatorContractMetadata, drawCalculatorContract] = getMetadataAndContract(
       signerOrProvider,
-      ContractType.TsunamiDrawCalculator,
+      ContractType.DrawCalculator,
       contractMetadataList
     )
 
@@ -124,10 +122,7 @@ export class ClaimableDraw {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = prepareClaimForUserFromDrawResult(
-      { address: usersAddress } as User,
-      drawResults
-    )
+    const claim: Claim = prepareClaims({ address: usersAddress } as User, [drawResults])
     return this.claimableDrawContract.claim(claim.userAddress, claim.drawIds, claim.data)
   }
 
@@ -231,6 +226,7 @@ export class ClaimableDraw {
   async getDrawSetting(drawId: number): Promise<DrawSettings> {
     const drawSettingsHistoryContract = await this.getDrawSettingsHistoryContract()
     const result: Result = await drawSettingsHistoryContract.functions.getDrawSetting(drawId)
+    console.log('getDrawSetting', drawId, result)
     return {
       matchCardinality: result[0].matchCardinality,
       distributions: result[0].distributions,
@@ -316,21 +312,13 @@ export class ClaimableDraw {
         prizes: []
       }
     } else {
-      console.log(
-        'getUsersPrizes',
-        'run params',
-        toDrawCalcDrawSettings(drawSettings),
-        toDrawCalcDraw(draw),
-        user,
-        runTsunamiDrawCalculatorForSingleDraw
-      )
-      const results = runTsunamiDrawCalculatorForSingleDraw(
-        toDrawCalcDrawSettings(drawSettings),
-        toDrawCalcDraw(draw),
+      const results = tsunamiDrawCalculator(
+        [toDrawCalcDrawSettings(drawSettings)],
+        [toDrawCalcDraw(draw)],
         user
       )
       console.log('getUsersPrizes', 'results', results)
-      return results
+      return results[0]
     }
   }
 
@@ -390,12 +378,12 @@ export class ClaimableDraw {
 
   async getDrawSettingsHistoryContract(): Promise<Contract> {
     const getDrawSettingsHistoryAddress = async () => {
-      const result: Result = await this.drawCalculatorContract.functions.getTsunamiDrawSettingsHistory()
+      const result: Result = await this.drawCalculatorContract.functions.getPrizeDistributionHistory()
       return result[0]
     }
     return this.getAndSetEthersContract(
       'drawSettingsHistory',
-      ContractType.TsunamiDrawSettingsHistory,
+      ContractType.PrizeDistributionHistory,
       getDrawSettingsHistoryAddress
     )
   }
@@ -433,7 +421,7 @@ export async function initializeClaimableDraws(
   linkedPrizePoolContractList: ContractList
 ): Promise<ClaimableDraw[] | null> {
   const contracts = linkedPrizePoolContractList.contracts
-  const claimableDrawContracts = getContractsByType(contracts, ContractType.ClaimableDraw)
+  const claimableDrawContracts = getContractsByType(contracts, ContractType.DrawPrizes)
   const claimableDrawContractsByChainId = sortContractsByChainId(claimableDrawContracts)
   const chainIds = Object.keys(claimableDrawContractsByChainId).map(Number)
 
@@ -448,6 +436,7 @@ export async function initializeClaimableDraws(
   const claimableDrawAddressesResponses = await Promise.allSettled(
     claimableDrawAddressBatchRequestPromises
   )
+  console.log('claimableDrawAddressesResponses', JSON.stringify(claimableDrawAddressesResponses))
   const claimableDrawAddresses: {
     chainId: number
     addressesByClaimableDraw: { [address: string]: { [key: string]: string } }
@@ -473,13 +462,13 @@ export async function initializeClaimableDraws(
   const contractsWithChildren = extendContractWithChildren(
     contracts,
     claimableDrawAddressesByChainId,
-    ContractType.ClaimableDraw
+    ContractType.DrawPrizes
   )
 
   // Sort contract lists
   const sortedContractLists = sortContractsByContractTypeAndChildren(
     contractsWithChildren,
-    ContractType.ClaimableDraw
+    ContractType.DrawPrizes
   )
 
   // Need to inject some more contracts since they get linked later
@@ -500,7 +489,7 @@ export async function initializeClaimableDraws(
     // DrawSettingsHistory
     const drawSettingsHistoryMetadatas = getContractsByType(
       contracts,
-      ContractType.TsunamiDrawSettingsHistory
+      ContractType.PrizeDistributionHistory
     )
     const drawSettingsMetadata = drawSettingsHistoryMetadatas.find(
       (contract) => contract.chainId === chainId
@@ -547,6 +536,12 @@ async function fetchClaimableDrawAddressesByChainId(
     // @ts-ignore: Property doesn't exist on MulticallContract
     batchCalls.push(claimableDrawEtherplexContract.getDrawCalculator())
   })
+  console.log(
+    'fetchClaimableDrawAddressesByChainId',
+    JSON.stringify(signerOrProvider),
+    chainId,
+    typeof chainId
+  )
   const result = await batch(signerOrProvider as BaseProvider, ...batchCalls)
   const addressesByClaimableDraw = {} as { [address: string]: { [key: string]: string } }
   Object.keys(result).forEach(
@@ -559,20 +554,3 @@ async function fetchClaimableDrawAddressesByChainId(
 }
 
 //////////////////////////// Temporary Methods ////////////////////////////
-
-const toDrawCalcDrawSettings = (drawSettings: DrawSettings): DrawCalcDrawSettings => ({
-  ...drawSettings,
-  numberOfPicks: drawSettings.numberOfPicks.toNumber(),
-  distributions: drawSettings.distributions.map((d) => toDistributionBigNumber(String(d)))
-})
-
-// const toDistributionNumber = (distributionUnformatted: BigNumber) =>
-//   Number(formatUnits(distributionUnformatted, DECIMALS_FOR_DISTRIBUTIONS))
-
-const toDistributionBigNumber = (distribution: string) =>
-  parseUnits(distribution, DECIMALS_FOR_DISTRIBUTIONS)
-
-const toDrawCalcDraw = (draw: Draw): DrawCalcDraw => ({
-  ...draw,
-  drawId: BigNumber.from(draw.drawId)
-})

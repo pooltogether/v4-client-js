@@ -2,11 +2,9 @@ export enum ContractType {
   YieldSourcePrizePool = 'YieldSourcePrizePool',
   Ticket = 'Ticket',
   Token = 'Token',
-  ClaimableDraw = 'ClaimableDraw',
+  DrawPrizes = 'DrawPrizes',
   DrawHistory = 'DrawHistory',
-  TsunamiDrawCalculator = 'TsunamiDrawCalculator',
-  TsunamiDrawSettingsHistory = 'TsunamiDrawSettingsHistory'
+  DrawCalculator = 'DrawCalculator',
+  PrizeDistributionHistory = 'PrizeDistributionHistory'
   // ... more contract types
 }
-
-export const DECIMALS_FOR_DISTRIBUTIONS = 9
