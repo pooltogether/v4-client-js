@@ -33,22 +33,22 @@ import { toDrawCalcDraw, toDrawCalcDrawSettings } from './utils/drawCalculatorHe
  * Can be instantiated with a signer or a provider.
  * If a provider is provided, only read methods are available.
  * NOTE: Ideally this is nested underneath a PrizePool.
- * Then when a Player is created, so is a new ClaimableDraw with a signer all ready to go.
+ * Then when a Player is created, so is a new DrawPrizes with a signer all ready to go.
  */
-export class ClaimableDraw {
+export class DrawPrize {
   readonly signerOrProvider: Provider | Signer
   readonly contractMetadataList: ContractMetadata[]
   readonly chainId: number
   readonly address: string
 
   // Contract metadata
-  readonly claimableDrawMetadata: ContractMetadata
+  readonly drawPrizesMetadata: ContractMetadata
   readonly drawCalculatorMetadata: ContractMetadata
   drawHistory: ContractMetadata | undefined
   drawSettingsHistory: ContractMetadata | undefined
 
   // Ethers contracts
-  readonly claimableDrawContract: Contract
+  readonly drawPrizesContract: Contract
   readonly drawCalculatorContract: Contract
   drawHistoryContract: Contract | undefined
   drawSettingsHistoryContract: Contract | undefined
@@ -61,7 +61,7 @@ export class ClaimableDraw {
    */
   constructor(signerOrProvider: Provider | Signer, contractMetadataList: ContractMetadata[]) {
     // Get contract metadata & ethers contracts
-    const [claimableDrawContractMetadata, claimableDrawContract] = getMetadataAndContract(
+    const [drawPrizesContractMetadata, drawPrizesContract] = getMetadataAndContract(
       signerOrProvider,
       ContractType.DrawPrizes,
       contractMetadataList
@@ -75,15 +75,15 @@ export class ClaimableDraw {
     // Set data
     this.signerOrProvider = signerOrProvider
     this.contractMetadataList = contractMetadataList
-    this.chainId = claimableDrawContractMetadata.chainId
-    this.address = claimableDrawContractMetadata.address
+    this.chainId = drawPrizesContractMetadata.chainId
+    this.address = drawPrizesContractMetadata.address
 
     // Set metadata
-    this.claimableDrawMetadata = claimableDrawContractMetadata
+    this.drawPrizesMetadata = drawPrizesContractMetadata
     this.drawCalculatorMetadata = drawCalculatorContractMetadata
 
     // Set ethers contracts
-    this.claimableDrawContract = claimableDrawContract
+    this.drawPrizesContract = drawPrizesContract
     this.drawCalculatorContract = drawCalculatorContract
 
     // Initialized later - requires a fetch
@@ -101,7 +101,7 @@ export class ClaimableDraw {
    * @returns
    */
   async claimPrizesByDraw(draw: Draw): Promise<TransactionResponse> {
-    const errorPrefix = 'ClaimableDraw [claim] | '
+    const errorPrefix = 'DrawPrizes [claim] | '
     const usersAddress = await this.getUsersAddress(errorPrefix)
 
     const drawResults = await this.getUsersPrizes(usersAddress, draw)
@@ -114,7 +114,7 @@ export class ClaimableDraw {
    * @returns
    */
   async claimPrizesByDrawResults(drawResults: DrawResults): Promise<TransactionResponse> {
-    const errorPrefix = 'ClaimableDraw [claimPrizes] | '
+    const errorPrefix = 'DrawPrizes [claimPrizes] | '
     const usersAddress = await this.getUsersAddress(errorPrefix)
     await this.validateSignerNetwork(errorPrefix)
 
@@ -123,7 +123,7 @@ export class ClaimableDraw {
     }
 
     const claim: Claim = prepareClaims({ address: usersAddress } as User, [drawResults])
-    return this.claimableDrawContract.claim(claim.userAddress, claim.drawIds, claim.data)
+    return this.drawPrizesContract.claim(claim.userAddress, claim.drawIds, claim.data)
   }
 
   /**
@@ -131,7 +131,7 @@ export class ClaimableDraw {
    * @returns Event
    */
   async getClaimedEvents() {
-    const errorPrefix = 'ClaimableDraw [getClaimedEvents] |'
+    const errorPrefix = 'DrawPrizes [getClaimedEvents] |'
     const usersAddress = await this.getUsersAddress(errorPrefix)
 
     return this.getUsersClaimedEvents(usersAddress)
@@ -201,7 +201,7 @@ export class ClaimableDraw {
   async getDraw(drawId: number): Promise<Draw> {
     const drawHistoryContract = await this.getDrawHistoryContract()
     const response: Result = await drawHistoryContract.functions.getDraw(drawId)
-    console.log('getDraw - ClaimableDraw', response)
+    console.log('getDraw - DrawPrizes', response)
     return {
       drawId: response[0].drawId,
       timestamp: response[0].timestamp,
@@ -215,7 +215,7 @@ export class ClaimableDraw {
     }
     const drawHistoryContract = await this.getDrawHistoryContract()
     const response: Result = await drawHistoryContract.functions.getDraws(drawIds)
-    console.log('getDraws - ClaimableDraw', response)
+    console.log('getDraws - DrawPrizes', response)
     return response[0].map((draw: Partial<Draw>) => ({
       drawId: draw.drawId,
       timestamp: draw.timestamp,
@@ -328,14 +328,14 @@ export class ClaimableDraw {
   }
 
   async getUsersClaimedEvents(usersAddress: string) {
-    const eventFilter = this.claimableDrawContract.filters.ClaimedDraw(usersAddress)
-    return await this.claimableDrawContract.queryFilter(eventFilter)
+    const eventFilter = this.drawPrizesContract.filters.ClaimedDraw(usersAddress)
+    return await this.drawPrizesContract.queryFilter(eventFilter)
   }
 
   // TODO: Check this
   async getUsersClaimedEvent(usersAddress: string, draw: Draw): Promise<Event> {
-    const eventFilter = this.claimableDrawContract.filters.ClaimedDraw(usersAddress, draw.drawId)
-    const events = await this.claimableDrawContract.queryFilter(eventFilter)
+    const eventFilter = this.drawPrizesContract.filters.ClaimedDraw(usersAddress, draw.drawId)
+    const events = await this.drawPrizesContract.queryFilter(eventFilter)
     return events[0]
   }
 
@@ -391,10 +391,10 @@ export class ClaimableDraw {
   //////////////////////////// Methods ////////////////////////////
 
   id(): string {
-    return `${this.claimableDrawMetadata.address}-${this.claimableDrawMetadata.chainId}`
+    return `${this.drawPrizesMetadata.address}-${this.drawPrizesMetadata.chainId}`
   }
 
-  async getUsersAddress(errorPrefix = 'ClaimableDraw [getUsersAddress] |') {
+  async getUsersAddress(errorPrefix = 'DrawPrizes [getUsersAddress] |') {
     const signer = await this.validateIsSigner(errorPrefix)
     return await signer.getAddress()
   }
@@ -416,34 +416,34 @@ export class ClaimableDraw {
  * @param linkedPrizePoolContractList
  * @returns
  */
-export async function initializeClaimableDraws(
+export async function initializeDrawPrizes(
   signersOrProviders: { [chainId: number]: Provider | Signer },
   linkedPrizePoolContractList: ContractList
-): Promise<ClaimableDraw[] | null> {
+): Promise<DrawPrize[] | null> {
   const contracts = linkedPrizePoolContractList.contracts
-  const claimableDrawContracts = getContractsByType(contracts, ContractType.DrawPrizes)
-  const claimableDrawContractsByChainId = sortContractsByChainId(claimableDrawContracts)
-  const chainIds = Object.keys(claimableDrawContractsByChainId).map(Number)
+  const drawPrizesContracts = getContractsByType(contracts, ContractType.DrawPrizes)
+  const drawPrizesContractsByChainId = sortContractsByChainId(drawPrizesContracts)
+  const chainIds = Object.keys(drawPrizesContractsByChainId).map(Number)
 
   // Fetch addresses for relationships between claimable draws and child contracts
-  const claimableDrawAddressBatchRequestPromises = chainIds.map((chainId) =>
+  const drawPrizesAddressBatchRequestPromises = chainIds.map((chainId) =>
     fetchClaimableDrawAddressesByChainId(
       chainId,
       signersOrProviders[chainId],
-      claimableDrawContractsByChainId[chainId]
+      drawPrizesContractsByChainId[chainId]
     )
   )
-  const claimableDrawAddressesResponses = await Promise.allSettled(
-    claimableDrawAddressBatchRequestPromises
+  const drawPrizesAddressesResponses = await Promise.allSettled(
+    drawPrizesAddressBatchRequestPromises
   )
-  console.log('claimableDrawAddressesResponses', JSON.stringify(claimableDrawAddressesResponses))
-  const claimableDrawAddresses: {
+  console.log('drawPrizesAddressesResponses', JSON.stringify(drawPrizesAddressesResponses))
+  const drawPrizesAddresses: {
     chainId: number
     addressesByClaimableDraw: { [address: string]: { [key: string]: string } }
   }[] = []
-  claimableDrawAddressesResponses.forEach((response) => {
+  drawPrizesAddressesResponses.forEach((response) => {
     if (response.status === 'fulfilled') {
-      claimableDrawAddresses.push(response.value)
+      drawPrizesAddresses.push(response.value)
     } else {
       console.error('Fetching contract addresses failed with error: ', response.reason)
       throw new Error(response.reason)
@@ -451,17 +451,17 @@ export async function initializeClaimableDraws(
   })
 
   // Sort children addresses by chain id
-  const claimableDrawAddressesByChainId: ChildContractAddresses = {}
-  claimableDrawAddresses.forEach(
+  const drawPrizesAddressesByChainId: ChildContractAddresses = {}
+  drawPrizesAddresses.forEach(
     (addressessResponse) =>
-      (claimableDrawAddressesByChainId[addressessResponse.chainId] =
+      (drawPrizesAddressesByChainId[addressessResponse.chainId] =
         addressessResponse.addressesByClaimableDraw)
   )
 
   // Extend contracts with children
   const contractsWithChildren = extendContractWithChildren(
     contracts,
-    claimableDrawAddressesByChainId,
+    drawPrizesAddressesByChainId,
     ContractType.DrawPrizes
   )
 
@@ -509,32 +509,32 @@ export async function initializeClaimableDraws(
 
   return finalContractLists.map((contractList) => {
     const chainId = contractList[0].chainId
-    return new ClaimableDraw(signersOrProviders[chainId], contractList)
+    return new DrawPrize(signersOrProviders[chainId], contractList)
   })
 }
 
 /**
- * Fetches relevant addresses from the ClaimableDraw to match with the provided contract list.
+ * Fetches relevant addresses from the DrawPrizes to match with the provided contract list.
  * - DrawCalculator
  * @param chainId
  * @param signerOrProvider
- * @param claimableDrawContracts
+ * @param drawPrizesContracts
  * @returns
  */
 async function fetchClaimableDrawAddressesByChainId(
   chainId: number,
   signerOrProvider: Signer | Provider,
-  claimableDrawContracts: ContractMetadata[]
+  drawPrizesContracts: ContractMetadata[]
 ) {
   const batchCalls = [] as Context[]
-  claimableDrawContracts.forEach((claimableDrawContract) => {
-    const claimableDrawEtherplexContract = etherplexContract(
-      claimableDrawContract.address,
-      claimableDrawContract.abi,
-      claimableDrawContract.address
+  drawPrizesContracts.forEach((drawPrizesContract) => {
+    const drawPrizesEtherplexContract = etherplexContract(
+      drawPrizesContract.address,
+      drawPrizesContract.abi,
+      drawPrizesContract.address
     )
     // @ts-ignore: Property doesn't exist on MulticallContract
-    batchCalls.push(claimableDrawEtherplexContract.getDrawCalculator())
+    batchCalls.push(drawPrizesEtherplexContract.getDrawCalculator())
   })
   console.log(
     'fetchClaimableDrawAddressesByChainId',
@@ -545,9 +545,9 @@ async function fetchClaimableDrawAddressesByChainId(
   const result = await batch(signerOrProvider as BaseProvider, ...batchCalls)
   const addressesByClaimableDraw = {} as { [address: string]: { [key: string]: string } }
   Object.keys(result).forEach(
-    (claimableDrawAddress: any) =>
-      (addressesByClaimableDraw[claimableDrawAddress] = {
-        drawCalculator: result[claimableDrawAddress].getDrawCalculator[0]
+    (drawPrizesAddress: any) =>
+      (addressesByClaimableDraw[drawPrizesAddress] = {
+        drawCalculator: result[drawPrizesAddress].getDrawCalculator[0]
       })
   )
   return { chainId, addressesByClaimableDraw }

@@ -7,7 +7,7 @@ import { Contract, ContractIdentifier } from '../types'
  * children extension.
  *
  * NOTE: This extension is added in the intialize functions for creating the instances of
- * LinkedPrizePool and ClaimableDraw
+ * LinkedPrizePool and DrawPrizes
  */
 export function sortContractsByContractTypeAndChildren(
   contracts: Contract[],
