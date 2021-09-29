@@ -32,7 +32,7 @@ export interface Draw {
   winningRandomNumber: BigNumber
 }
 
-export interface DrawSettings {
+export interface PrizeDistributions {
   bitRangeSize: number
   matchCardinality: number
   drawStartTimestampOffset: number
@@ -54,7 +54,7 @@ export {
 
 // Forward other PoolTogether types
 export {
-  TsunamiDrawSettings as DrawCalcDrawSettings,
+  PrizeDistribution as DrawCalcPrizeDistributions,
   Draw as DrawCalcDraw,
   Pick as DrawCalcPick,
   User as DrawCalcUser,

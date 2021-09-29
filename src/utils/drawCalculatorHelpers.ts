@@ -1,14 +1,16 @@
 import { BigNumber } from 'ethers'
 import { formatUnits, parseUnits } from '@ethersproject/units'
-import { DrawSettings, DrawCalcDrawSettings, Draw, DrawCalcDraw } from '../types'
+import { PrizeDistributions, DrawCalcPrizeDistributions, Draw, DrawCalcDraw } from '../types'
 import { calculatePrizeForDistributionIndex as _calculatePrizeForDistributionIndex } from '@pooltogether/draw-calculator-js'
 
 const DECIMALS_FOR_DISTRIBUTIONS = 9
 
-export const toDrawCalcDrawSettings = (drawSettings: DrawSettings): DrawCalcDrawSettings => ({
-  ...drawSettings,
-  numberOfPicks: drawSettings.numberOfPicks.toNumber(),
-  distributions: drawSettings.distributions.map((d) => toDistributionBigNumber(String(d)))
+export const toDrawCalcPrizeDistributions = (
+  prizeDistributions: PrizeDistributions
+): DrawCalcPrizeDistributions => ({
+  ...prizeDistributions,
+  numberOfPicks: prizeDistributions.numberOfPicks.toNumber(),
+  distributions: prizeDistributions.distributions.map((d) => toDistributionBigNumber(String(d)))
 })
 
 export const toDistributionNumber = (distributionUnformatted: BigNumber) =>
@@ -24,11 +26,11 @@ export const toDrawCalcDraw = (draw: Draw): DrawCalcDraw => ({
 
 export const calculatePrizeForDistributionIndex = (
   prizeDistributionIndex: number,
-  drawSettings: DrawSettings,
+  prizeDistributions: PrizeDistributions,
   draw: Draw
 ) =>
   _calculatePrizeForDistributionIndex(
     prizeDistributionIndex,
-    toDrawCalcDrawSettings(drawSettings),
+    toDrawCalcPrizeDistributions(prizeDistributions),
     toDrawCalcDraw(draw)
   )

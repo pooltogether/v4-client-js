@@ -132,7 +132,10 @@ export async function initializeLinkedPrizePool(
     if (response.status === 'fulfilled') {
       prizePoolAddresses.push(response.value)
     } else {
-      console.error('Fetching contract addresses failed with error: ', response.reason)
+      console.error(
+        'Fetching contract addresses for prize pools failed with error: ',
+        response.reason
+      )
     }
   })
   const prizePoolAddressesByChainId = {} as PrizePoolAddressesByChainId
