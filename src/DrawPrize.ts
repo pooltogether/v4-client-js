@@ -303,7 +303,7 @@ export class DrawPrize {
 
     const user: User = {
       address: usersAddress,
-      normalizedBalance: balance
+      normalizedBalances: [balance]
     }
 
     if (balance.isZero()) {
