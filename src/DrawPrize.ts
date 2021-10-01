@@ -6,7 +6,10 @@ import {
   Contract as ContractMetadata,
   ContractList,
   Draw,
-  PrizeDistributions
+  PrizeDistribution,
+  DrawResults,
+  Claim,
+  DrawCalcUser
 } from './types'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
@@ -14,20 +17,12 @@ import { contract as etherplexContract, batch, Context } from '@pooltogether/eth
 import { BaseProvider, TransactionResponse } from '@ethersproject/providers'
 import { extendContractWithChildren } from './utils/extendContractWithChildren'
 import { getMetadataAndContract } from './utils/getMetadataAndContract'
-import { BigNumber } from '@ethersproject/bignumber'
-import {
-  Claim,
-  DrawResults,
-  drawCalculator,
-  User,
-  prepareClaims
-} from '@pooltogether/draw-calculator-js'
+import { prepareClaims, calculateDrawResults } from '@pooltogether/draw-calculator-js'
 import { getContractsByType } from './utils/getContractsByType'
 import { sortContractsByChainId } from './utils/sortContractsByChainId'
 import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByContractTypeAndChildren'
-import { validateIsSigner, validateSignerNetwork } from './utils/validation'
-import { ethers } from 'ethers'
-import { toDrawCalcDraw, toDrawCalcPrizeDistributions } from './utils/drawCalculatorHelpers'
+import { validateAddress, validateIsSigner, validateSignerNetwork } from './utils/validation'
+import { BigNumber, ethers } from 'ethers'
 
 /**
  * Can be instantiated with a signer or a provider.
@@ -122,8 +117,12 @@ export class DrawPrize {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = prepareClaims({ address: usersAddress } as User, [drawResults])
-    return this.drawPrizesContract.claim(claim.userAddress, claim.drawIds, claim.data)
+    const claim: Claim = prepareClaims({ address: usersAddress } as DrawCalcUser, [drawResults])
+    return this.drawPrizesContract.claim(
+      claim.userAddress,
+      claim.drawIds,
+      claim.encodedWinningPickIndices
+    )
   }
 
   /**
@@ -159,7 +158,6 @@ export class DrawPrize {
   async getOldestDraw(): Promise<Draw> {
     const drawHistoryContract = await this.getDrawHistoryContract()
     const result: Result = await drawHistoryContract.functions.getOldestDraw()
-    console.log('getOldestDraw - claimabledraw', result)
     const draw = result[0]
     return {
       drawId: draw.drawId,
@@ -193,7 +191,7 @@ export class DrawPrize {
     return await this.getDraws(validDrawIds)
   }
 
-  async getValidPrizeDistributions(): Promise<PrizeDistributions[]> {
+  async getValidPrizeDistributions(): Promise<PrizeDistribution[]> {
     const validDrawIds = await this.getValidDrawIds()
     return await this.getPrizeDistributions(validDrawIds)
   }
@@ -201,7 +199,6 @@ export class DrawPrize {
   async getDraw(drawId: number): Promise<Draw> {
     const drawHistoryContract = await this.getDrawHistoryContract()
     const response: Result = await drawHistoryContract.functions.getDraw(drawId)
-    console.log('getDraw - DrawPrizes', response)
     return {
       drawId: response[0].drawId,
       timestamp: response[0].timestamp,
@@ -215,7 +212,6 @@ export class DrawPrize {
     }
     const drawHistoryContract = await this.getDrawHistoryContract()
     const response: Result = await drawHistoryContract.functions.getDraws(drawIds)
-    console.log('getDraws - DrawPrizes', response)
     return response[0].map((draw: Partial<Draw>) => ({
       drawId: draw.drawId,
       timestamp: draw.timestamp,
@@ -223,12 +219,11 @@ export class DrawPrize {
     }))
   }
 
-  async getPrizeDistribution(drawId: number): Promise<PrizeDistributions> {
+  async getPrizeDistribution(drawId: number): Promise<PrizeDistribution> {
     const prizeDistributionsHistoryContract = await this.getPrizeDistributionsHistoryContract()
     const result: Result = await prizeDistributionsHistoryContract.functions.getPrizeDistribution(
       drawId
     )
-    console.log('getPrizeDistribution', drawId, result)
     return {
       matchCardinality: result[0].matchCardinality,
       distributions: result[0].distributions,
@@ -241,7 +236,7 @@ export class DrawPrize {
     }
   }
 
-  async getPrizeDistributions(drawIds: number[]): Promise<PrizeDistributions[]> {
+  async getPrizeDistributions(drawIds: number[]): Promise<PrizeDistribution[]> {
     if (!drawIds || drawIds.length === 0) {
       return []
     }
@@ -249,7 +244,7 @@ export class DrawPrize {
     const prizeDistributionsResults: Result = await prizeDistributionsHistoryContract.functions.getPrizeDistributions(
       drawIds
     )
-    return prizeDistributionsResults[0].map((result: Partial<PrizeDistributions>) => ({
+    return prizeDistributionsResults[0].map((result: Partial<PrizeDistribution>) => ({
       matchCardinality: result.matchCardinality,
       distributions: result.distributions,
       bitRangeSize: result.bitRangeSize,
@@ -261,10 +256,20 @@ export class DrawPrize {
     }))
   }
 
+  async getUsersClaimedAmount(usersAddress: string, drawId: number): Promise<BigNumber> {
+    const errorPrefix = 'DrawPrizes [getUsersClaimedAmount] |'
+    await validateAddress(errorPrefix, usersAddress)
+
+    const result: Result = await this.drawPrizesContract.functions.getDrawPayoutBalanceOf(
+      usersAddress,
+      drawId
+    )
+    return result[0]
+  }
+
   // // TODO: Double check
   // async getNextDrawId(): Promise<number> {
   //   const response: Result = await this.drawHistoryContract.functions.nextDrawIndex()
-  //   console.log('getNextDrawId', response)
   //   return response[0] as number
   // }
 
@@ -275,60 +280,31 @@ export class DrawPrize {
    * @returns
    */
   async getUsersPrizes(usersAddress: string, draw: Draw): Promise<DrawResults> {
-    console.log('getUsersPrizes', 'params', usersAddress, draw)
-
     // Fetch the draw settings for the draw
-    const prizeDistributions: PrizeDistributions = await this.getPrizeDistribution(draw.drawId)
-    console.log('getUsersPrizes', 'prizeDistributions', prizeDistributions)
+    const prizeDistributions: PrizeDistribution = await this.getPrizeDistribution(draw.drawId)
 
-    // Fetch the ticket for the draw calculator
-    // TODO: Need to identify what ticket ABI matches
-    // TODO: Should be fetching the ticket address but the fn isn't in the ABI?
-    const ticketData = getContractsByType(this.contractMetadataList, ContractType.Ticket)[0]
-    // const [ticketAddress] = await drawCalculatorContract.functions.ticket()
-    const [, ticketContract] = getMetadataAndContract(
-      this.signerOrProvider,
-      ContractType.Ticket,
-      this.contractMetadataList,
-      ticketData.address
-    )
-
-    // Fetch users balance
-    const balanceResult: Result = await ticketContract.functions.getBalanceAt(
+    // Fetch users normalized balance
+    const balanceResult = await this.drawCalculatorContract.functions.getNormalizedBalancesForDrawIds(
       usersAddress,
-      draw.timestamp
+      [draw.drawId]
     )
-    const balance: BigNumber = balanceResult[0]
-    console.log('getUsersPrizes', 'balance', balance)
 
-    const user: User = {
+    const normalizedBalance: BigNumber = balanceResult[0][0]
+
+    const user: DrawCalcUser = {
       address: usersAddress,
-      normalizedBalances: [balance]
+      normalizedBalances: [normalizedBalance]
     }
 
-    if (balance.isZero()) {
-      console.log('getUsersPrizes', 'Balance is zero')
+    if (normalizedBalance.isZero()) {
       return {
-        drawId: BigNumber.from(draw.drawId),
+        drawId: draw.drawId,
         totalValue: ethers.constants.Zero,
         prizes: []
       }
     } else {
-      console.log(
-        'getUsersPrizes',
-        'drawCalculator',
-        drawCalculator,
-        [toDrawCalcPrizeDistributions(prizeDistributions)],
-        [toDrawCalcDraw(draw)],
-        user
-      )
-      const results = drawCalculator(
-        [toDrawCalcPrizeDistributions(prizeDistributions)],
-        [toDrawCalcDraw(draw)],
-        user
-      )
-      console.log('getUsersPrizes', 'results', results)
-      return results[0]
+      const results = calculateDrawResults(prizeDistributions, draw, user)
+      return results
     }
   }
 
@@ -338,6 +314,9 @@ export class DrawPrize {
   }
 
   async getUsersClaimedEvents(usersAddress: string) {
+    const errorPrefix = 'DrawPrizes [getUsersClaimedEvents] |'
+    await validateAddress(errorPrefix, usersAddress)
+
     const eventFilter = this.drawPrizesContract.filters.ClaimedDraw(usersAddress)
     return await this.drawPrizesContract.queryFilter(eventFilter)
   }
@@ -435,8 +414,6 @@ export async function initializeDrawPrizes(
   const drawPrizesContractsByChainId = sortContractsByChainId(drawPrizesContracts)
   const chainIds = Object.keys(drawPrizesContractsByChainId).map(Number)
 
-  console.log('initializeDrawPrizes', drawPrizesContracts, linkedPrizePoolContractList)
-
   // Fetch addresses for relationships between claimable draws and child contracts
   const drawPrizesAddressBatchRequestPromises = chainIds.map((chainId) =>
     fetchClaimableDrawAddressesByChainId(
@@ -448,7 +425,6 @@ export async function initializeDrawPrizes(
   const drawPrizesAddressesResponses = await Promise.allSettled(
     drawPrizesAddressBatchRequestPromises
   )
-  console.log('drawPrizesAddressesResponses', JSON.stringify(drawPrizesAddressesResponses))
   const drawPrizesAddresses: {
     chainId: number
     addressesByClaimableDraw: { [address: string]: { [key: string]: string } }
@@ -551,12 +527,6 @@ async function fetchClaimableDrawAddressesByChainId(
     // @ts-ignore: Property doesn't exist on MulticallContract
     batchCalls.push(drawPrizesEtherplexContract.getDrawCalculator())
   })
-  console.log(
-    'fetchClaimableDrawAddressesByChainId',
-    JSON.stringify(signerOrProvider),
-    chainId,
-    typeof chainId
-  )
   const result = await batch(signerOrProvider as BaseProvider, ...batchCalls)
   const addressesByClaimableDraw = {} as { [address: string]: { [key: string]: string } }
   Object.keys(result).forEach(

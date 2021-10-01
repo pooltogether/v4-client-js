@@ -5,5 +5,7 @@ export * from './DrawPrize'
 export * from './types'
 export * from './utils'
 
-export { calculateNumberOfPrizesForIndex } from '@pooltogether/draw-calculator-js'
-export * from './utils/drawCalculatorHelpers'
+export {
+  calculateNumberOfPrizesForIndex,
+  calculatePrizeForDistributionIndex
+} from '@pooltogether/draw-calculator-js'

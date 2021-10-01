@@ -65,7 +65,7 @@
   },
   "dependencies": {
     "@pooltogether/contract-list-schema": "^0.1.4",
-    "@pooltogether/draw-calculator-js": "^1.0.0-beta.22",
+    "@pooltogether/draw-calculator-js": "^1.0.0-beta.25",
     "@pooltogether/etherplex": "^1.1.2"
   },
   "peerDependencies": {

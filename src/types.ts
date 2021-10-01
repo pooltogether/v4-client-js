@@ -32,17 +32,6 @@ export interface Draw {
   winningRandomNumber: BigNumber
 }
 
-export interface PrizeDistributions {
-  bitRangeSize: number
-  matchCardinality: number
-  drawStartTimestampOffset: number
-  drawEndTimestampOffset: number
-  maxPicksPerUser: number
-  numberOfPicks: BigNumber
-  distributions: number[]
-  prize: BigNumber
-}
-
 export {
   Version,
   Tags,
@@ -54,13 +43,13 @@ export {
 
 // Forward other PoolTogether types
 export {
-  PrizeDistribution as DrawCalcPrizeDistributions,
   Draw as DrawCalcDraw,
-  Pick as DrawCalcPick,
   User as DrawCalcUser,
+  UserDrawResult as DrawCalcUserDrawResult,
+  PrizeDistribution,
+  Pick,
   DrawResults,
   PrizeAwardable,
   PickPrize,
-  Claim,
-  UserDrawResult as DrawCalcUserDrawResult
+  Claim
 } from '@pooltogether/draw-calculator-js'
