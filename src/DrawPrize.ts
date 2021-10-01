@@ -267,6 +267,12 @@ export class DrawPrize {
     return result[0]
   }
 
+  async getUsersClaimedAmounts(usersAddress: string, drawIds: number[]): Promise<BigNumber[]> {
+    return await Promise.all(
+      drawIds.map((drawId) => this.getUsersClaimedAmount(usersAddress, drawId))
+    )
+  }
+
   // // TODO: Double check
   // async getNextDrawId(): Promise<number> {
   //   const response: Result = await this.drawHistoryContract.functions.nextDrawIndex()
