@@ -143,7 +143,6 @@ export class DrawPrize {
   // TODO: Our Tsunami frontend will do this outside of here since it's hardcoded.
 
   // NOTE: getNewestDraw will error if there is no draw pushed
-  // Use to check if draw is ready?
   async getNewestDraw(): Promise<Draw> {
     const drawHistoryContract = await this.getDrawHistoryContract()
     const result: Result = await drawHistoryContract.functions.getNewestDraw()
@@ -166,6 +165,56 @@ export class DrawPrize {
     }
   }
 
+  async getNewestPrizeDistribution(): Promise<{
+    prizeDistribution: PrizeDistribution
+    drawId: number
+  }> {
+    const prizeDistributionHistoryContract = await this.getPrizeDistributionsHistoryContract()
+    const result: Result = await prizeDistributionHistoryContract.functions.getNewestPrizeDistribution()
+    const prizeDistribution = result[0]
+    const drawId: number = result[1]
+    return {
+      prizeDistribution: {
+        matchCardinality: prizeDistribution.matchCardinality,
+        numberOfPicks: prizeDistribution.numberOfPicks,
+        distributions: prizeDistribution.distributions,
+        bitRangeSize: prizeDistribution.bitRangeSize,
+        prize: prizeDistribution.prize,
+        drawStartTimestampOffset: prizeDistribution.drawStartTimestampOffset,
+        drawEndTimestampOffset: prizeDistribution.drawEndTimestampOffset,
+        maxPicksPerUser: prizeDistribution.maxPicksPerUser
+      } as PrizeDistribution,
+      drawId
+    }
+  }
+
+  async getOldestPrizeDistribution(): Promise<{
+    prizeDistribution: PrizeDistribution
+    drawId: number
+  }> {
+    const prizeDistributionHistoryContract = await this.getPrizeDistributionsHistoryContract()
+    const result: Result = await prizeDistributionHistoryContract.functions.getOldestPrizeDistribution()
+    const prizeDistribution = result[0]
+    const drawId: number = result[1]
+    return {
+      prizeDistribution: {
+        matchCardinality: prizeDistribution.matchCardinality,
+        numberOfPicks: prizeDistribution.numberOfPicks,
+        distributions: prizeDistribution.distributions,
+        bitRangeSize: prizeDistribution.bitRangeSize,
+        prize: prizeDistribution.prize,
+        drawStartTimestampOffset: prizeDistribution.drawStartTimestampOffset,
+        drawEndTimestampOffset: prizeDistribution.drawEndTimestampOffset,
+        maxPicksPerUser: prizeDistribution.maxPicksPerUser
+      } as PrizeDistribution,
+      drawId
+    }
+  }
+
+  /**
+   * Gets the list of draw ids of draws that are available on the contract
+   * @returns draw id array ranging from oldest to newest draw
+   */
   async getValidDrawIds(): Promise<number[]> {
     const [oldestDraw, newestDraw] = await Promise.allSettled([
       this.getOldestDraw(),
@@ -186,14 +235,65 @@ export class DrawPrize {
     return validIds
   }
 
-  async getValidDraws(): Promise<Draw[]> {
-    const validDrawIds = await this.getValidDrawIds()
-    return await this.getDraws(validDrawIds)
+  /**
+   * Gets the list of draw ids of draws that have prize distributions set.
+   * TODO:
+   * @returns draw id array ranging from oldest to newest draw
+   */
+  async getClaimableDrawIds(): Promise<number[]> {
+    const [oldestDraw, newestDraw] = await Promise.allSettled([
+      this.getOldestPrizeDistribution(),
+      this.getNewestPrizeDistribution()
+    ])
+    // If newest failed, there are none
+    // TODO: Check oldest for id 0 as well
+    // TODO: Do the same empty states apply for the prize distribution buffer?
+    if (newestDraw.status === 'rejected' || oldestDraw.status === 'rejected') {
+      return []
+    }
+
+    const oldestId = oldestDraw.value.drawId
+    const newestId = newestDraw.value.drawId
+    const claimableIds = []
+    for (let i = oldestId; i <= newestId; i++) {
+      claimableIds.push(i)
+    }
+    return claimableIds
   }
 
-  async getValidPrizeDistributions(): Promise<PrizeDistribution[]> {
-    const validDrawIds = await this.getValidDrawIds()
-    return await this.getPrizeDistributions(validDrawIds)
+  async getClaimableDrawsAndPrizeDistributions(): Promise<
+    { draw: Draw; prizeDistribution: PrizeDistribution }[]
+  > {
+    const claimableDrawIds = await this.getClaimableDrawIds()
+    return this.getDrawsAndPrizeDistributions(claimableDrawIds)
+  }
+
+  async getDrawsAndPrizeDistributions(
+    drawIds: number[]
+  ): Promise<{ draw: Draw; prizeDistribution: PrizeDistribution }[]> {
+    const [drawsResponse, prizeDistributionsResponse] = await Promise.allSettled([
+      this.getDraws(drawIds),
+      this.getPrizeDistributions(drawIds)
+    ])
+
+    // If any are rejected, drop the largest draw id and retry
+    // TODO: Make this error handling better.
+    // There's a delay between setting the draw and the prize distribution so this will happen frequently.
+    if (drawsResponse.status === 'rejected' || prizeDistributionsResponse.status === 'rejected') {
+      return this.getDrawsAndPrizeDistributions(
+        drawIds.sort((a, b) => a - b).slice(0, drawIds.length - 1)
+      )
+    }
+
+    const drawsAndPrizeDistributions: { draw: Draw; prizeDistribution: PrizeDistribution }[] = []
+    drawsResponse.value.map((draw, index) => {
+      drawsAndPrizeDistributions.push({
+        draw,
+        prizeDistribution: prizeDistributionsResponse.value[index]
+      })
+    })
+
+    return drawsAndPrizeDistributions
   }
 
   async getDraw(drawId: number): Promise<Draw> {
@@ -217,6 +317,11 @@ export class DrawPrize {
       timestamp: draw.timestamp,
       winningRandomNumber: draw.winningRandomNumber
     }))
+  }
+
+  async getClaimableDraws(): Promise<Draw[]> {
+    const claimableDrawIds = await this.getClaimableDrawIds()
+    return await this.getDraws(claimableDrawIds)
   }
 
   async getPrizeDistribution(drawId: number): Promise<PrizeDistribution> {
@@ -256,6 +361,11 @@ export class DrawPrize {
     }))
   }
 
+  async getClaimablePrizeDistributions(): Promise<PrizeDistribution[]> {
+    const claimableDrawIds = await this.getClaimableDrawIds()
+    return await this.getPrizeDistributions(claimableDrawIds)
+  }
+
   async getUsersClaimedAmount(usersAddress: string, drawId: number): Promise<BigNumber> {
     const errorPrefix = 'DrawPrizes [getUsersClaimedAmount] |'
     await validateAddress(errorPrefix, usersAddress)
@@ -272,12 +382,6 @@ export class DrawPrize {
       drawIds.map((drawId) => this.getUsersClaimedAmount(usersAddress, drawId))
     )
   }
-
-  // // TODO: Double check
-  // async getNextDrawId(): Promise<number> {
-  //   const response: Result = await this.drawHistoryContract.functions.nextDrawIndex()
-  //   return response[0] as number
-  // }
 
   /**
    *
@@ -543,5 +647,3 @@ async function fetchClaimableDrawAddressesByChainId(
   )
   return { chainId, addressesByClaimableDraw }
 }
-
-//////////////////////////// Temporary Methods ////////////////////////////
