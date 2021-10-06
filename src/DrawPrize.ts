@@ -241,19 +241,37 @@ export class DrawPrize {
    * @returns draw id array ranging from oldest to newest draw
    */
   async getClaimableDrawIds(): Promise<number[]> {
-    const [oldestDraw, newestDraw] = await Promise.allSettled([
+    const [
+      oldestPrizeDistributionResponse,
+      newestPrizeDistributionResponse,
+      oldestDrawResponse,
+      newestDrawResponse
+    ] = await Promise.allSettled([
       this.getOldestPrizeDistribution(),
-      this.getNewestPrizeDistribution()
+      this.getNewestPrizeDistribution(),
+      this.getOldestDraw(),
+      this.getNewestDraw()
     ])
     // If newest failed, there are none
     // TODO: Check oldest for id 0 as well
     // TODO: Do the same empty states apply for the prize distribution buffer?
-    if (newestDraw.status === 'rejected' || oldestDraw.status === 'rejected') {
+    if (
+      oldestPrizeDistributionResponse.status === 'rejected' ||
+      newestPrizeDistributionResponse.status === 'rejected' ||
+      newestDrawResponse.status === 'rejected' ||
+      oldestDrawResponse.status === 'rejected'
+    ) {
       return []
     }
 
-    const oldestId = oldestDraw.value.drawId
-    const newestId = newestDraw.value.drawId
+    const oldestPrizeDistributionId = oldestPrizeDistributionResponse.value.drawId
+    const newestPrizeDistributionId = newestPrizeDistributionResponse.value.drawId
+    const oldestDrawId = oldestDrawResponse.value.drawId
+    const newestDrawId = newestDrawResponse.value.drawId
+
+    const oldestId = Math.max(oldestPrizeDistributionId, oldestDrawId)
+    const newestId = Math.min(newestDrawId, newestPrizeDistributionId)
+
     const claimableIds = []
     for (let i = oldestId; i <= newestId; i++) {
       claimableIds.push(i)
