@@ -80,13 +80,21 @@ function createPrizePools(providers: Providers, contracts: Contract[]): PrizePoo
     contracts,
     ContractType.YieldSourcePrizePool
   )
-  return prizePoolContractLists.map((contracts) => {
+  const prizePools: PrizePool[] = []
+  prizePoolContractLists.forEach((contracts) => {
     const prizePoolContract = contracts.find(
       (contract) => contract.type === ContractType.YieldSourcePrizePool
     ) as Contract
     const provider = providers[prizePoolContract.chainId]
-    return new PrizePool(provider, contracts)
+    try {
+      prizePools.push(new PrizePool(provider, contracts))
+    } catch (e) {
+      const error = e as Error
+      console.error(error.message)
+    }
   })
+
+  return prizePools
 }
 
 //////////////////////////// PROBABLY TEMPORARY PRIZE POOL INITIALIZATION ////////////////////////////

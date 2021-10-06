@@ -11,16 +11,16 @@ export function extendContractWithChildren(
   contractType: ContractType
 ) {
   return contracts.map((contract) => {
-    if (contract.type !== contractType) return contract
     const chainId = contract.chainId
-    const relevantAddresses = Object.values(
-      childContractAddressesByChainId[contract.chainId][contract.address]
-    )
+    const keyedRelevantAddresses =
+      childContractAddressesByChainId?.[contract.chainId]?.[contract.address]
+    if (contract.type !== contractType || !keyedRelevantAddresses) return contract
+
     return {
       ...contract,
       extensions: {
         ...contract.extensions,
-        children: relevantAddresses.map((address) => ({ chainId, address }))
+        children: Object.values(keyedRelevantAddresses).map((address) => ({ chainId, address }))
       }
     }
   })
