@@ -401,6 +401,20 @@ export class DrawPrize {
     )
   }
 
+  async getUsersNormalizedBalancesForDrawIds(
+    usersAddress: string,
+    drawIds: number[]
+  ): Promise<BigNumber[]> {
+    const errorPrefix = 'DrawPrizes [getUsersNormalizedBalancesForDrawIds] |'
+    await validateAddress(errorPrefix, usersAddress)
+
+    const result: Result = await this.drawCalculatorContract.functions.getNormalizedBalancesForDrawIds(
+      usersAddress,
+      drawIds
+    )
+    return result[0]
+  }
+
   /**
    *
    * @param usersAddress

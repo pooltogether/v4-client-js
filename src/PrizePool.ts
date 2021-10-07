@@ -157,7 +157,7 @@ export class PrizePool {
     const errorPrefix = 'PrizePool [getTicketData] | '
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
 
-    return getTokenData(this.tokenContract)
+    return getTokenData(this.ticketContract)
   }
 
   /**
