@@ -138,6 +138,14 @@ export class PrizePool {
     return { allowanceUnformatted, isApproved: !allowanceUnformatted.isZero() }
   }
 
+  async getUsersTicketDelegate(usersAddress: string) {
+    const errorPrefix = 'PrizePool [getUsersTicketDelegate] | '
+    await validateAddress(errorPrefix, usersAddress)
+
+    const result = await this.ticketContract.functions.delegateOf(usersAddress)
+    return result[0]
+  }
+
   /**
    * Fetches decimals, name and symbol for the Token (underlying).
    * @returns symbol: string, decimals: string, name: string

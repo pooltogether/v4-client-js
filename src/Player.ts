@@ -82,8 +82,23 @@ export class Player extends PrizePool {
    * @returns TransactionResponse
    */
   async approveDeposits(): Promise<TransactionResponse> {
+    const errorPrefix = 'Player [approveDeposits] | '
+    await this.validateSignerNetwork(errorPrefix)
+
     const prizePoolAddress = this.prizePoolMetadata.address
     return this.tokenContract.approve(prizePoolAddress, MaxUint256)
+  }
+
+  /**
+   *
+   * @returns
+   */
+  async selfDelegateTickets(): Promise<TransactionResponse> {
+    const errorPrefix = 'Player [selfDelegateTickets] | '
+    await this.validateSignerNetwork(errorPrefix)
+
+    const usersAddress = await this.signer.getAddress()
+    return this.ticketContract.delegate(usersAddress)
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
@@ -115,6 +130,10 @@ export class Player extends PrizePool {
     return this.getUsersDepositAllowance(usersAddress)
   }
 
+  /**
+   *
+   * @returns
+   */
   async getTicketDelegate() {
     const usersAddress = await this.signer.getAddress()
     return this.getUsersTicketDelegate(usersAddress)
