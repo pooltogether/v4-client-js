@@ -177,21 +177,22 @@ async function fetchPrizePoolAddressesByChainId(
 ) {
   const batchCalls = [] as Context[]
   prizePoolContracts.forEach((prizePoolContract) => {
+    console.log(prizePoolContract.address, prizePoolContract)
     const prizePoolEtherplexContract = etherplexContract(
       prizePoolContract.address,
       prizePoolContract.abi,
       prizePoolContract.address
     )
     // @ts-ignore: Property doesn't exist on MulticallContract
-    batchCalls.push(prizePoolEtherplexContract.token().ticket())
+    batchCalls.push(prizePoolEtherplexContract.getToken().getTicket())
   })
   const result = await batch(provider as BaseProvider, ...batchCalls)
   const addressesByPrizePool = {} as PrizePoolAddresses
   Object.keys(result).forEach(
     (prizePoolAddress: any) =>
       (addressesByPrizePool[prizePoolAddress] = {
-        token: result[prizePoolAddress].token[0],
-        ticket: result[prizePoolAddress].ticket[0]
+        token: result[prizePoolAddress].getToken[0],
+        ticket: result[prizePoolAddress].getTicket[0]
       })
   )
   return { chainId, addressesByPrizePool }

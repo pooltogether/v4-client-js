@@ -2,9 +2,10 @@ export enum ContractType {
   YieldSourcePrizePool = 'YieldSourcePrizePool',
   Ticket = 'Ticket',
   Token = 'Token',
-  DrawPrize = 'DrawPrize',
-  DrawHistory = 'DrawHistory',
+  PrizeDistributor = 'PrizeDistributor',
+  DrawBuffer = 'DrawBuffer',
   DrawCalculator = 'DrawCalculator',
-  PrizeDistributionHistory = 'PrizeDistributionHistory'
+  DrawCalculatorTimelock = 'DrawCalculatorTimelock',
+  PrizeDistributionBuffer = 'PrizeDistributionBuffer'
   // ... more contract types
 }
