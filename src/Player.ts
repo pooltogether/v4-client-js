@@ -3,7 +3,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { MaxUint256 } from '@ethersproject/constants'
 import { PrizePool } from './PrizePool'
-import { validateSignerNetwork } from './utils/validation'
+import { validateAddress, validateSignerNetwork } from './utils/validation'
 
 /**
  * A Player for a Prize Pool.
@@ -61,6 +61,23 @@ export class Player extends PrizePool {
   }
 
   /**
+   * Submits a transaction to deposit a controlled token into the Prize Pool.
+   * @param amount BigNumber
+   * @param controlledTokenAddress string
+   * @returns TransactionResponse
+   */
+  async depositAndDelegate(amount: BigNumber, to?: string): Promise<TransactionResponse> {
+    const errorPrefix = 'Player [depositToAndDelegate] | '
+    await this.validateSignerNetwork(errorPrefix)
+    if (to) {
+      await validateAddress(errorPrefix, to)
+    }
+
+    const usersAddress = await this.signer.getAddress()
+    return this.prizePoolContract.depositToAndDelegate(usersAddress, amount, to || usersAddress)
+  }
+
+  /**
    * Submits a transaction to set an allowance for deposits into the Prize Pool.
    * @returns TransactionResponse
    */
@@ -96,6 +113,11 @@ export class Player extends PrizePool {
   async getDepositAllowance() {
     const usersAddress = await this.signer.getAddress()
     return this.getUsersDepositAllowance(usersAddress)
+  }
+
+  async getTicketDelegate() {
+    const usersAddress = await this.signer.getAddress()
+    return this.getUsersTicketDelegate(usersAddress)
   }
 
   //////////////////////////// Utility methods ////////////////////////////
