@@ -4,6 +4,7 @@ export enum ContractType {
   Token = 'Token',
   PrizeDistributor = 'PrizeDistributor',
   DrawBuffer = 'DrawBuffer',
+  DrawBeacon = 'DrawBeacon',
   DrawCalculator = 'DrawCalculator',
   DrawCalculatorTimelock = 'DrawCalculatorTimelock',
   PrizeDistributionBuffer = 'PrizeDistributionBuffer'

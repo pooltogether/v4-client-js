@@ -1,6 +1,6 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { PrizePool } from './PrizePool'
-import { Contract, ContractList } from '@pooltogether/contract-list-schema'
+import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
 import { ContractType } from './constants'
 import { contract as etherplexContract, batch, Context } from '@pooltogether/etherplex'
 import { Providers } from './types'
@@ -10,6 +10,8 @@ import { extendContractWithChildren } from './utils/extendContractWithChildren'
 import { getContractsByType } from './utils/getContractsByType'
 import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByContractTypeAndChildren'
 import { sortContractsByChainId } from './utils/sortContractsByChainId'
+import { Contract } from '@ethersproject/contracts'
+import { BigNumber } from '@ethersproject/bignumber'
 
 interface PrizePoolAddresses {
   [prizePoolAddress: string]: {
@@ -35,6 +37,12 @@ export class LinkedPrizePool {
   readonly prizePools: PrizePool[]
   readonly contractList: ContractList
 
+  // Contract metadata
+  readonly drawBeaconMetadata: ContractMetadata
+
+  // Ethers contracts
+  readonly drawBeaconContract: Contract
+
   /**
    *
    * @constructor
@@ -45,6 +53,18 @@ export class LinkedPrizePool {
     this.providers = providers
     this.contractList = linkedPrizePoolContractList
     this.prizePools = createPrizePools(providers, linkedPrizePoolContractList.contracts)
+
+    const drawBeaconContractMetadata = linkedPrizePoolContractList.contracts.find(
+      (c) => c.type === ContractType.DrawBeacon
+    ) as ContractMetadata
+    const drawBeaconProvider = providers[drawBeaconContractMetadata.chainId]
+    const drawBeaconContract = new Contract(
+      drawBeaconContractMetadata.address,
+      drawBeaconContractMetadata.abi,
+      drawBeaconProvider
+    )
+    this.drawBeaconMetadata = drawBeaconContractMetadata
+    this.drawBeaconContract = drawBeaconContract
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
@@ -66,6 +86,25 @@ export class LinkedPrizePool {
     })
     return Promise.all(balancesPromises)
   }
+
+  /**
+   *
+   * @returns
+   */
+  async getDrawBeaconPeriod() {
+    const [periodSecondsResult, periodStartedAtResult] = await Promise.all([
+      this.drawBeaconContract.functions.getBeaconPeriodSeconds(),
+      this.drawBeaconContract.functions.getBeaconPeriodStartedAt()
+    ])
+    const startedAtSeconds: BigNumber = periodStartedAtResult[0]
+    const periodSeconds: number = periodSecondsResult[0]
+    const endsAtSeconds: BigNumber = startedAtSeconds.add(periodSeconds)
+    return {
+      startedAtSeconds,
+      periodSeconds,
+      endsAtSeconds
+    }
+  }
 }
 
 /**
@@ -75,7 +114,7 @@ export class LinkedPrizePool {
  * @param contracts
  * @returns
  */
-function createPrizePools(providers: Providers, contracts: Contract[]): PrizePool[] {
+function createPrizePools(providers: Providers, contracts: ContractMetadata[]): PrizePool[] {
   const prizePoolContractLists = sortContractsByContractTypeAndChildren(
     contracts,
     ContractType.YieldSourcePrizePool
@@ -84,7 +123,7 @@ function createPrizePools(providers: Providers, contracts: Contract[]): PrizePoo
   prizePoolContractLists.forEach((contracts) => {
     const prizePoolContract = contracts.find(
       (contract) => contract.type === ContractType.YieldSourcePrizePool
-    ) as Contract
+    ) as ContractMetadata
     const provider = providers[prizePoolContract.chainId]
     try {
       prizePools.push(new PrizePool(provider, contracts))
@@ -173,11 +212,10 @@ export async function initializeLinkedPrizePool(
 async function fetchPrizePoolAddressesByChainId(
   chainId: number,
   provider: Provider,
-  prizePoolContracts: Contract[]
+  prizePoolContracts: ContractMetadata[]
 ) {
   const batchCalls = [] as Context[]
   prizePoolContracts.forEach((prizePoolContract) => {
-    console.log(prizePoolContract.address, prizePoolContract)
     const prizePoolEtherplexContract = etherplexContract(
       prizePoolContract.address,
       prizePoolContract.abi,
@@ -203,7 +241,7 @@ async function fetchPrizePoolAddressesByChainId(
  * @param contracts
  * @returns
  */
-function extendContractsWithToken(contracts: Contract[]) {
+function extendContractsWithToken(contracts: ContractMetadata[]) {
   const updatedContracts = [...contracts]
   const tokens: { address: string; chainId: number }[] = contracts
     .filter((contract) => {
@@ -234,5 +272,5 @@ function createTokenContract(chainId: number, address: string) {
     abi: ERC20Abi,
     tags: [],
     extensions: {}
-  } as Contract
+  } as ContractMetadata
 }

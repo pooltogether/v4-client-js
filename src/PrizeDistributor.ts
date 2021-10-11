@@ -39,17 +39,19 @@ export class PrizeDistributor {
   // Contract metadata
   readonly prizeDistributorsMetadata: ContractMetadata
   readonly drawCalculatorMetadata: ContractMetadata
+  readonly drawCalculatorTimelockMetadata: ContractMetadata
   drawBuffer: ContractMetadata | undefined
   prizeDistributionsBuffer: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizeDistributorsContract: Contract
   readonly drawCalculatorContract: Contract
+  readonly drawCalculatorTimelockContract: Contract
   drawBufferContract: Contract | undefined
   prizeDistributionsBufferContract: Contract | undefined
 
   /**
-   * NOTE: Assumes a list of only the relevant contracts was provided
+   * NOTE: Assumes a list of only the relevant contracts was provided.
    * @constructor
    * @param signerOrProvider
    * @param contractMetadataList a filtered list of relevant contract metadata.
@@ -66,6 +68,14 @@ export class PrizeDistributor {
       ContractType.DrawCalculator,
       contractMetadataList
     )
+    const [
+      drawCalculatorTimelockContractMetadata,
+      drawCalculatorTimelockContract
+    ] = getMetadataAndContract(
+      signerOrProvider,
+      ContractType.DrawCalculatorTimelock,
+      contractMetadataList
+    )
 
     // Set data
     this.signerOrProvider = signerOrProvider
@@ -76,16 +86,20 @@ export class PrizeDistributor {
     // Set metadata
     this.prizeDistributorsMetadata = prizeDistributorsContractMetadata
     this.drawCalculatorMetadata = drawCalculatorContractMetadata
+    this.drawCalculatorTimelockMetadata = drawCalculatorTimelockContractMetadata
 
     // Set ethers contracts
     this.prizeDistributorsContract = prizeDistributorsContract
     this.drawCalculatorContract = drawCalculatorContract
+    this.drawCalculatorTimelockContract = drawCalculatorTimelockContract
 
     // Initialized later - requires a fetch
     this.drawBuffer = undefined
     this.prizeDistributionsBuffer = undefined
     this.drawBufferContract = undefined
     this.prizeDistributionsBufferContract = undefined
+
+    console.log('PrizeDistributor', this)
   }
 
   //////////////////////////// Ethers write functions ////////////////////////////
@@ -212,35 +226,32 @@ export class PrizeDistributor {
   }
 
   /**
-   * Gets the list of draw ids of draws that are available on the contract
-   * @returns draw id array ranging from oldest to newest draw
+   *
+   * @returns
    */
-  async getValidDrawIds(): Promise<number[]> {
-    const [oldestDraw, newestDraw] = await Promise.allSettled([
-      this.getOldestDraw(),
-      this.getNewestDraw()
+  async getTimelockDrawId(): Promise<{
+    drawId: number
+    lockStartTimeSeconds: BigNumber
+    timelockDurationSeconds: number
+  }> {
+    const [timelockResult, timelockDurationResult] = await Promise.all([
+      await this.drawCalculatorTimelockContract.functions.getTimelock(),
+      await this.drawCalculatorTimelockContract.functions.getTimelockDuration()
     ])
-    // If newest failed, there are none
-    // TODO: Check oldest for id 0 as well
-    if (newestDraw.status === 'rejected' || oldestDraw.status === 'rejected') {
-      return []
+    const [lockStartTimeSeconds, drawId] = timelockResult[0]
+    const timelockDurationSeconds = timelockDurationResult[0]
+    return {
+      drawId,
+      lockStartTimeSeconds,
+      timelockDurationSeconds
     }
-
-    const oldestId = oldestDraw.value.drawId
-    const newestId = newestDraw.value.drawId
-    const validIds = []
-    for (let i = oldestId; i <= newestId; i++) {
-      validIds.push(i)
-    }
-    return validIds
   }
 
   /**
    * Gets the list of draw ids of draws that have prize distributions set.
-   * TODO:
    * @returns draw id array ranging from oldest to newest draw
    */
-  async getClaimableDrawIds(): Promise<number[]> {
+  async getValidDrawIds(): Promise<number[]> {
     const [
       oldestPrizeDistributionResponse,
       newestPrizeDistributionResponse,
@@ -269,23 +280,32 @@ export class PrizeDistributor {
     const oldestDrawId = oldestDrawResponse.value.drawId
     const newestDrawId = newestDrawResponse.value.drawId
 
+    console.log({
+      oldestPrizeDistributionId,
+      newestPrizeDistributionId,
+      oldestDrawId,
+      newestDrawId
+    })
+
+    const newestIds = [newestDrawId, newestPrizeDistributionId]
+
     const oldestId = Math.max(oldestPrizeDistributionId, oldestDrawId)
-    const newestId = Math.min(newestDrawId, newestPrizeDistributionId)
+    const newestId = Math.min(...newestIds)
 
-    const claimableIds = []
+    if (newestId < oldestId) return []
+
+    const validIds = []
     for (let i = oldestId; i <= newestId; i++) {
-      claimableIds.push(i)
+      validIds.push(i)
     }
-    return claimableIds
+    return validIds
   }
 
-  async getClaimableDrawsAndPrizeDistributions(): Promise<
-    { draw: Draw; prizeDistribution: PrizeDistribution }[]
-  > {
-    const claimableDrawIds = await this.getClaimableDrawIds()
-    return this.getDrawsAndPrizeDistributions(claimableDrawIds)
-  }
-
+  /**
+   *
+   * @param drawIds
+   * @returns
+   */
   async getDrawsAndPrizeDistributions(
     drawIds: number[]
   ): Promise<{ draw: Draw; prizeDistribution: PrizeDistribution }[]> {
@@ -314,6 +334,11 @@ export class PrizeDistributor {
     return drawsAndPrizeDistributions
   }
 
+  /**
+   *
+   * @param drawId
+   * @returns
+   */
   async getDraw(drawId: number): Promise<Draw> {
     const drawBufferContract = await this.getDrawBufferContract()
     const response: Result = await drawBufferContract.functions.getDraw(drawId)
@@ -324,6 +349,11 @@ export class PrizeDistributor {
     }
   }
 
+  /**
+   *
+   * @param drawIds
+   * @returns
+   */
   async getDraws(drawIds: number[]): Promise<Draw[]> {
     if (!drawIds || drawIds.length === 0) {
       return []
@@ -337,11 +367,11 @@ export class PrizeDistributor {
     }))
   }
 
-  async getClaimableDraws(): Promise<Draw[]> {
-    const claimableDrawIds = await this.getClaimableDrawIds()
-    return await this.getDraws(claimableDrawIds)
-  }
-
+  /**
+   *
+   * @param drawId
+   * @returns
+   */
   async getPrizeDistribution(drawId: number): Promise<PrizeDistribution> {
     const prizeDistributionsBufferContract = await this.getPrizeDistributionsBufferContract()
     const result: Result = await prizeDistributionsBufferContract.functions.getPrizeDistribution(
@@ -359,6 +389,11 @@ export class PrizeDistributor {
     }
   }
 
+  /**
+   *
+   * @param drawIds
+   * @returns
+   */
   async getPrizeDistributions(drawIds: number[]): Promise<PrizeDistribution[]> {
     if (!drawIds || drawIds.length === 0) {
       return []
@@ -379,11 +414,12 @@ export class PrizeDistributor {
     }))
   }
 
-  async getClaimablePrizeDistributions(): Promise<PrizeDistribution[]> {
-    const claimableDrawIds = await this.getClaimableDrawIds()
-    return await this.getPrizeDistributions(claimableDrawIds)
-  }
-
+  /**
+   *
+   * @param usersAddress
+   * @param drawId
+   * @returns
+   */
   async getUsersClaimedAmount(usersAddress: string, drawId: number): Promise<BigNumber> {
     const errorPrefix = 'PrizeDistributors [getUsersClaimedAmount] |'
     await validateAddress(errorPrefix, usersAddress)
@@ -395,12 +431,24 @@ export class PrizeDistributor {
     return result[0]
   }
 
+  /**
+   *
+   * @param usersAddress
+   * @param drawIds
+   * @returns
+   */
   async getUsersClaimedAmounts(usersAddress: string, drawIds: number[]): Promise<BigNumber[]> {
     return await Promise.all(
       drawIds.map((drawId) => this.getUsersClaimedAmount(usersAddress, drawId))
     )
   }
 
+  /**
+   *
+   * @param usersAddress
+   * @param drawIds
+   * @returns
+   */
   async getUsersNormalizedBalancesForDrawIds(
     usersAddress: string,
     drawIds: number[]
@@ -450,11 +498,22 @@ export class PrizeDistributor {
     }
   }
 
+  /**
+   *
+   * @param usersAddress
+   * @param drawId
+   * @returns
+   */
   async getUsersPrizesByDrawId(usersAddress: string, drawId: number): Promise<DrawResults> {
     const draw = await this.getDraw(drawId)
     return this.getUsersPrizes(usersAddress, draw)
   }
 
+  /**
+   *
+   * @param usersAddress
+   * @returns
+   */
   async getUsersClaimedEvents(usersAddress: string) {
     const errorPrefix = 'PrizeDistributors [getUsersClaimedEvents] |'
     await validateAddress(errorPrefix, usersAddress)
@@ -463,7 +522,12 @@ export class PrizeDistributor {
     return await this.prizeDistributorsContract.queryFilter(eventFilter)
   }
 
-  // TODO: Check this
+  /**
+   * TODO: Check this
+   * @param usersAddress
+   * @param draw
+   * @returns
+   */
   async getUsersClaimedEvent(usersAddress: string, draw: Draw): Promise<Event> {
     const eventFilter = this.prizeDistributorsContract.filters.ClaimedDraw(
       usersAddress,
@@ -475,6 +539,13 @@ export class PrizeDistributor {
 
   //////////////////////////// Ethers Contracts ////////////////////////////
 
+  /**
+   *
+   * @param contractMetadataKey
+   * @param contractType
+   * @param getContractAddress
+   * @returns
+   */
   private async getAndSetEthersContract(
     contractMetadataKey: string,
     contractType: ContractType,
@@ -498,6 +569,10 @@ export class PrizeDistributor {
     return contract
   }
 
+  /**
+   *
+   * @returns
+   */
   async getDrawBufferContract(): Promise<Contract> {
     const getDrawBufferAddress = async () => {
       const result: Result = await this.drawCalculatorContract.functions.getDrawBuffer()
@@ -506,6 +581,10 @@ export class PrizeDistributor {
     return this.getAndSetEthersContract('drawBuffer', ContractType.DrawBuffer, getDrawBufferAddress)
   }
 
+  /**
+   *
+   * @returns
+   */
   async getPrizeDistributionsBufferContract(): Promise<Contract> {
     const getPrizeDistributionsBufferAddress = async () => {
       const result: Result = await this.drawCalculatorContract.functions.getPrizeDistributionBuffer()
@@ -520,19 +599,38 @@ export class PrizeDistributor {
 
   //////////////////////////// Methods ////////////////////////////
 
+  /**
+   *
+   * @returns
+   */
   id(): string {
     return `${this.prizeDistributorsMetadata.address}-${this.prizeDistributorsMetadata.chainId}`
   }
 
+  /**
+   *
+   * @param errorPrefix
+   * @returns
+   */
   async getUsersAddress(errorPrefix = 'PrizeDistributors [getUsersAddress] |') {
     const signer = await this.validateIsSigner(errorPrefix)
     return await signer.getAddress()
   }
 
+  /**
+   *
+   * @param errorPrefix
+   * @returns
+   */
   async validateSignerNetwork(errorPrefix: string) {
     return validateSignerNetwork(errorPrefix, this.signerOrProvider as Signer, this.chainId)
   }
 
+  /**
+   *
+   * @param errorPrefix
+   * @returns
+   */
   async validateIsSigner(errorPrefix: string) {
     return validateIsSigner(errorPrefix, this.signerOrProvider)
   }
@@ -604,7 +702,9 @@ export async function initializePrizeDistributors(
   )
 
   // Need to inject some more contracts since they get linked later
-  // TODO: Need to properly match these contracts
+  // TODO: Need to properly match these contracts.
+  // NOTE: Naively assumes the DrawCalculatorTimelock deployment is for the prize pool on that chain
+  // Assumes the DrawCalculator matches this time lock
   // - DrawBuffer
   // - PrizeDistributionsBuffer
   // - Ticket
@@ -630,11 +730,21 @@ export async function initializePrizeDistributors(
     const ticketMetadatas = getContractsByType(contracts, ContractType.Ticket)
     const ticketMetadata = ticketMetadatas.find((contract) => contract.chainId === chainId)
 
+    // DrawCalculatorTimelock
+    const drawCalculatorTimelockMetadatas = getContractsByType(
+      contracts,
+      ContractType.DrawCalculatorTimelock
+    )
+    const drawCalculatorTimelockMetadata = drawCalculatorTimelockMetadatas.find(
+      (contract) => contract.chainId === chainId
+    )
+
     // Push contracts
     const newContractList: ContractMetadata[] = [...contractList]
     if (drawBufferMetadata) newContractList.push(drawBufferMetadata)
-    if (ticketMetadata) newContractList.push(ticketMetadata)
     if (prizeDistributionsMetadata) newContractList.push(prizeDistributionsMetadata)
+    if (ticketMetadata) newContractList.push(ticketMetadata)
+    if (drawCalculatorTimelockMetadata) newContractList.push(drawCalculatorTimelockMetadata)
     finalContractLists.push(newContractList)
   })
 
