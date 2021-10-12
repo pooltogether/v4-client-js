@@ -73,8 +73,6 @@ export class PrizePool {
     this.prizePoolContract = prizePoolContract
     this.ticketContract = ticketContract
     this.tokenContract = tokenContract
-
-    console.log('PrizePool', this)
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////

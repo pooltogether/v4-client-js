@@ -3,7 +3,7 @@ import { PrizePool } from './PrizePool'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
 import { ContractType } from './constants'
 import { contract as etherplexContract, batch, Context } from '@pooltogether/etherplex'
-import { Providers } from './types'
+import { Draw, Providers } from './types'
 import { BaseProvider } from '@ethersproject/providers'
 import ERC20Abi from './abis/ERC20Abi'
 import { extendContractWithChildren } from './utils/extendContractWithChildren'
@@ -12,6 +12,7 @@ import { sortContractsByContractTypeAndChildren } from './utils/sortContractsByC
 import { sortContractsByChainId } from './utils/sortContractsByChainId'
 import { Contract } from '@ethersproject/contracts'
 import { BigNumber } from '@ethersproject/bignumber'
+import { Result } from '@ethersproject/abi'
 
 interface PrizePoolAddresses {
   [prizePoolAddress: string]: {
@@ -37,11 +38,17 @@ export class LinkedPrizePool {
   readonly prizePools: PrizePool[]
   readonly contractList: ContractList
 
+  // Used to uniquely identify the Linked Prize Pool. TODO: Probably use something better?
+  readonly beaconChainId: number
+  readonly beaconAddress: string
+
   // Contract metadata
   readonly drawBeaconMetadata: ContractMetadata
+  readonly drawBufferMetadata: ContractMetadata
 
   // Ethers contracts
   readonly drawBeaconContract: Contract
+  readonly drawBufferContract: Contract
 
   /**
    *
@@ -54,17 +61,35 @@ export class LinkedPrizePool {
     this.contractList = linkedPrizePoolContractList
     this.prizePools = createPrizePools(providers, linkedPrizePoolContractList.contracts)
 
+    // DrawBeacon
     const drawBeaconContractMetadata = linkedPrizePoolContractList.contracts.find(
       (c) => c.type === ContractType.DrawBeacon
     ) as ContractMetadata
-    const drawBeaconProvider = providers[drawBeaconContractMetadata.chainId]
+    const beaconChainId = drawBeaconContractMetadata.chainId
+    const beaconProvider = providers[beaconChainId]
     const drawBeaconContract = new Contract(
       drawBeaconContractMetadata.address,
       drawBeaconContractMetadata.abi,
-      drawBeaconProvider
+      beaconProvider
     )
+
+    // DrawBuffer
+    const drawBufferContractMetadata = linkedPrizePoolContractList.contracts.find(
+      (c) => c.type === ContractType.DrawBuffer && c.chainId === beaconChainId
+    ) as ContractMetadata
+    const drawBufferContract = new Contract(
+      drawBufferContractMetadata.address,
+      drawBufferContractMetadata.abi,
+      beaconProvider
+    )
+
+    // Set values
     this.drawBeaconMetadata = drawBeaconContractMetadata
     this.drawBeaconContract = drawBeaconContract
+    this.drawBufferMetadata = drawBufferContractMetadata
+    this.drawBufferContract = drawBufferContract
+    this.beaconChainId = beaconChainId
+    this.beaconAddress = drawBeaconContractMetadata.address
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
@@ -92,18 +117,63 @@ export class LinkedPrizePool {
    * @returns
    */
   async getDrawBeaconPeriod() {
-    const [periodSecondsResult, periodStartedAtResult] = await Promise.all([
+    const [periodSecondsResult, periodStartedAtResult, nextDrawIdResult] = await Promise.all([
       this.drawBeaconContract.functions.getBeaconPeriodSeconds(),
-      this.drawBeaconContract.functions.getBeaconPeriodStartedAt()
+      this.drawBeaconContract.functions.getBeaconPeriodStartedAt(),
+      this.drawBeaconContract.functions.getNextDrawId()
     ])
     const startedAtSeconds: BigNumber = periodStartedAtResult[0]
     const periodSeconds: number = periodSecondsResult[0]
     const endsAtSeconds: BigNumber = startedAtSeconds.add(periodSeconds)
+    const drawId: number = nextDrawIdResult[0]
     return {
       startedAtSeconds,
       periodSeconds,
-      endsAtSeconds
+      endsAtSeconds,
+      drawId
     }
+  }
+
+  /**
+   *
+   * @returns
+   */
+  async getAllDrawIds(): Promise<number[]> {
+    const [oldestDrawResponse, newestDrawResponse] = await Promise.allSettled([
+      this.drawBufferContract.functions.getOldestDraw(),
+      this.drawBufferContract.functions.getNewestDraw()
+    ])
+
+    if (newestDrawResponse.status === 'rejected' || oldestDrawResponse.status === 'rejected') {
+      return []
+    }
+
+    const oldestId = oldestDrawResponse.value[0].drawId
+    const newestId = newestDrawResponse.value[0].drawId
+
+    const drawIds = []
+    for (let i = oldestId; i <= newestId; i++) {
+      drawIds.push(i)
+    }
+
+    return drawIds
+  }
+
+  /**
+   *
+   * @returns
+   */
+  async getAllDraws(): Promise<Draw[]> {
+    const drawIds = await this.getAllDrawIds()
+    const result: Result = await this.drawBufferContract.functions.getDraws(drawIds)
+    return result[0]
+  }
+
+  /**
+   *
+   */
+  id(): string {
+    return `linked-prize-pool-${this.beaconChainId}-${this.beaconAddress}`
   }
 }
 

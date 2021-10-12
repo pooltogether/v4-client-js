@@ -98,8 +98,6 @@ export class PrizeDistributor {
     this.prizeDistributionsBuffer = undefined
     this.drawBufferContract = undefined
     this.prizeDistributionsBufferContract = undefined
-
-    console.log('PrizeDistributor', this)
   }
 
   //////////////////////////// Ethers write functions ////////////////////////////
@@ -248,6 +246,62 @@ export class PrizeDistributor {
   }
 
   /**
+   *
+   * @returns all draw ids in the buffer
+   */
+  async getDrawIdsFromDrawBuffer(): Promise<number[]> {
+    const [oldestDrawResponse, newestDrawResponse] = await Promise.allSettled([
+      this.getOldestDraw(),
+      this.getNewestDraw()
+    ])
+
+    if (newestDrawResponse.status === 'rejected' || oldestDrawResponse.status === 'rejected') {
+      return []
+    }
+
+    const oldestId = oldestDrawResponse.value.drawId
+    const newestId = newestDrawResponse.value.drawId
+
+    const drawIds = []
+    for (let i = oldestId; i <= newestId; i++) {
+      drawIds.push(i)
+    }
+
+    return drawIds
+  }
+
+  /**
+   *
+   * @returns all draw ids in the buffer
+   */
+  async getDrawIdsFromPrizeDistributionBuffer(): Promise<number[]> {
+    const [
+      oldestPrizeDistributionResponse,
+      newestPrizeDistributionResponse
+    ] = await Promise.allSettled([
+      this.getOldestPrizeDistribution(),
+      this.getNewestPrizeDistribution()
+    ])
+
+    if (
+      newestPrizeDistributionResponse.status === 'rejected' ||
+      oldestPrizeDistributionResponse.status === 'rejected'
+    ) {
+      return []
+    }
+
+    const oldestId = oldestPrizeDistributionResponse.value.drawId
+    const newestId = newestPrizeDistributionResponse.value.drawId
+
+    const drawIds = []
+    for (let i = oldestId; i <= newestId; i++) {
+      drawIds.push(i)
+    }
+
+    return drawIds
+  }
+
+  /**
    * Gets the list of draw ids of draws that have prize distributions set.
    * @returns draw id array ranging from oldest to newest draw
    */
@@ -279,13 +333,6 @@ export class PrizeDistributor {
     const newestPrizeDistributionId = newestPrizeDistributionResponse.value.drawId
     const oldestDrawId = oldestDrawResponse.value.drawId
     const newestDrawId = newestDrawResponse.value.drawId
-
-    console.log({
-      oldestPrizeDistributionId,
-      newestPrizeDistributionId,
-      oldestDrawId,
-      newestDrawId
-    })
 
     const newestIds = [newestDrawId, newestPrizeDistributionId]
 
