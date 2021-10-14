@@ -229,19 +229,13 @@ export class PrizeDistributor {
    */
   async getTimelockDrawId(): Promise<{
     drawId: number
-    lockStartTimeSeconds: BigNumber
-    timelockDurationSeconds: number
+    endTimeSeconds: BigNumber
   }> {
-    const [timelockResult, timelockDurationResult] = await Promise.all([
-      await this.drawCalculatorTimelockContract.functions.getTimelock(),
-      await this.drawCalculatorTimelockContract.functions.getTimelockDuration()
-    ])
-    const [lockStartTimeSeconds, drawId] = timelockResult[0]
-    const timelockDurationSeconds = timelockDurationResult[0]
+    const timelockResult = await this.drawCalculatorTimelockContract.functions.getTimelock()
+    const [endTimeSeconds, drawId] = timelockResult[0]
     return {
       drawId,
-      lockStartTimeSeconds,
-      timelockDurationSeconds
+      endTimeSeconds
     }
   }
 
@@ -518,7 +512,7 @@ export class PrizeDistributor {
    */
   async getUsersPrizes(usersAddress: string, draw: Draw): Promise<DrawResults> {
     // Fetch the draw settings for the draw
-    const prizeDistributions: PrizeDistribution = await this.getPrizeDistribution(draw.drawId)
+    const prizeDistribution: PrizeDistribution = await this.getPrizeDistribution(draw.drawId)
 
     // Fetch users normalized balance
     const balanceResult = await this.drawCalculatorContract.functions.getNormalizedBalancesForDrawIds(
@@ -540,8 +534,7 @@ export class PrizeDistributor {
         prizes: []
       }
     } else {
-      const results = calculateDrawResults(prizeDistributions, draw, user)
-      return results
+      return calculateDrawResults(prizeDistribution, draw, user)
     }
   }
 
