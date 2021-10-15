@@ -65,7 +65,7 @@ export class Player extends PrizePool {
     const errorPrefix = 'Player [depositTo] | '
     await this.validateSignerNetwork(errorPrefix)
 
-    const overrides = { gasLimit: 500000 }
+    const overrides = { gasLimit: 750000 }
 
     const usersAddress = await this.signer.getAddress()
     return this.prizePoolContract.depositTo(usersAddress, amount, overrides)
