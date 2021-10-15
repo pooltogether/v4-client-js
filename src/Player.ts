@@ -1,6 +1,6 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/bignumber'
-import { Overrides } from '@ethersproject/contracts'
+// import { Overrides } from '@ethersproject/contracts'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { MaxUint256 } from '@ethersproject/constants'
 import { PrizePool } from './PrizePool'
@@ -39,10 +39,15 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async withdraw(amount: BigNumber, overrides?: Overrides): Promise<TransactionResponse> {
+  async withdraw(
+    amount: BigNumber,
+    // overrides?: Overrides
+  ): Promise<TransactionResponse> {
     const errorPrefix = 'Player [withdraw] | '
     await this.validateSignerNetwork(errorPrefix)
 
+    const overrides = { gasLimit: 750000 }
+    
     const usersAddress = await this.signer.getAddress()
     return this.prizePoolContract.withdrawFrom(usersAddress, amount, overrides)
   }
@@ -53,9 +58,14 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async deposit(amount: BigNumber, overrides?: Overrides): Promise<TransactionResponse> {
+  async deposit(
+    amount: BigNumber,
+    //overrides?: Overrides
+  ): Promise<TransactionResponse> {
     const errorPrefix = 'Player [depositTo] | '
     await this.validateSignerNetwork(errorPrefix)
+
+    const overrides = { gasLimit: 275000 }
 
     const usersAddress = await this.signer.getAddress()
     return this.prizePoolContract.depositTo(usersAddress, amount, overrides)
@@ -70,13 +80,17 @@ export class Player extends PrizePool {
   async depositAndDelegate(
     amount: BigNumber,
     to?: string,
-    overrides?: Overrides
+    // overrides?: Overrides
   ): Promise<TransactionResponse> {
+
     const errorPrefix = 'Player [depositToAndDelegate] | '
     await this.validateSignerNetwork(errorPrefix)
     if (to) {
       await validateAddress(errorPrefix, to)
     }
+
+    const overrides = { gasLimit: 750000 }
+
 
     const usersAddress = await this.signer.getAddress()
     return this.prizePoolContract.depositToAndDelegate(
