@@ -1,5 +1,6 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/bignumber'
+import { Overrides } from '@ethersproject/contracts'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { MaxUint256 } from '@ethersproject/constants'
 import { PrizePool } from './PrizePool'
@@ -38,12 +39,12 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async withdraw(amount: BigNumber): Promise<TransactionResponse> {
+  async withdraw(amount: BigNumber, overrides?: Overrides): Promise<TransactionResponse> {
     const errorPrefix = 'Player [withdraw] | '
     await this.validateSignerNetwork(errorPrefix)
 
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.withdrawFrom(usersAddress, amount)
+    return this.prizePoolContract.withdrawFrom(usersAddress, amount, overrides)
   }
 
   /**
@@ -52,12 +53,12 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async deposit(amount: BigNumber): Promise<TransactionResponse> {
+  async deposit(amount: BigNumber, overrides?: Overrides): Promise<TransactionResponse> {
     const errorPrefix = 'Player [depositTo] | '
     await this.validateSignerNetwork(errorPrefix)
 
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.depositTo(usersAddress, amount)
+    return this.prizePoolContract.depositTo(usersAddress, amount, overrides)
   }
 
   /**
@@ -66,7 +67,11 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async depositAndDelegate(amount: BigNumber, to?: string): Promise<TransactionResponse> {
+  async depositAndDelegate(
+    amount: BigNumber,
+    to?: string,
+    overrides?: Overrides
+  ): Promise<TransactionResponse> {
     const errorPrefix = 'Player [depositToAndDelegate] | '
     await this.validateSignerNetwork(errorPrefix)
     if (to) {
@@ -74,7 +79,12 @@ export class Player extends PrizePool {
     }
 
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.depositToAndDelegate(usersAddress, amount, to || usersAddress)
+    return this.prizePoolContract.depositToAndDelegate(
+      usersAddress,
+      amount,
+      to || usersAddress,
+      overrides
+    )
   }
 
   /**
