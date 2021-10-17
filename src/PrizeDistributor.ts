@@ -129,11 +129,14 @@ export class PrizeDistributor {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
+    const overrides = { gasLimit: 400000 }
+
     const claim: Claim = prepareClaims({ address: usersAddress } as DrawCalcUser, [drawResults])
     return this.prizeDistributorsContract.claim(
       claim.userAddress,
       claim.drawIds,
-      claim.encodedWinningPickIndices
+      claim.encodedWinningPickIndices,
+      overrides
     )
   }
 
