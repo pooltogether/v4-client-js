@@ -169,6 +169,18 @@ export class PrizePool {
   }
 
   /**
+   * Fetches total supply for the Ticket.
+   * @returns symbol: string, decimals: string, name: string
+   */
+  async getTicketTotalSupply(): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getTicketData] | '
+    await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
+    const result = await this.ticketContract.functions.totalSupply()
+    const totalSupply: BigNumber = result[0]
+    return totalSupply
+  }
+
+  /**
    * Fetches a gas estimate for depositing from the Prize Pool.
    * @param usersAddress string
    * @param amount BigNumber
