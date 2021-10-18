@@ -105,12 +105,12 @@ export class Player extends PrizePool {
    * Submits a transaction to set an allowance for deposits into the Prize Pool.
    * @returns TransactionResponse
    */
-  async approveDeposits(): Promise<TransactionResponse> {
+  async approveDeposits(amount?: BigNumber): Promise<TransactionResponse> {
     const errorPrefix = 'Player [approveDeposits] | '
     await this.validateSignerNetwork(errorPrefix)
 
     const prizePoolAddress = this.prizePoolMetadata.address
-    return this.tokenContract.approve(prizePoolAddress, MaxUint256)
+    return this.tokenContract.approve(prizePoolAddress, amount || MaxUint256)
   }
 
   /**
