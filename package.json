@@ -2,15 +2,14 @@
   "name": "@pooltogether/v4-js-client",
   "author": "PoolTogether Inc.",
   "module": "dist/v4-js-client.esm.js",
-<<<<<<< HEAD
-  "version": "0.4.8",
-=======
-  "version": "0.5.0",
->>>>>>> 04724fb (v0.5.0)
+  "version": "0.5.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "engines": {
     "node": ">=16"
   },
