@@ -101,7 +101,7 @@ export class PrizePool {
    * @param usersAddress string
    * @returns BigNumber
    */
-  async getUsersTicketBalance(usersAddress: string) {
+  async getUsersTicketBalance(usersAddress: string): Promise<BigNumber> {
     const errorPrefix = 'PrizePool [getUsersTicketBalance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
@@ -110,11 +110,27 @@ export class PrizePool {
   }
 
   /**
+   * Returns a users Ticket TWAB at a specific timestamp.
+   * @param usersAddress string
+   * @param timestamp number
+   * @returns BigNumber
+   */
+  async getUsersTicketTwabAt(usersAddress: string, timestamp: number): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUsersTicketBalance] | '
+    await validateAddress(errorPrefix, usersAddress)
+    await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
+
+    const result = await this.ticketContract.functions.getBalanceAt(usersAddress, timestamp)
+    const balance: BigNumber = result[0]
+    return balance
+  }
+
+  /**
    * Returns a users Token (underlying token) balance.
    * @param usersAddress string
    * @returns BigNumber
    */
-  async getUsersTokenBalance(usersAddress: string) {
+  async getUsersTokenBalance(usersAddress: string): Promise<BigNumber> {
     const errorPrefix = 'PrizePool [getUsersTokenBalance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
