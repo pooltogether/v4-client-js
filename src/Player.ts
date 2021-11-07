@@ -1,5 +1,6 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/bignumber'
+import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
 // import { Overrides } from '@ethersproject/contracts'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { MaxUint256 } from '@ethersproject/constants'
@@ -23,8 +24,8 @@ export class Player extends PrizePool {
    * @param signer Signer to submit transactions with
    * @param prizePool PrizePool that is relevant to this Player
    */
-  constructor(signer: Signer, prizePool: PrizePool) {
-    super(signer, prizePool.contractMetadataList)
+  constructor(prizePoolMetadata: ContractMetadata, signer: Signer, prizePool: PrizePool) {
+    super(prizePoolMetadata, signer, prizePool.contractMetadataList)
 
     this.signer = signer
   }
@@ -40,14 +41,14 @@ export class Player extends PrizePool {
    * @returns TransactionResponse
    */
   async withdraw(
-    amount: BigNumber,
+    amount: BigNumber
     // overrides?: Overrides
   ): Promise<TransactionResponse> {
     const errorPrefix = 'Player [withdraw] | '
     await this.validateSignerNetwork(errorPrefix)
 
     const overrides = { gasLimit: 750000 }
-    
+
     const usersAddress = await this.signer.getAddress()
     return this.prizePoolContract.withdrawFrom(usersAddress, amount, overrides)
   }
@@ -59,7 +60,7 @@ export class Player extends PrizePool {
    * @returns TransactionResponse
    */
   async deposit(
-    amount: BigNumber,
+    amount: BigNumber
     //overrides?: Overrides
   ): Promise<TransactionResponse> {
     const errorPrefix = 'Player [depositTo] | '
@@ -79,10 +80,9 @@ export class Player extends PrizePool {
    */
   async depositAndDelegate(
     amount: BigNumber,
-    to?: string,
+    to?: string
     // overrides?: Overrides
   ): Promise<TransactionResponse> {
-
     const errorPrefix = 'Player [depositToAndDelegate] | '
     await this.validateSignerNetwork(errorPrefix)
     if (to) {
@@ -90,7 +90,6 @@ export class Player extends PrizePool {
     }
 
     const overrides = { gasLimit: 750000 }
-
 
     const usersAddress = await this.signer.getAddress()
     return this.prizePoolContract.depositToAndDelegate(

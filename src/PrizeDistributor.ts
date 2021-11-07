@@ -26,8 +26,8 @@ import { BigNumber, ethers } from 'ethers'
  * Then when a Player is created, so is a new PrizeDistributors with a signer all ready to go.
  */
 export class PrizeDistributor {
-  readonly signerOrProvider: Provider | Signer
   readonly contractMetadataList: ContractMetadata[]
+  readonly signerOrProvider: Provider | Signer
   readonly chainId: number
   readonly address: string
 
@@ -35,8 +35,8 @@ export class PrizeDistributor {
   readonly prizeDistributorMetadata: ContractMetadata
   readonly drawCalculatorTimelockMetadata: ContractMetadata
   drawCalculatorMetadata: ContractMetadata | undefined
-  drawBuffer: ContractMetadata | undefined
-  prizeDistributionsBuffer: ContractMetadata | undefined
+  drawBufferMetadata: ContractMetadata | undefined
+  prizeDistributionsBufferMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizeDistributorContract: Contract
@@ -57,10 +57,8 @@ export class PrizeDistributor {
     contractMetadataList: ContractMetadata[]
   ) {
     // Get contract metadata & ethers contracts
-    const [
-      drawCalculatorTimelockContractMetadata,
-      drawCalculatorTimelockContract
-    ] = getMetadataAndContract(
+    const [drawCalculatorTimelockMetadata, drawCalculatorTimelockContract] = getMetadataAndContract(
+      prizeDistributorMetadata.chainId,
       signerOrProvider,
       ContractType.DrawCalculatorTimelock,
       contractMetadataList
@@ -80,7 +78,7 @@ export class PrizeDistributor {
 
     // Set metadata
     this.prizeDistributorMetadata = prizeDistributorMetadata
-    this.drawCalculatorTimelockMetadata = drawCalculatorTimelockContractMetadata
+    this.drawCalculatorTimelockMetadata = drawCalculatorTimelockMetadata
 
     // Set ethers contracts
     this.prizeDistributorContract = prizeDistributorContract
@@ -89,9 +87,9 @@ export class PrizeDistributor {
     // Initialized later - requires a fetch
     this.drawCalculatorMetadata = undefined
     this.drawCalculatorContract = undefined
-    this.drawBuffer = undefined
+    this.drawBufferMetadata = undefined
     this.drawBufferContract = undefined
-    this.prizeDistributionsBuffer = undefined
+    this.prizeDistributionsBufferMetadata = undefined
     this.prizeDistributionsBufferContract = undefined
   }
 
@@ -584,23 +582,25 @@ export class PrizeDistributor {
    * @returns
    */
   private async getAndSetEthersContract(
-    contractMetadataKey: string,
+    key: string,
     contractType: ContractType,
     getContractAddress: () => Promise<string>
   ): Promise<Contract> {
-    const contractKey = `${contractMetadataKey}Contract`
+    const contractKey = `${key}Contract`
+    const metadataKey = `${key}Metadata`
     // @ts-ignore
     if (this[contractKey] !== undefined) return this[contractKey]
 
     const contractAddress = await getContractAddress()
     const [contractMetadata, contract] = getMetadataAndContract(
+      this.chainId,
       this.signerOrProvider,
       contractType,
       this.contractMetadataList,
       contractAddress
     )
     // @ts-ignore
-    this[contractMetadataKey] = contractMetadata
+    this[metadataKey] = contractMetadata
     // @ts-ignore
     this[contractKey] = contract
     return contract

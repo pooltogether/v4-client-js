@@ -40,19 +40,25 @@ export class PrizePool {
    * @param signerOrProvider
    * @param contractMetadataList a filtered list of relevant contract metadata.
    */
-  constructor(signerOrProvider: Provider | Signer, contractMetadataList: ContractMetadata[]) {
+  constructor(
+    prizePoolMetadata: ContractMetadata,
+    signerOrProvider: Provider | Signer,
+    contractMetadataList: ContractMetadata[]
+  ) {
     // Get contract metadata & ethers contracts
-    const [prizePoolContractMetadata, prizePoolContract] = getMetadataAndContract(
-      signerOrProvider,
-      ContractType.YieldSourcePrizePool,
-      contractMetadataList
+    const prizePoolContract = new Contract(
+      prizePoolMetadata.address,
+      prizePoolMetadata.abi,
+      signerOrProvider
     )
     const [ticketContractMetadata, ticketContract] = getMetadataAndContract(
+      prizePoolMetadata.chainId,
       signerOrProvider,
       ContractType.Ticket,
       contractMetadataList
     )
     const [tokenContractMetadata, tokenContract] = getMetadataAndContract(
+      prizePoolMetadata.chainId,
       signerOrProvider,
       ContractType.Token,
       contractMetadataList
@@ -61,11 +67,11 @@ export class PrizePool {
     // Set data
     this.contractMetadataList = contractMetadataList
     this.signerOrProvider = signerOrProvider
-    this.chainId = prizePoolContractMetadata.chainId
-    this.address = prizePoolContractMetadata.address
+    this.chainId = prizePoolMetadata.chainId
+    this.address = prizePoolMetadata.address
 
     // Set metadata
-    this.prizePoolMetadata = prizePoolContractMetadata
+    this.prizePoolMetadata = prizePoolMetadata
     this.ticketMetadata = ticketContractMetadata
     this.tokenMetadata = tokenContractMetadata
 

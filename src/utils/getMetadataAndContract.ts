@@ -5,12 +5,15 @@ import { ContractType } from '../constants'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
 
 export function getMetadataAndContract(
+  chainId: number,
   signerOrProvider: Provider | Signer,
   contractType: ContractType,
   contractMetadataList: ContractMetadata[],
   addressOverride?: string
 ): [ContractMetadata, Contract] {
-  const contractMetadata = contractMetadataList.find((contract) => contract.type === contractType)
+  const contractMetadata = contractMetadataList.find(
+    (contract) => contract.type === contractType && contract.chainId === chainId
+  )
   if (!contractMetadata) {
     throw new Error(`Invalid contract list. Missing ${contractType}.`)
   }

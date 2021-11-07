@@ -191,12 +191,12 @@ function createPrizePools(providers: Providers, contracts: ContractMetadata[]): 
   )
   const prizePools: PrizePool[] = []
   prizePoolContractLists.forEach((contracts) => {
-    const prizePoolContract = contracts.find(
+    const prizePoolMetadata = contracts.find(
       (contract) => contract.type === ContractType.YieldSourcePrizePool
     ) as ContractMetadata
-    const provider = providers[prizePoolContract.chainId]
+    const provider = providers[prizePoolMetadata.chainId]
     try {
-      prizePools.push(new PrizePool(provider, contracts))
+      prizePools.push(new PrizePool(prizePoolMetadata, provider, contracts))
     } catch (e) {
       const error = e as Error
       console.error(error.message)
