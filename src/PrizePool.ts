@@ -280,13 +280,6 @@ export class PrizePool {
       return result[0]
     }
     const ticketAddress = await getAddress()
-    console.log('getTicketContract', {
-      chainId: this.chainId,
-      signerOrProvider: this.signerOrProvider,
-      type: ContractType.Ticket,
-      contracts: this.contractMetadataList,
-      address: ticketAddress
-    })
     const [ticketMetadata, ticketContract] = getMetadataAndContract(
       this.chainId,
       this.signerOrProvider,
