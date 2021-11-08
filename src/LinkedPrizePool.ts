@@ -155,6 +155,31 @@ export class LinkedPrizePool {
 
   /**
    *
+   * @param chainId
+   * @param address
+   * @returns
+   */
+  getPrizePool(chainId: number, address: string): PrizePool | undefined {
+    return this.prizePools.find(
+      (prizePool) => prizePool.chainId === chainId && prizePool.address === address
+    )
+  }
+
+  /**
+   *
+   * @param chainId
+   * @param address
+   * @returns
+   */
+  getPrizeDistributor(chainId: number, address: string): PrizeDistributor | undefined {
+    return this.prizeDistributors.find(
+      (prizeDistributor) =>
+        prizeDistributor.chainId === chainId && prizeDistributor.address === address
+    )
+  }
+
+  /**
+   *
    */
   id(): string {
     return `linked-prize-pool-${this.beaconChainId}-${this.beaconAddress}`
