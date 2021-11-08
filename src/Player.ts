@@ -1,11 +1,10 @@
 import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
-// import { Overrides } from '@ethersproject/contracts'
 import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { MaxUint256 } from '@ethersproject/constants'
 import { PrizePool } from './PrizePool'
-import { validateAddress, validateSignerNetwork } from './utils/validation'
+import { validateAddress, validateSignerNetwork } from './utils'
 
 /**
  * A Player for a Prize Pool.
@@ -29,8 +28,6 @@ export class Player extends PrizePool {
 
     this.signer = signer
   }
-
-  //////////////////////////// Wrapped ethers write functions ////////////////////////////
 
   //////////////////////////// Ethers write functions ////////////////////////////
 
@@ -109,7 +106,8 @@ export class Player extends PrizePool {
     await this.validateSignerNetwork(errorPrefix)
 
     const prizePoolAddress = this.prizePoolMetadata.address
-    return this.tokenContract.approve(prizePoolAddress, amount || MaxUint256)
+    const tokenContract = await this.getTokenContract()
+    return tokenContract.approve(prizePoolAddress, amount || MaxUint256)
   }
 
   /**
@@ -121,7 +119,21 @@ export class Player extends PrizePool {
     await this.validateSignerNetwork(errorPrefix)
 
     const usersAddress = await this.signer.getAddress()
-    return this.ticketContract.delegate(usersAddress)
+    return this.delegateTickets(usersAddress)
+  }
+
+  /**
+   * Delegates ticket power to the provided address
+   * @param address
+   * @returns
+   */
+  async delegateTickets(address: string): Promise<TransactionResponse> {
+    const errorPrefix = 'Player [delegateTickets] | '
+    await this.validateSignerNetwork(errorPrefix)
+    await validateAddress(errorPrefix, address)
+
+    const ticketContract = await this.getTicketContract()
+    return ticketContract.delegate(address)
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////

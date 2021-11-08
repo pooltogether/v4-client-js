@@ -6,6 +6,14 @@ export * from './types'
 export * from './utils'
 
 export {
+  batchCalculateDrawResults,
+  calculateDrawResults,
+  prepareClaims,
+  computeCardinality,
+  computeDrawResults,
+  computePicks,
+  generatePicks,
   calculateNumberOfPrizesForIndex,
-  calculatePrizeForDistributionIndex
+  calculatePrizeForDistributionIndex,
+  calculateNumberOfPicksForUser
 } from '@pooltogether/draw-calculator-js'

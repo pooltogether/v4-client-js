@@ -1,5 +1,5 @@
 import { Provider } from '@ethersproject/abstract-provider'
-import { BigNumber } from 'ethers'
+import { BigNumber, Signer } from 'ethers'
 
 export interface TokenData {
   name: string
@@ -13,7 +13,11 @@ export interface PrizePoolTokenBalances {
 }
 
 export interface Providers {
-  [networkId: number]: Provider
+  [chainId: number]: Provider
+}
+
+export interface SignersOrProviders {
+  [chainId: number]: Provider | Signer
 }
 
 export interface ChildContractAddresses {

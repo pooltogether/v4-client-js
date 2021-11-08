@@ -1,5 +1,11 @@
 import { Contract, Event } from '@ethersproject/contracts'
 import { Result } from '@ethersproject/abi'
+import { Provider } from '@ethersproject/abstract-provider'
+import { Signer } from '@ethersproject/abstract-signer'
+import { TransactionResponse } from '@ethersproject/providers'
+import { prepareClaims, calculateDrawResults } from '@pooltogether/draw-calculator-js'
+import { BigNumber, ethers } from 'ethers'
+
 import { ContractType } from './constants'
 import {
   Contract as ContractMetadata,
@@ -8,15 +14,15 @@ import {
   PrizeDistribution,
   DrawResults,
   Claim,
-  DrawCalcUser
+  DrawCalcUser,
+  SignersOrProviders
 } from './types'
-import { Provider } from '@ethersproject/abstract-provider'
-import { Signer } from '@ethersproject/abstract-signer'
-import { TransactionResponse } from '@ethersproject/providers'
-import { getMetadataAndContract } from './utils/getMetadataAndContract'
-import { prepareClaims, calculateDrawResults } from '@pooltogether/draw-calculator-js'
-import { validateAddress, validateIsSigner, validateSignerNetwork } from './utils/validation'
-import { BigNumber, ethers } from 'ethers'
+import {
+  getMetadataAndContract,
+  validateAddress,
+  validateIsSigner,
+  validateSignerNetwork
+} from './utils'
 
 /**
  * Can be instantiated with a signer or a provider.
@@ -572,7 +578,7 @@ export class PrizeDistributor {
     return events[0]
   }
 
-  //////////////////////////// Ethers Contracts ////////////////////////////
+  //////////////////////////// Ethers Contracts Initializers ////////////////////////////
 
   /**
    *
@@ -611,7 +617,7 @@ export class PrizeDistributor {
    * @returns
    */
   async getDrawCalculatorContract(): Promise<Contract> {
-    const getDrawCalculatorAddress = async () => {
+    const getAddress = async () => {
       let result: Result = await this.prizeDistributorContract.functions.getDrawCalculator()
       let address = result[0]
       const contractMetadata = this.contractMetadataList.find(
@@ -626,11 +632,7 @@ export class PrizeDistributor {
         return address
       }
     }
-    return this.getAndSetEthersContract(
-      'drawCalculator',
-      ContractType.DrawCalculator,
-      getDrawCalculatorAddress
-    )
+    return this.getAndSetEthersContract('drawCalculator', ContractType.DrawCalculator, getAddress)
   }
 
   /**
@@ -638,12 +640,12 @@ export class PrizeDistributor {
    * @returns
    */
   async getDrawBufferContract(): Promise<Contract> {
-    const getDrawBufferAddress = async () => {
+    const getAddress = async () => {
       const drawCalculatorContract = await this.getDrawCalculatorContract()
       const result: Result = await drawCalculatorContract.functions.getDrawBuffer()
       return result[0]
     }
-    return this.getAndSetEthersContract('drawBuffer', ContractType.DrawBuffer, getDrawBufferAddress)
+    return this.getAndSetEthersContract('drawBuffer', ContractType.DrawBuffer, getAddress)
   }
 
   /**
@@ -651,7 +653,7 @@ export class PrizeDistributor {
    * @returns
    */
   async getPrizeDistributionsBufferContract(): Promise<Contract> {
-    const getPrizeDistributionsBufferAddress = async () => {
+    const getAddress = async () => {
       const drawCalculatorContract = await this.getDrawCalculatorContract()
       const result: Result = await drawCalculatorContract.functions.getPrizeDistributionBuffer()
       return result[0]
@@ -659,7 +661,7 @@ export class PrizeDistributor {
     return this.getAndSetEthersContract(
       'prizeDistributionsBuffer',
       ContractType.PrizeDistributionBuffer,
-      getPrizeDistributionsBufferAddress
+      getAddress
     )
   }
 
@@ -702,9 +704,15 @@ export class PrizeDistributor {
   }
 }
 
+/**
+ * Utility function to create several PrizeDistributors from a contract list.
+ * @param contractList
+ * @param signersOrProviders
+ * @returns
+ */
 export function initializePrizeDistributors(
   contractList: ContractList,
-  signersOrProviders: { [chainId: number]: Provider | Signer }
+  signersOrProviders: SignersOrProviders
 ) {
   const prizeDistributorContracts = contractList.contracts.filter(
     (contract) => contract.type === ContractType.PrizeDistributor
