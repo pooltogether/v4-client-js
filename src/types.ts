@@ -1,5 +1,8 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { BigNumber, Signer } from 'ethers'
+import {
+  Pick,
+} from '@pooltogether/draw-calculator-js'
 
 export interface TokenData {
   name: string
@@ -13,7 +16,7 @@ export interface PrizePoolTokenBalances {
 }
 
 export interface Providers {
-  [chainId: number]: Provider
+  [chainId: number]: Provider | undefined;
 }
 
 export interface SignersOrProviders {
@@ -26,6 +29,12 @@ export interface ChildContractAddresses {
       [childContractType: string]: string
     }
   }
+}
+
+export interface User {
+  address: string;
+  normalizedBalances: BigNumber[];
+  picks?: Pick[]; // optional as user may not have picks (under floor)
 }
 
 // Modelled after the generated types
