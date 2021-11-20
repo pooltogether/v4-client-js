@@ -122,7 +122,7 @@ export class LinkedPrizePool {
    *
    * @returns
    */
-  async getAllDrawIds(): Promise<number[]> {
+  async getBeaconChainDrawIds(): Promise<number[]> {
     const [oldestDrawResponse, newestDrawResponse] = await Promise.allSettled([
       this.drawBufferContract.functions.getOldestDraw(),
       this.drawBufferContract.functions.getNewestDraw()
@@ -147,8 +147,8 @@ export class LinkedPrizePool {
    *
    * @returns
    */
-  async getAllDraws(): Promise<Draw[]> {
-    const drawIds = await this.getAllDrawIds()
+  async getBeaconChainDraws(): Promise<Draw[]> {
+    const drawIds = await this.getBeaconChainDrawIds()
     const result: Result = await this.drawBufferContract.functions.getDraws(drawIds)
     return result[0]
   }

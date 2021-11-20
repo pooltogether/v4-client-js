@@ -5,6 +5,7 @@ import { TransactionResponse } from '@ethersproject/abstract-provider'
 import { MaxUint256 } from '@ethersproject/constants'
 import { PrizePool } from './PrizePool'
 import { validateAddress, validateSignerNetwork } from './utils'
+import { Overrides } from '@ethersproject/contracts'
 
 /**
  * A Player for a Prize Pool.
@@ -37,17 +38,16 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async withdraw(
-    amount: BigNumber
-    // overrides?: Overrides
-  ): Promise<TransactionResponse> {
+  async withdraw(amount: BigNumber, overrides?: Overrides): Promise<TransactionResponse> {
     const errorPrefix = 'Player [withdraw] | '
     await this.validateSignerNetwork(errorPrefix)
 
-    const overrides = { gasLimit: 750000 }
-
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.withdrawFrom(usersAddress, amount, overrides)
+    if (Boolean(overrides)) {
+      return this.prizePoolContract.withdrawFrom(usersAddress, amount)
+    } else {
+      return this.prizePoolContract.withdrawFrom(usersAddress, amount, overrides)
+    }
   }
 
   /**
@@ -56,17 +56,16 @@ export class Player extends PrizePool {
    * @param controlledTokenAddress string
    * @returns TransactionResponse
    */
-  async deposit(
-    amount: BigNumber
-    //overrides?: Overrides
-  ): Promise<TransactionResponse> {
+  async deposit(amount: BigNumber, overrides?: Overrides): Promise<TransactionResponse> {
     const errorPrefix = 'Player [depositTo] | '
     await this.validateSignerNetwork(errorPrefix)
 
-    const overrides = { gasLimit: 750000 }
-
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.depositTo(usersAddress, amount, overrides)
+    if (Boolean(overrides)) {
+      return this.prizePoolContract.depositTo(usersAddress, amount, overrides)
+    } else {
+      return this.prizePoolContract.depositTo(usersAddress, amount)
+    }
   }
 
   /**
@@ -77,8 +76,8 @@ export class Player extends PrizePool {
    */
   async depositAndDelegate(
     amount: BigNumber,
-    to?: string
-    // overrides?: Overrides
+    to?: string,
+    overrides?: Overrides
   ): Promise<TransactionResponse> {
     const errorPrefix = 'Player [depositToAndDelegate] | '
     await this.validateSignerNetwork(errorPrefix)
@@ -86,15 +85,17 @@ export class Player extends PrizePool {
       await validateAddress(errorPrefix, to)
     }
 
-    const overrides = { gasLimit: 750000 }
-
     const usersAddress = await this.signer.getAddress()
-    return this.prizePoolContract.depositToAndDelegate(
-      usersAddress,
-      amount,
-      to || usersAddress,
-      overrides
-    )
+    if (Boolean(overrides)) {
+      return this.prizePoolContract.depositToAndDelegate(
+        usersAddress,
+        amount,
+        to || usersAddress,
+        overrides
+      )
+    } else {
+      return this.prizePoolContract.depositToAndDelegate(usersAddress, amount, to || usersAddress)
+    }
   }
 
   /**

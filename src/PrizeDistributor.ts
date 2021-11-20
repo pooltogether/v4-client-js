@@ -1,4 +1,4 @@
-import { Contract, Event } from '@ethersproject/contracts'
+import { Contract, Event, Overrides } from '@ethersproject/contracts'
 import { Result } from '@ethersproject/abi'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
@@ -119,7 +119,10 @@ export class PrizeDistributor {
    * @param drawResults
    * @returns
    */
-  async claimPrizesByDrawResults(drawResults: DrawResults): Promise<TransactionResponse> {
+  async claimPrizesByDrawResults(
+    drawResults: DrawResults,
+    overrides?: Overrides
+  ): Promise<TransactionResponse> {
     const errorPrefix = 'PrizeDistributors [claimPrizes] | '
     const usersAddress = await this.getUsersAddress(errorPrefix)
     await this.validateSignerNetwork(errorPrefix)
@@ -128,15 +131,62 @@ export class PrizeDistributor {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const overrides = { gasLimit: 400000 }
-
     const claim: Claim = prepareClaims({ address: usersAddress } as DrawCalcUser, [drawResults])
-    return this.prizeDistributorContract.claim(
-      claim.userAddress,
-      claim.drawIds,
-      claim.encodedWinningPickIndices,
-      overrides
-    )
+    if (Boolean(overrides)) {
+      return this.prizeDistributorContract.claim(
+        claim.userAddress,
+        claim.drawIds,
+        claim.encodedWinningPickIndices,
+        overrides
+      )
+    } else {
+      return this.prizeDistributorContract.claim(
+        claim.userAddress,
+        claim.drawIds,
+        claim.encodedWinningPickIndices
+      )
+    }
+  }
+
+  /**
+   * Submits a transaction to claim a users prizes
+   * @param drawResults an array of draw results to claim
+   * @returns
+   */
+  async claimPrizesAcrossMultipleDrawsByDrawResults(
+    drawResults: {
+      [drawId: number]: DrawResults
+    },
+    overrides?: Overrides
+  ): Promise<TransactionResponse> {
+    const errorPrefix = 'PrizeDistributors [claimPrizes] | '
+    const usersAddress = await this.getUsersAddress(errorPrefix)
+    await this.validateSignerNetwork(errorPrefix)
+
+    const drawResultsList = Object.values(drawResults)
+    const totalValueToClaim = drawResultsList.reduce((total, drawResult) => {
+      return total.add(drawResult.totalValue)
+    }, ethers.BigNumber.from(0))
+
+    if (totalValueToClaim.isZero()) {
+      throw new Error(errorPrefix + 'No prizes to claim.')
+    }
+
+    const claim: Claim = prepareClaims({ address: usersAddress } as DrawCalcUser, drawResultsList)
+    if (Boolean(overrides)) {
+      return this.prizeDistributorContract.claim(
+        claim.userAddress,
+        claim.drawIds,
+        claim.encodedWinningPickIndices,
+        overrides
+      )
+    } else {
+      return this.prizeDistributorContract.claim(
+        claim.userAddress,
+        claim.drawIds,
+        claim.encodedWinningPickIndices
+      )
+    }
   }
 
   /**
@@ -351,7 +401,7 @@ export class PrizeDistributor {
    */
   async getDrawsAndPrizeDistributions(
     drawIds: number[]
-  ): Promise<{ draw: Draw; prizeDistribution: PrizeDistribution }[]> {
+  ): Promise<{ [drawId: number]: { draw: Draw; prizeDistribution: PrizeDistribution } }> {
     const [drawsResponse, prizeDistributionsResponse] = await Promise.allSettled([
       this.getDraws(drawIds),
       this.getPrizeDistributions(drawIds)
@@ -366,12 +416,14 @@ export class PrizeDistributor {
       )
     }
 
-    const drawsAndPrizeDistributions: { draw: Draw; prizeDistribution: PrizeDistribution }[] = []
-    drawsResponse.value.map((draw, index) => {
-      drawsAndPrizeDistributions.push({
+    const drawsAndPrizeDistributions: {
+      [drawId: number]: { draw: Draw; prizeDistribution: PrizeDistribution }
+    } = {}
+    Object.values(drawsResponse.value).forEach((draw, index) => {
+      drawsAndPrizeDistributions[draw.drawId] = {
         draw,
         prizeDistribution: prizeDistributionsResponse.value[index]
-      })
+      }
     })
 
     return drawsAndPrizeDistributions
@@ -397,17 +449,21 @@ export class PrizeDistributor {
    * @param drawIds
    * @returns
    */
-  async getDraws(drawIds: number[]): Promise<Draw[]> {
+  async getDraws(drawIds: number[]): Promise<{ [drawId: number]: Draw }> {
+    const draws: { [drawId: number]: Draw } = {}
     if (!drawIds || drawIds.length === 0) {
-      return []
+      return draws
     }
     const drawBufferContract = await this.getDrawBufferContract()
     const response: Result = await drawBufferContract.functions.getDraws(drawIds)
-    return response[0].map((draw: Partial<Draw>) => ({
-      drawId: draw.drawId,
-      timestamp: draw.timestamp,
-      winningRandomNumber: draw.winningRandomNumber
-    }))
+    response[0].forEach((draw: Draw) => {
+      draws[draw.drawId] = {
+        drawId: draw.drawId,
+        timestamp: draw.timestamp,
+        winningRandomNumber: draw.winningRandomNumber
+      }
+    })
+    return draws
   }
 
   /**
@@ -437,24 +493,28 @@ export class PrizeDistributor {
    * @param drawIds
    * @returns
    */
-  async getPrizeDistributions(drawIds: number[]): Promise<PrizeDistribution[]> {
+  async getPrizeDistributions(drawIds: number[]): Promise<{ [drawId: number]: PrizeDistribution }> {
     if (!drawIds || drawIds.length === 0) {
-      return []
+      return {}
     }
     const prizeDistributionsBufferContract = await this.getPrizeDistributionsBufferContract()
     const prizeDistributionsResults: Result = await prizeDistributionsBufferContract.functions.getPrizeDistributions(
       drawIds
     )
-    return prizeDistributionsResults[0].map((result: Partial<PrizeDistribution>) => ({
-      matchCardinality: result.matchCardinality,
-      tiers: result.tiers,
-      bitRangeSize: result.bitRangeSize,
-      maxPicksPerUser: result.maxPicksPerUser,
-      numberOfPicks: result.numberOfPicks,
-      prize: result.prize,
-      drawStartTimestampOffset: result.drawStartTimestampOffset,
-      drawEndTimestampOffset: result.drawEndTimestampOffset
-    }))
+    const prizeDistributions: { [drawId: number]: PrizeDistribution } = {}
+    prizeDistributionsResults[0].forEach((result: PrizeDistribution, index: number) => {
+      prizeDistributions[drawIds[index]] = {
+        matchCardinality: result.matchCardinality,
+        tiers: result.tiers,
+        bitRangeSize: result.bitRangeSize,
+        maxPicksPerUser: result.maxPicksPerUser,
+        numberOfPicks: result.numberOfPicks,
+        prize: result.prize,
+        drawStartTimestampOffset: result.drawStartTimestampOffset,
+        drawEndTimestampOffset: result.drawEndTimestampOffset
+      }
+    })
+    return prizeDistributions
   }
 
   /**
@@ -480,10 +540,19 @@ export class PrizeDistributor {
    * @param drawIds
    * @returns
    */
-  async getUsersClaimedAmounts(usersAddress: string, drawIds: number[]): Promise<BigNumber[]> {
-    return await Promise.all(
-      drawIds.map((drawId) => this.getUsersClaimedAmount(usersAddress, drawId))
+  async getUsersClaimedAmounts(
+    usersAddress: string,
+    drawIds: number[]
+  ): Promise<{ [drawId: number]: BigNumber }> {
+    const claimedAmounts: { [drawId: number]: BigNumber } = {}
+    await Promise.all(
+      drawIds.map((drawId) => {
+        return this.getUsersClaimedAmount(usersAddress, drawId).then((claimedAmount) => {
+          claimedAmounts[drawId] = claimedAmount
+        })
+      })
     )
+    return claimedAmounts
   }
 
   /**
@@ -495,7 +564,7 @@ export class PrizeDistributor {
   async getUsersNormalizedBalancesForDrawIds(
     usersAddress: string,
     drawIds: number[]
-  ): Promise<BigNumber[]> {
+  ): Promise<{ [drawId: number]: BigNumber }> {
     const errorPrefix = 'PrizeDistributors [getUsersNormalizedBalancesForDrawIds] |'
     await validateAddress(errorPrefix, usersAddress)
 
