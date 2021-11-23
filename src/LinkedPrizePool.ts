@@ -147,10 +147,18 @@ export class LinkedPrizePool {
    *
    * @returns
    */
-  async getBeaconChainDraws(): Promise<Draw[]> {
+  async getBeaconChainDraws(): Promise<{ [drawId: number]: Draw }> {
     const drawIds = await this.getBeaconChainDrawIds()
+    const draws: { [drawId: number]: Draw } = {}
     const result: Result = await this.drawBufferContract.functions.getDraws(drawIds)
-    return result[0]
+    result[0].forEach((draw: Draw) => {
+      draws[draw.drawId] = {
+        drawId: draw.drawId,
+        timestamp: draw.timestamp,
+        winningRandomNumber: draw.winningRandomNumber
+      }
+    })
+    return draws
   }
 
   /**
