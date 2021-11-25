@@ -66,8 +66,8 @@
   "dependencies": {
     "@ethersproject/abi": "^5.1.0",
     "@pooltogether/contract-list-schema": "^0.1.4",
-    "@pooltogether/draw-calculator-js": "^1.0.2",
-    "@pooltogether/etherplex": "^1.1.2"
+    "@pooltogether/etherplex": "^1.1.2",
+    "@pooltogether/draw-calculator-js": "^1.0.3-beta.1"
   },
   "peerDependencies": {
     "ethers": "^5.4.6"
