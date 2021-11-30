@@ -7,7 +7,7 @@ import { PrizePool } from './PrizePool'
 import { validateAddress, validateSignerNetwork } from './utils'
 
 /**
- * A Player for a Prize Pool.
+ * A User for a Prize Pool.
  * Provides read & write functionality for a Prize Pool.
  * Reads use the provider from the PrizePool.
  * Writes use the signer from the contructor.
@@ -15,13 +15,13 @@ import { validateAddress, validateSignerNetwork } from './utils'
  * incorrect network.
  * @extends PrizePool
  */
-export class Player extends PrizePool {
+export class User extends PrizePool {
   readonly signer: Signer
 
   /**
-   * Creates an instance of a Player for a specific PrizePool
+   * Creates an instance of a User for a specific PrizePool
    * @param signer Signer to submit transactions with
-   * @param prizePool PrizePool that is relevant to this Player
+   * @param prizePool PrizePool that is relevant to this User
    */
   constructor(prizePoolMetadata: ContractMetadata, signer: Signer, prizePool: PrizePool) {
     super(prizePoolMetadata, signer, prizePool.contractMetadataList)
@@ -41,7 +41,7 @@ export class Player extends PrizePool {
     amount: BigNumber
     // overrides?: Overrides
   ): Promise<TransactionResponse> {
-    const errorPrefix = 'Player [withdraw] | '
+    const errorPrefix = 'User [withdraw] | '
     await this.validateSignerNetwork(errorPrefix)
 
     const overrides = { gasLimit: 750000 }
@@ -60,7 +60,7 @@ export class Player extends PrizePool {
     amount: BigNumber
     //overrides?: Overrides
   ): Promise<TransactionResponse> {
-    const errorPrefix = 'Player [depositTo] | '
+    const errorPrefix = 'User [depositTo] | '
     await this.validateSignerNetwork(errorPrefix)
 
     const overrides = { gasLimit: 750000 }
@@ -80,7 +80,7 @@ export class Player extends PrizePool {
     to?: string
     // overrides?: Overrides
   ): Promise<TransactionResponse> {
-    const errorPrefix = 'Player [depositToAndDelegate] | '
+    const errorPrefix = 'User [depositToAndDelegate] | '
     await this.validateSignerNetwork(errorPrefix)
     if (to) {
       await validateAddress(errorPrefix, to)
@@ -102,7 +102,7 @@ export class Player extends PrizePool {
    * @returns TransactionResponse
    */
   async approveDeposits(amount?: BigNumber): Promise<TransactionResponse> {
-    const errorPrefix = 'Player [approveDeposits] | '
+    const errorPrefix = 'User [approveDeposits] | '
     await this.validateSignerNetwork(errorPrefix)
 
     const prizePoolAddress = this.prizePoolMetadata.address
@@ -115,7 +115,7 @@ export class Player extends PrizePool {
    * @returns
    */
   async selfDelegateTickets(): Promise<TransactionResponse> {
-    const errorPrefix = 'Player [selfDelegateTickets] | '
+    const errorPrefix = 'User [selfDelegateTickets] | '
     await this.validateSignerNetwork(errorPrefix)
 
     const usersAddress = await this.signer.getAddress()
@@ -128,7 +128,7 @@ export class Player extends PrizePool {
    * @returns
    */
   async delegateTickets(address: string): Promise<TransactionResponse> {
-    const errorPrefix = 'Player [delegateTickets] | '
+    const errorPrefix = 'User [delegateTickets] | '
     await this.validateSignerNetwork(errorPrefix)
     await validateAddress(errorPrefix, address)
 
@@ -139,7 +139,7 @@ export class Player extends PrizePool {
   //////////////////////////// Ethers read functions ////////////////////////////
 
   /**
-   * Returns the Players ticket balance.
+   * Returns the Users ticket balance.
    * @returns BigNumber
    */
   async getTicketBalance(): Promise<BigNumber> {
@@ -148,7 +148,7 @@ export class Player extends PrizePool {
   }
 
   /**
-   * Returns the Players token (underlying token) balance.
+   * Returns the Users token (underlying token) balance.
    * @returns BigNumber
    */
   async getTokenBalance(): Promise<BigNumber> {
@@ -157,7 +157,7 @@ export class Player extends PrizePool {
   }
 
   /**
-   * Returns the allowance the Player has for depositing into the Prize Pool.
+   * Returns the allowance the User has for depositing into the Prize Pool.
    * @returns BigNumber
    */
   async getDepositAllowance() {

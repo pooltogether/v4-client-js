@@ -8,20 +8,20 @@ import { Result } from '@ethersproject/abi'
 import { initializePrizeDistributors, PrizeDistributor } from './PrizeDistributor'
 
 /**
- * A Linked Prize Pool (a group of Prize Pools).
+ * A Prize Pool Network (a group of Prize Pools).
  * Provides read only functions for getting data needed to display to users.
  * Initializes several PrizePools.
  *
  * NOTE: Initialization is still up in the air since the way we're using
- * contract lists to store Linked Prize Pool data is constantly changing.
+ * contract lists to store Prize Pool Network data is constantly changing.
  */
-export class LinkedPrizePool {
+export class PrizePoolNetwork {
   readonly providers: Providers
   readonly prizePools: PrizePool[]
   readonly prizeDistributors: PrizeDistributor[]
   readonly contractList: ContractList
 
-  // Used to uniquely identify the Linked Prize Pool. TODO: Probably use something better?
+  // Used to uniquely identify the Prize Pool Network. TODO: Probably use something better?
   readonly beaconChainId: number
   readonly beaconAddress: string
 
@@ -37,16 +37,16 @@ export class LinkedPrizePool {
    *
    * @constructor
    * @param providers
-   * @param linkedPrizePoolContractList
+   * @param prizePoolNetworkContractList
    */
-  constructor(providers: Providers, linkedPrizePoolContractList: ContractList) {
+  constructor(providers: Providers, prizePoolNetworkContractList: ContractList) {
     this.providers = providers
-    this.contractList = linkedPrizePoolContractList
-    this.prizePools = initializePrizePools(linkedPrizePoolContractList, providers)
-    this.prizeDistributors = initializePrizeDistributors(linkedPrizePoolContractList, providers)
+    this.contractList = prizePoolNetworkContractList
+    this.prizePools = initializePrizePools(prizePoolNetworkContractList, providers)
+    this.prizeDistributors = initializePrizeDistributors(prizePoolNetworkContractList, providers)
 
     // DrawBeacon
-    const drawBeaconContractMetadata = linkedPrizePoolContractList.contracts.find(
+    const drawBeaconContractMetadata = prizePoolNetworkContractList.contracts.find(
       (c) => c.type === ContractType.DrawBeacon
     ) as ContractMetadata
     const beaconChainId = drawBeaconContractMetadata.chainId
@@ -58,7 +58,7 @@ export class LinkedPrizePool {
     )
 
     // DrawBuffer
-    const drawBufferContractMetadata = linkedPrizePoolContractList.contracts.find(
+    const drawBufferContractMetadata = prizePoolNetworkContractList.contracts.find(
       (c) => c.type === ContractType.DrawBuffer && c.chainId === beaconChainId
     ) as ContractMetadata
     const drawBufferContract = new Contract(
@@ -79,7 +79,7 @@ export class LinkedPrizePool {
   //////////////////////////// Ethers read functions ////////////////////////////
 
   /**
-   * Fetch the users balances for all relevant tokens for all Prize Pools in the Linked Prize Pool.
+   * Fetch the users balances for all relevant tokens for all Prize Pools in the Prize Pool Network.
    * @param usersAddress address to get balances for
    * @returns an array of objects containing the chain id & Prize Pool address and a balances object
    * with the users balances for relevant tokens to the prize pool
@@ -182,6 +182,6 @@ export class LinkedPrizePool {
    *
    */
   id(): string {
-    return `linked-prize-pool-${this.beaconChainId}-${this.beaconAddress}`
+    return `prize-pool-network-${this.beaconChainId}-${this.beaconAddress}`
   }
 }
