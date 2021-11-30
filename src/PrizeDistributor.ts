@@ -29,7 +29,7 @@ import {
  * If a provider is provided, only read methods are available.
  * NOTE: Ideally this is nested underneath a PrizePool.
  * TODO: Make metadata readonly by using getters and private setters.
- * Then when a Player is created, so is a new PrizeDistributors with a signer all ready to go.
+ * Then when a User is created, so is a new PrizeDistributors with a signer all ready to go.
  */
 export class PrizeDistributor {
   readonly contractMetadataList: ContractMetadata[]

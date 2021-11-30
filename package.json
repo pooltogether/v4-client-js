@@ -22,6 +22,8 @@
     "reinstall": "rm -rf node_modules && yarn install",
     "build": "tsdx build",
     "test": "tsdx test",
+    "test:watch": "tsdx test --watch",
+    "test:coverage": "tsdx test --coverage",
     "lint": "tsdx lint",
     "prepare": "tsdx build",
     "size": "size-limit",
@@ -54,6 +56,8 @@
     }
   ],
   "devDependencies": {
+    "@pooltogether/evm-chains-extended": "^0.6.4-beta.1",
+    "@pooltogether/utilities": "^0.3.5",
     "@size-limit/preset-small-lib": "^5.0.3",
     "@types/lodash.memoize": "^4.1.6",
     "ethers": "^5.4.6",
@@ -67,7 +71,8 @@
     "@ethersproject/abi": "^5.1.0",
     "@pooltogether/contract-list-schema": "^0.1.4",
     "@pooltogether/draw-calculator-js": "^1.0.3-beta.2",
-    "@pooltogether/etherplex": "^1.1.2"
+    "@pooltogether/etherplex": "^1.1.2",
+    "debug": "^4.3.3"
   },
   "peerDependencies": {
     "ethers": "^5.4.6"

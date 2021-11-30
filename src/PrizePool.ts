@@ -24,7 +24,7 @@ import {
  * Provides read only functions for getting data needed to display to users.
  *
  * NOTE: Initialization is still up in the air since the way we're using
- * contract lists to store Linked Prize Pool data is constantly changing.
+ * contract lists to store Prize Pool Network data is constantly changing.
  */
 export class PrizePool {
   readonly contractMetadataList: ContractMetadata[]

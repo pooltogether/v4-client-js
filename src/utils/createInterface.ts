@@ -1,7 +1,5 @@
-import { Interface } from "@ethersproject/abi";
+import { Interface } from '@ethersproject/abi'
 
 export function createInterface(abi: any) {
-  return new Interface(abi);
+  return new Interface(abi)
 }
-
-export default createInterface;

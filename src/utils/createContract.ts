@@ -1,16 +1,12 @@
-import { Interface } from "@ethersproject/abi";
-import { Contract } from "@ethersproject/contracts";
-import { Provider } from "@ethersproject/abstract-provider";
-import { Signer } from "@ethersproject/abstract-signer";
-import { Wallet } from "@ethersproject/wallet";
+import { Interface } from '@ethersproject/abi'
+import { Contract } from '@ethersproject/contracts'
+import { Provider } from '@ethersproject/abstract-provider'
+import { Signer } from '@ethersproject/abstract-signer'
 
 export const createContract = (
-  address?: string,
-  contractInterface?: Interface,
-  provider?: Provider | Signer | Wallet
-): Contract | undefined => {
-  if (!address || !contractInterface) return undefined;
-  return new Contract(address, contractInterface, provider);
-};
-
-export default createContract;
+  address: string,
+  contractInterface: Interface,
+  provider: Provider | Signer
+): Contract => {
+  return new Contract(address, contractInterface, provider)
+}

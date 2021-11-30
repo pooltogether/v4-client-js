@@ -1489,6 +1489,18 @@
     lodash.merge "^4.6.2"
     zen-observable-ts "^0.8.20"
 
+"@pooltogether/evm-chains-extended@^0.6.4-beta.1":
+  version "0.6.4-beta.1"
+  resolved "https://registry.yarnpkg.com/@pooltogether/evm-chains-extended/-/evm-chains-extended-0.6.4-beta.1.tgz#dba3a24fe22c2c0832e9cf0eb4af2e5bad5615f0"
+  integrity sha512-wTaR1bJGWDoW/xlvymtuEZOwgQu3N4pDHTdCm00lMFN0AH8JKczyJRijTv5Jef7dhGmiZIMOlyBFCFkMlVU6ew==
+  dependencies:
+    evm-chains "^0.2.0"
+
+"@pooltogether/utilities@^0.3.5":
+  version "0.3.5"
+  resolved "https://registry.yarnpkg.com/@pooltogether/utilities/-/utilities-0.3.5.tgz#8ca6dc80257c0bf9f6565944fbc6b37581038ec6"
+  integrity sha512-wMEzPd4oL5NcapckcP1aHJzwiCkxlwXbX3Cci8g9BtHzbWlKx8+2G56KLHl/lZQXAHamKTN4VHpFmRjHwnRCfg==
+
 "@rollup/plugin-babel@^5.1.0":
   version "5.3.0"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-babel/-/plugin-babel-5.3.0.tgz#9cb1c5146ddd6a4968ad96f209c50c62f92f9879"
@@ -3268,6 +3280,13 @@ debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2:
   dependencies:
     ms "2.1.2"
 
+debug@^4.3.3:
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.3.tgz#04266e0b70a98d4462e6e288e38259213332b664"
+  integrity sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==
+  dependencies:
+    ms "2.1.2"
+
 decamelize@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/decamelize/-/decamelize-1.2.0.tgz#f6534d15148269b20352e7bee26f501f9a191290"
@@ -3863,6 +3882,11 @@ events@^3.0.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
   integrity sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==
+
+evm-chains@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/evm-chains/-/evm-chains-0.2.0.tgz#401354aa2b474bb9b34e796d328f281e67d07349"
+  integrity sha512-iMpFpmKT9VydfIUpRFoQHNzLdZ3WSNagiq6PABqWDSRwAA9OW+dpKYczkvJ/WSUesGWgcfzYoKRvfusn/9bBYA==
 
 evp_bytestokey@^1.0.0, evp_bytestokey@^1.0.3:
   version "1.0.3"

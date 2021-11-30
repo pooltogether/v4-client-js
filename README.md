@@ -22,36 +22,36 @@ $ yarn add @pooltogether/v4-js-client
 
 ## Initializing
 
-### `LinkedPrizePool`
+### `PrizePoolNetwork`
 
-A `LinkedPrizePool` is a collection of `PrizePool` and `PrizeDistributor` across several chains that make up a v4 deployment.
+A `PrizePoolNetwork` is a collection of `PrizePool` and `PrizeDistributor` across several chains that make up a v4 deployment.
 
-To create an instance of `LinkedPrizePool` you will need:
+To create an instance of `PrizePoolNetwork` you will need:
 
 - A [Contract List](https://github.com/pooltogether/contract-list-schema) containing all of the relevant contracts for a v4 prize pool. You can obtain this by generating your own after deploying a v4 Prize Pool ([start here](https://github.com/pooltogether/v4-core)). Or by importing a copy of our current deployments [v4-pool-data](https://www.npmjs.com/package/@pooltogether/v4-pool-data).
 - [Ethers providers](https://docs.ethers.io/v5/api/providers/) for every chain that a Prize Pool is deployed on.
 
 ```js
-import { LinkedPrizePool } from '@pooltogether/v4-js-client'
+import { PrizePoolNetwork } from '@pooltogether/v4-js-client'
 import { mainnet } from '@pooltogether/v4-pool-data'
 
-const linkedPrizePool = new LinkedPrizePool(providers, mainnet)
+const PrizePoolNetwork = new PrizePoolNetwork(providers, mainnet)
 ```
 
 ### `PrizePool`
 
-A `PrizePool` is a representation of a Prize Pool deployment. The Prize Pool is responsible for managing deposits, withdrawals & delegation. `PrizePool` is a read only object, for write capabilities check out `Player`
+A `PrizePool` is a representation of a Prize Pool deployment. The Prize Pool is responsible for managing deposits, withdrawals & delegation. `PrizePool` is a read only object, for write capabilities check out `User`
 
 ```js
-const prizePool = linkedPrizePool.getPrizePool(1, '0xabc123')
+const prizePool = PrizePoolNetwork.getPrizePool(1, '0xabc123')
 ```
 
-### `Player`
+### `User`
 
-A `Player` is wrapper around `PrizePool` with the ability to send transactions to manage deposits, withdrawals and delegation.
+A `User` is wrapper around `PrizePool` with the ability to send transactions to manage deposits, withdrawals and delegation.
 
 ```js
-const player = new Player(prizePool.prizePoolMetadata, signer, prizePool)
+const user = new User(prizePool.prizePoolMetadata, signer, prizePool)
 ```
 
 ### `PrizeDistributor`
@@ -59,11 +59,11 @@ const player = new Player(prizePool.prizePoolMetadata, signer, prizePool)
 A `PrizeDistributor` is what handles prizes. It is used to determine the current draw, check for prizes & claiming prizes. For write capabilities, pass a signer when creating an instance.
 
 ```js
-const prizeDistributor = linkedPrizePool.getPrizeDistributor(1, '0xabc123')
+const prizeDistributor = PrizePoolNetwork.getPrizeDistributor(1, '0xabc123')
 ```
 
 ```js
-const prizeDistributor = linkedPrizePool.getPrizeDistributor(1, '0xabc123')
+const prizeDistributor = PrizePoolNetwork.getPrizeDistributor(1, '0xabc123')
 const signer = provider.getSigner()
 const signerPrizeDistributor = new PrizeDistributor(
   prizeDistributor.prizeDistributorMetadata,
@@ -88,7 +88,7 @@ const usersBalances: {
   chainId: number,
   address: string,
   balances: PrizePoolTokenBalances
-}[] = await linkedPrizePool.getUsersPrizePoolBalances()
+}[] = await PrizePoolNetwork.getUsersPrizePoolBalances()
 ```
 
 ### Get a users deposit token & ticket balance
@@ -102,7 +102,7 @@ const balance: PrizePoolTokenBalances = await prizePool.getUsersPrizePoolBalance
 NOTE: Make sure you're shifting by the proper decimal amount
 
 ```js
-const txResponse: TransactionResponse = await player.approveDeposits(
+const txResponse: TransactionResponse = await user.approveDeposits(
   ethers.utils.parseUnits(10, decimals)
 )
 ```
@@ -112,7 +112,7 @@ const txResponse: TransactionResponse = await player.approveDeposits(
 NOTE: Make sure you're shifting by the proper decimal amount
 
 ```js
-const txResponse: TransactionResponse = await player.depositAndDelegate(
+const txResponse: TransactionResponse = await user.depositAndDelegate(
   ethers.utils.parseUnits(10, decimals)
 )
 ```
@@ -122,7 +122,7 @@ const txResponse: TransactionResponse = await player.depositAndDelegate(
 NOTE: Make sure you're shifting by the proper decimal amount
 
 ```js
-const txResponse: TransactionResponse = await player.deposit(ethers.utils.parseUnits(10, decimals))
+const txResponse: TransactionResponse = await user.deposit(ethers.utils.parseUnits(10, decimals))
 ```
 
 ### Withdraw tokens
@@ -130,7 +130,7 @@ const txResponse: TransactionResponse = await player.deposit(ethers.utils.parseU
 NOTE: Make sure you're shifting by the proper decimal amount
 
 ```js
-const txResponse: TransactionResponse = await player.withdraw(ethers.utils.parseUnits(10, decimals))
+const txResponse: TransactionResponse = await user.withdraw(ethers.utils.parseUnits(10, decimals))
 ```
 
 ### Get valid draw ids

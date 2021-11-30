@@ -3,6 +3,8 @@ import { Contract } from '@ethersproject/contracts'
 import { Signer } from '@ethersproject/abstract-signer'
 import { ContractType } from '../constants'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
+import { createContract } from '../utils/createContract'
+import { createInterface } from '../utils/createInterface'
 
 export function getMetadataAndContract(
   chainId: number,
@@ -17,9 +19,9 @@ export function getMetadataAndContract(
   if (!contractMetadata) {
     throw new Error(`Invalid contract list. Missing ${contractType}.`)
   }
-  const contract = new Contract(
+  const contract = createContract(
     addressOverride || contractMetadata.address,
-    contractMetadata.abi,
+    createInterface(contractMetadata.abi),
     signerOrProvider
   )
 
