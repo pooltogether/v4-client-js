@@ -3,7 +3,11 @@ import { Result } from '@ethersproject/abi'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
 import { TransactionResponse } from '@ethersproject/providers'
-import { prepareClaims, calculateDrawResults } from '@pooltogether/draw-calculator-js'
+import {
+  prepareClaims,
+  calculateDrawResults,
+  filterResultsByValue
+} from '@pooltogether/draw-calculator-js'
 import { BigNumber, ethers } from 'ethers'
 
 import { ContractType } from './constants'
@@ -110,7 +114,7 @@ export class PrizeDistributor {
     const errorPrefix = 'PrizeDistributors [claim] | '
     const usersAddress = await this.getUsersAddress(errorPrefix)
 
-    const drawResults = await this.getUsersPrizes(usersAddress, draw)
+    const drawResults = await this.calculateUsersPrizes(usersAddress, draw)
     return this.claimPrizesByDrawResults(drawResults)
   }
 
@@ -577,12 +581,13 @@ export class PrizeDistributor {
   }
 
   /**
-   *
+   * Calculates the prizes a user won for a specific Draw.
+   * NOTE: This is computationally expensive and may cause a long delay.
    * @param usersAddress
    * @param draw
    * @returns
    */
-  async getUsersPrizes(usersAddress: string, draw: Draw): Promise<DrawResults> {
+  async calculateUsersPrizes(usersAddress: string, draw: Draw): Promise<DrawResults> {
     // Fetch the draw settings for the draw
     const prizeDistribution: PrizeDistribution = await this.getPrizeDistribution(draw.drawId)
 
@@ -607,19 +612,21 @@ export class PrizeDistributor {
         prizes: []
       }
     } else {
-      return calculateDrawResults(prizeDistribution, draw, user)
+      const drawResults = calculateDrawResults(prizeDistribution, draw, user)
+      return filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
     }
   }
 
   /**
-   *
+   * Calculates the prizes a user won for a specific draw id.
+   * NOTE: This is computationally expensive and may cause a long delay.
    * @param usersAddress
    * @param drawId
    * @returns
    */
-  async getUsersPrizesByDrawId(usersAddress: string, drawId: number): Promise<DrawResults> {
+  async calculateUsersPrizesByDrawId(usersAddress: string, drawId: number): Promise<DrawResults> {
     const draw = await this.getDraw(drawId)
-    return this.getUsersPrizes(usersAddress, draw)
+    return this.calculateUsersPrizes(usersAddress, draw)
   }
 
   /**

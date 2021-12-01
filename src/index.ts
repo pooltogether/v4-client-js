@@ -16,5 +16,6 @@ export {
   generatePicks,
   calculateNumberOfPrizesForIndex,
   calculatePrizeForDistributionIndex,
-  calculateNumberOfPicksForUser
+  calculateNumberOfPicksForUser,
+  filterResultsByValue
 } from '@pooltogether/draw-calculator-js'
