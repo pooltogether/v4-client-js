@@ -50,6 +50,7 @@ export {
   Draw as DrawCalcDraw,
   User as DrawCalcUser,
   UserDrawResult as DrawCalcUserDrawResult,
+  PrizeTier,
   PrizeDistribution,
   Pick,
   DrawResults,

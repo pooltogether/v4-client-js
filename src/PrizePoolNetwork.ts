@@ -1,7 +1,7 @@
 import { initializePrizePools, PrizePool } from './PrizePool'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
 import { ContractType } from './constants'
-import { Draw, Providers } from './types'
+import { Draw, PrizeTier, Providers } from './types'
 import { Contract } from '@ethersproject/contracts'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Result } from '@ethersproject/abi'
@@ -28,10 +28,12 @@ export class PrizePoolNetwork {
   // Contract metadata
   readonly drawBeaconMetadata: ContractMetadata
   readonly drawBufferMetadata: ContractMetadata
+  readonly prizeTierHistoryMetadata: ContractMetadata
 
   // Ethers contracts
   readonly drawBeaconContract: Contract
   readonly drawBufferContract: Contract
+  readonly prizeTierHistoryContract: Contract
 
   /**
    *
@@ -67,13 +69,25 @@ export class PrizePoolNetwork {
       beaconProvider
     )
 
+    // PrizeTierHistory
+    const prizeTierHistoryContractMetadata = prizePoolNetworkContractList.contracts.find(
+      (c) => c.type === ContractType.PrizeTierHistory && c.chainId === beaconChainId
+    ) as ContractMetadata
+    const prizeTierHistoryContract = new Contract(
+      prizeTierHistoryContractMetadata.address,
+      prizeTierHistoryContractMetadata.abi,
+      beaconProvider
+    )
+
     // Set values
+    this.beaconChainId = beaconChainId
+    this.beaconAddress = drawBeaconContractMetadata.address
     this.drawBeaconMetadata = drawBeaconContractMetadata
     this.drawBeaconContract = drawBeaconContract
     this.drawBufferMetadata = drawBufferContractMetadata
     this.drawBufferContract = drawBufferContract
-    this.beaconChainId = beaconChainId
-    this.beaconAddress = drawBeaconContractMetadata.address
+    this.prizeTierHistoryMetadata = prizeTierHistoryContractMetadata
+    this.prizeTierHistoryContract = prizeTierHistoryContract
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
@@ -159,6 +173,22 @@ export class PrizePoolNetwork {
       }
     })
     return draws
+  }
+
+  /**
+   *
+   * @returns
+   */
+  async getUpcomingPrizeTier(): Promise<PrizeTier> {
+    const [drawId]: number[] = await this.prizeTierHistoryContract.functions.getNewestDrawId()
+    const result: Result = await this.prizeTierHistoryContract.functions.getPrizeTier(drawId)
+    return {
+      bitRangeSize: result[0].bitRangeSize,
+      expiryDuration: result[0].expiryDuration,
+      maxPicksPerUser: result[0].maxPicksPerUser,
+      prize: result[0].prize,
+      tiers: result[0].tiers
+    }
   }
 
   /**

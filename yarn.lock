@@ -1472,9 +1472,9 @@
   integrity sha512-oLAu9TGfU9xf1QFJJZQxUj0hsfcRao/DMCZ1hVvDkmwOnX1PUkuhuvZfvgwLFd4hJ4m2kjdCyTJ+VJ5qvgjyww==
 
 "@pooltogether/draw-calculator-js@^1.0.3-beta.2":
-  version "1.0.3-beta.2"
-  resolved "https://registry.yarnpkg.com/@pooltogether/draw-calculator-js/-/draw-calculator-js-1.0.3-beta.2.tgz#ddc00690404a625c74461bf1a76c01fc158d8807"
-  integrity sha512-KN4iDKU/7p7elJ1B6BuXXAwcy63TuQRWGGm8osNJSKR/ER8jObkFNqQ3foxDAf62JB8MsUqoCKOxoA6sqzNfPA==
+  version "1.0.3-beta.4"
+  resolved "https://registry.yarnpkg.com/@pooltogether/draw-calculator-js/-/draw-calculator-js-1.0.3-beta.4.tgz#24f46c360ebf6a070e193a95d81c026b7209ce89"
+  integrity sha512-JAh3/gjPdebJm9M8rPP9KRIrVAlBIAe/uZ/5jpDzmQUuEiUBp5FNrUyFFUdK8ATF4x3dVLjxvcwACBQYHPPr8w==
   dependencies:
     chalk "^4.1.2"
     debug "^4.3.2"
@@ -3273,14 +3273,14 @@ debug@^3.2.7:
   dependencies:
     ms "^2.1.1"
 
-debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.3.2:
+debug@^4.0.1, debug@^4.1.0, debug@^4.1.1:
   version "4.3.2"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.2.tgz#f0a49c18ac8779e31d4a0c6029dfb76873c7428b"
   integrity sha512-mOp8wKcvj7XxC78zLgw/ZA+6TSgkoE2C/ienthhRD298T7UNwAg9diBpLRxC0mOezLl4B0xV7M0cCO6P/O0Xhw==
   dependencies:
     ms "2.1.2"
 
-debug@^4.3.3:
+debug@^4.3.2, debug@^4.3.3:
   version "4.3.3"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.3.tgz#04266e0b70a98d4462e6e288e38259213332b664"
   integrity sha512-/zxw5+vh1Tfv+4Qn7a5nsbcJKPaSvCDhojn6FEl9vupwK2VCSDtEiEtqr8DFtzYFOdz63LBkxec7DYuc2jon6Q==

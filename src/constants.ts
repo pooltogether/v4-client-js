@@ -1,8 +1,8 @@
-export const DAYS_IN_SECONDS = 86400;
+export const DAYS_IN_SECONDS = 86400
 
-export const HOUR_IN_SECONDS = 3600;
+export const HOUR_IN_SECONDS = 3600
 
-export const TIER_DENOMINATION = 9;
+export const TIER_DENOMINATION = 9
 
 export enum ContractType {
   YieldSourcePrizePool = 'YieldSourcePrizePool',
@@ -13,6 +13,7 @@ export enum ContractType {
   DrawBeacon = 'DrawBeacon',
   DrawCalculator = 'DrawCalculator',
   DrawCalculatorTimelock = 'DrawCalculatorTimelock',
-  PrizeDistributionBuffer = 'PrizeDistributionBuffer'
+  PrizeDistributionBuffer = 'PrizeDistributionBuffer',
+  PrizeTierHistory = 'PrizeTierHistory'
   // ... more contract types
 }
