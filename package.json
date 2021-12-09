@@ -2,7 +2,7 @@
   "name": "@pooltogether/v4-js-client",
   "author": "PoolTogether Inc.",
   "module": "dist/v4-js-client.esm.js",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
