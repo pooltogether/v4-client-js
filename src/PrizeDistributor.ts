@@ -19,14 +19,18 @@ import {
   DrawResults,
   Claim,
   DrawCalcUser,
-  SignersOrProviders
+  SignersOrProviders,
+  TokenData
 } from './types'
 import {
+  createContractMetadata,
   getMetadataAndContract,
+  getTokenData,
   validateAddress,
   validateIsSigner,
   validateSignerNetwork
 } from './utils'
+import ERC20Abi from 'abis/ERC20Abi'
 
 /**
  * Can be instantiated with a signer or a provider.
@@ -47,6 +51,7 @@ export class PrizeDistributor {
   drawCalculatorMetadata: ContractMetadata | undefined
   drawBufferMetadata: ContractMetadata | undefined
   prizeDistributionsBufferMetadata: ContractMetadata | undefined
+  tokenMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizeDistributorContract: Contract
@@ -54,6 +59,7 @@ export class PrizeDistributor {
   drawCalculatorContract: Contract | undefined
   drawBufferContract: Contract | undefined
   prizeDistributionsBufferContract: Contract | undefined
+  tokenContract: Contract | undefined
 
   /**
    * NOTE: Assumes that there is only one DrawCalculaotrTimelock on the network for the provided prizeDistributorMetadata.
@@ -206,9 +212,14 @@ export class PrizeDistributor {
 
   //////////////////////////// Ethers read functions ////////////////////////////
 
-  // TODO: Get past distribution
-  // TODO: Get past prizes
-  // TODO: Our Tsunami frontend will do this outside of here since it's hardcoded.
+  /**
+   * Fetches decimals, name and symbol for the Token that will be distributed.
+   * @returns symbol: string, decimals: string, name: string
+   */
+  async getTokenData(): Promise<TokenData> {
+    const tokenContract = await this.getTokenContract()
+    return getTokenData(tokenContract)
+  }
 
   // NOTE: getNewestDraw will error if there is no draw pushed
   async getNewestDraw(): Promise<Draw> {
@@ -739,6 +750,33 @@ export class PrizeDistributor {
       ContractType.PrizeDistributionBuffer,
       getAddress
     )
+  }
+
+  /**
+   *
+   * @returns
+   */
+  async getTokenContract(): Promise<Contract> {
+    if (this.tokenContract !== undefined) return this.tokenContract
+    const getAddress = async () => {
+      const result: Result = await this.prizeDistributorContract.functions.getToken()
+      return result[0]
+    }
+    const tokenAddress = await getAddress()
+    const tokenMetadata = createContractMetadata(
+      this.chainId,
+      tokenAddress,
+      ContractType.Token,
+      ERC20Abi
+    )
+    const tokenContract = new Contract(
+      tokenMetadata.address,
+      tokenMetadata.abi,
+      this.signerOrProvider
+    )
+    this.tokenMetadata = tokenMetadata
+    this.tokenContract = tokenContract
+    return tokenContract
   }
 
   //////////////////////////// Methods ////////////////////////////
