@@ -169,7 +169,9 @@ export class PrizePoolNetwork {
       draws[draw.drawId] = {
         drawId: draw.drawId,
         timestamp: draw.timestamp,
-        winningRandomNumber: draw.winningRandomNumber
+        winningRandomNumber: draw.winningRandomNumber,
+        beaconPeriodStartedAt: draw.beaconPeriodStartedAt,
+        beaconPeriodSeconds: draw.beaconPeriodSeconds
       }
     })
     return draws

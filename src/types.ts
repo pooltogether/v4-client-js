@@ -34,6 +34,8 @@ export interface Draw {
   drawId: number
   timestamp: number
   winningRandomNumber: BigNumber
+  beaconPeriodStartedAt: number
+  beaconPeriodSeconds: number
 }
 
 export {

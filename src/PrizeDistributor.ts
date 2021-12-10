@@ -229,7 +229,9 @@ export class PrizeDistributor {
     return {
       drawId: draw.drawId,
       timestamp: draw.timestamp,
-      winningRandomNumber: draw.winningRandomNumber
+      winningRandomNumber: draw.winningRandomNumber,
+      beaconPeriodStartedAt: draw.beaconPeriodStartedAt,
+      beaconPeriodSeconds: draw.beaconPeriodSeconds
     }
   }
 
@@ -240,7 +242,9 @@ export class PrizeDistributor {
     return {
       drawId: draw.drawId,
       timestamp: draw.timestamp,
-      winningRandomNumber: draw.winningRandomNumber
+      winningRandomNumber: draw.winningRandomNumber,
+      beaconPeriodStartedAt: draw.beaconPeriodStartedAt,
+      beaconPeriodSeconds: draw.beaconPeriodSeconds
     }
   }
 
@@ -455,7 +459,9 @@ export class PrizeDistributor {
     return {
       drawId: response[0].drawId,
       timestamp: response[0].timestamp,
-      winningRandomNumber: response[0].winningRandomNumber
+      winningRandomNumber: response[0].winningRandomNumber,
+      beaconPeriodStartedAt: response[0].beaconPeriodStartedAt,
+      beaconPeriodSeconds: response[0].beaconPeriodSeconds
     }
   }
 
@@ -475,7 +481,9 @@ export class PrizeDistributor {
       draws[draw.drawId] = {
         drawId: draw.drawId,
         timestamp: draw.timestamp,
-        winningRandomNumber: draw.winningRandomNumber
+        winningRandomNumber: draw.winningRandomNumber,
+        beaconPeriodStartedAt: draw.beaconPeriodStartedAt,
+        beaconPeriodSeconds: draw.beaconPeriodSeconds
       }
     })
     return draws
