@@ -30,7 +30,7 @@ import {
   validateIsSigner,
   validateSignerNetwork
 } from './utils'
-import ERC20Abi from 'abis/ERC20Abi'
+import ERC20Abi from './abis/ERC20Abi'
 
 /**
  * Can be instantiated with a signer or a provider.
