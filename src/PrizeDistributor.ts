@@ -631,7 +631,15 @@ export class PrizeDistributor {
         prizes: []
       }
     } else {
-      const drawResults = calculateDrawResults(prizeDistribution, draw, user)
+      const drawResults = calculateDrawResults(
+        prizeDistribution,
+        {
+          ...draw,
+          timestamp: draw.timestamp.toNumber(),
+          beaconPeriodStartedAt: draw.beaconPeriodStartedAt.toNumber()
+        },
+        user
+      )
       return filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
     }
   }

@@ -32,9 +32,9 @@ export interface ChildContractAddresses {
 
 export interface Draw {
   drawId: number
-  timestamp: number
+  timestamp: BigNumber
   winningRandomNumber: BigNumber
-  beaconPeriodStartedAt: number
+  beaconPeriodStartedAt: BigNumber
   beaconPeriodSeconds: number
 }
 
