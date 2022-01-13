@@ -1,6 +1,6 @@
 import { ContractType } from '../constants'
-import { getContractsByType } from './getContractsByType'
 import { Contract, ContractIdentifier } from '../types'
+import { getContractsByType } from './getContractsByType'
 
 /**
  * Reads the contract list and pulls out connected contracts based on the

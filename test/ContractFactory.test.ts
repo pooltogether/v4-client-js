@@ -1,8 +1,9 @@
-import { constants } from 'ethers'
 import { getReadProviders } from '@pooltogether/utilities'
+import { constants } from 'ethers'
+
 import { ContractFactory } from '../src/ContractFactory'
-import { contactList, ADDRESS_DEAD, CHAIN_ID } from './constants'
 import { ContractList, SignersOrProviders } from '../src/types'
+import { contactList, ADDRESS_DEAD, CHAIN_ID } from './constants'
 
 describe('ContractFactory', () => {
   let cf: ContractFactory

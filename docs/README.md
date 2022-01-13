@@ -1,3 +1,5 @@
+@pooltogether/v4-js-client / [Exports](modules.md)
+
 <p align="center">
   <a href="https://github.com/pooltogether/pooltogether--brand-assets">
     <img src="https://github.com/pooltogether/pooltogether--brand-assets/blob/977e03604c49c63314450b5d432fe57d34747c66/logo/pooltogether-logo--purple-gradient.png?raw=true" alt="PoolTogether Brand" style="max-width:100%;" width="200">
@@ -175,28 +177,3 @@ NOTE: Ensure the `PrizeDistributor` was initialized with a `Signer`
 ```js
 const txResponse: TransactionResponse = await prizeDistributor.claimPrizesByDraw(1)
 ```
-
-# 💻 Developer Experience
-
-## Contributing
-
-[Create an Issue](https://github.com/pooltogether/v4-utils-js/issues) to request new features.
-[Open Pull Request](#) adhering to Contribution guidelines.
-
-The package is setup using the [TSDX zero-config CLI](https://tsdx.io/) which includes:
-
-- Typescript
-- Rollup
-- Jest
-- Prettier
-- ESLint
-
-**Minor changes have been made to extend the default configuration.**
-
-### ESLint
-
-The TSDX linting configuration is overwritten to include override(s)\* for:
-
-- Import/Order (used to enforce consistent module import ordering)
-
-###### \*The ESLint overrides may incorrectly be interpreted by VSCode since the nested config file is ignored in the IDE

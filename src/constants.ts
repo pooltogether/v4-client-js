@@ -4,6 +4,9 @@ export const HOUR_IN_SECONDS = 3600
 
 export const TIER_DENOMINATION = 9
 
+/**
+ * A shortlist of PoolTogether v4 contract names that are used by the classes in this repo.
+ */
 export enum ContractType {
   YieldSourcePrizePool = 'YieldSourcePrizePool',
   Ticket = 'Ticket',

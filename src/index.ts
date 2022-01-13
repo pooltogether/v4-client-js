@@ -3,6 +3,7 @@ export * from './PrizePoolNetwork'
 export * from './PrizePool'
 export * from './User'
 export * from './PrizeDistributor'
+export * from './DrawCalculatorAPI'
 export * from './types'
 export * from './utils'
 

@@ -1,1 +1,1 @@
-export * from "./getMultiTicketAverageTotalSuppliesBetween";
+export * from './getMultiTicketAverageTotalSuppliesBetween'

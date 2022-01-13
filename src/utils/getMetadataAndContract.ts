@@ -1,8 +1,9 @@
 import { Provider } from '@ethersproject/abstract-provider'
-import { Contract } from '@ethersproject/contracts'
 import { Signer } from '@ethersproject/abstract-signer'
-import { ContractType } from '../constants'
+import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
+
+import { ContractType } from '../constants'
 import { createContract } from '../utils/createContract'
 import { createInterface } from '../utils/createInterface'
 
@@ -12,7 +13,7 @@ export function getMetadataAndContract(
   contractType: ContractType,
   contractMetadataList: ContractMetadata[],
   addressOverride?: string
-): [ContractMetadata, Contract] {
+): { contractMetadata: ContractMetadata; contract: Contract } {
   const contractMetadata = contractMetadataList.find(
     (contract) => contract.type === contractType && contract.chainId === chainId
   )
@@ -25,5 +26,5 @@ export function getMetadataAndContract(
     signerOrProvider
   )
 
-  return [contractMetadata, contract]
+  return { contractMetadata, contract }
 }

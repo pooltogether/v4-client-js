@@ -1,7 +1,7 @@
 import { Interface } from '@ethersproject/abi'
-import { Contract } from '@ethersproject/contracts'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
+import { Contract } from '@ethersproject/contracts'
 
 export const createContract = (
   address: string,
