@@ -54,7 +54,7 @@ Create an instance of a PrizePoolNetwork by providing ethers Providers for each 
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:40](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L40)
+[src/PrizePoolNetwork.ts:41](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L41)
 
 ## Properties
 
@@ -64,7 +64,7 @@ Create an instance of a PrizePoolNetwork by providing ethers Providers for each 
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:22](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L22)
+[src/PrizePoolNetwork.ts:23](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L23)
 
 ___
 
@@ -74,7 +74,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:21](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L21)
+[src/PrizePoolNetwork.ts:22](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L22)
 
 ___
 
@@ -84,7 +84,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:18](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L18)
+[src/PrizePoolNetwork.ts:19](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L19)
 
 ___
 
@@ -94,7 +94,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:30](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L30)
+[src/PrizePoolNetwork.ts:31](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L31)
 
 ___
 
@@ -104,7 +104,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:25](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L25)
+[src/PrizePoolNetwork.ts:26](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L26)
 
 ___
 
@@ -114,7 +114,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:31](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L31)
+[src/PrizePoolNetwork.ts:32](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L32)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:26](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L26)
+[src/PrizePoolNetwork.ts:27](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L27)
 
 ___
 
@@ -134,7 +134,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:17](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L17)
+[src/PrizePoolNetwork.ts:18](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L18)
 
 ___
 
@@ -144,7 +144,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:16](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L16)
+[src/PrizePoolNetwork.ts:17](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L17)
 
 ___
 
@@ -154,7 +154,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:32](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L32)
+[src/PrizePoolNetwork.ts:33](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L33)
 
 ___
 
@@ -164,7 +164,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:27](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L27)
+[src/PrizePoolNetwork.ts:28](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L28)
 
 ___
 
@@ -174,7 +174,7 @@ ___
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:15](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L15)
+[src/PrizePoolNetwork.ts:16](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L16)
 
 ## Methods
 
@@ -192,7 +192,7 @@ an array of draw ids
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:142](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L142)
+[src/PrizePoolNetwork.ts:143](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L143)
 
 ___
 
@@ -210,7 +210,7 @@ an object of draws keyed by their draw id
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:167](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L167)
+[src/PrizePoolNetwork.ts:168](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L168)
 
 ___
 
@@ -228,7 +228,7 @@ the current draw beacon period.
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:120](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L120)
+[src/PrizePoolNetwork.ts:121](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L121)
 
 ___
 
@@ -251,7 +251,7 @@ Returns a PrizeDistributor from the list of Prize Distributors that was created 
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:217](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L217)
+[src/PrizePoolNetwork.ts:218](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L218)
 
 ___
 
@@ -274,7 +274,7 @@ Returns a PrizePool from the list of Prize Pools that was created on initializat
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:205](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L205)
+[src/PrizePoolNetwork.ts:206](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L206)
 
 ___
 
@@ -292,7 +292,7 @@ the upcoming prize tier
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:187](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L187)
+[src/PrizePoolNetwork.ts:188](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L188)
 
 ___
 
@@ -316,7 +316,7 @@ an array of objects containing the chain id & Prize Pool address and a balances 
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:104](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L104)
+[src/PrizePoolNetwork.ts:105](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L105)
 
 ___
 
@@ -334,4 +334,4 @@ a unique id for the PrizePoolNetwork
 
 #### Defined in
 
-[src/PrizePoolNetwork.ts:93](https://github.com/pooltogether/v4-js-client/blob/6c47059/src/PrizePoolNetwork.ts#L93)
+[src/PrizePoolNetwork.ts:94](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizePoolNetwork.ts#L94)
