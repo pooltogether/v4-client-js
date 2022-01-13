@@ -1,19 +1,16 @@
-import { initializePrizePools, PrizePool } from './PrizePool'
-import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
-import { ContractType } from './constants'
-import { Draw, PrizeTier, Providers } from './types'
-import { Contract } from '@ethersproject/contracts'
-import { BigNumber } from '@ethersproject/bignumber'
 import { Result } from '@ethersproject/abi'
+import { BigNumber } from '@ethersproject/bignumber'
+import { Contract } from '@ethersproject/contracts'
+import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
+
+import { ContractType } from './constants'
 import { initializePrizeDistributors, PrizeDistributor } from './PrizeDistributor'
+import { initializePrizePools, PrizePool } from './PrizePool'
+import { Draw, PrizeTier, Providers } from './types'
 
 /**
- * A Prize Pool Network (a group of Prize Pools).
- * Provides read only functions for getting data needed to display to users.
- * Initializes several PrizePools.
- *
- * NOTE: Initialization is still up in the air since the way we're using
- * contract lists to store Prize Pool Network data is constantly changing.
+ * A Prize Pool Network.
+ * The network consists of one or more Prize Pools and Prize Distributors. PrizePoolNetwork provides read only functions for reading data from the contracts that make up the network. Initializes several PrizePools and PrizeDistributors on creation.
  */
 export class PrizePoolNetwork {
   readonly providers: Providers
@@ -36,10 +33,10 @@ export class PrizePoolNetwork {
   readonly prizeTierHistoryContract: Contract
 
   /**
-   *
+   * Create an instance of a PrizePoolNetwork by providing ethers Providers for each relevant network and a Contract List.
    * @constructor
-   * @param providers
-   * @param prizePoolNetworkContractList
+   * @param providers ethers Providers for each network in the Prize Pool Network, keyed by their chain id.
+   * @param prizePoolNetworkContractList a Contract List containing all of the relevant metadata for the Prize Pool Network.
    */
   constructor(providers: Providers, prizePoolNetworkContractList: ContractList) {
     this.providers = providers
@@ -90,13 +87,20 @@ export class PrizePoolNetwork {
     this.prizeTierHistoryContract = prizeTierHistoryContract
   }
 
+  /**
+   * Returns a unique id string for this PrizePoolNetwork.
+   * @returns a unique id for the PrizePoolNetwork
+   */
+  id(): string {
+    return `prize-pool-network-${this.beaconChainId}-${this.beaconAddress}`
+  }
+
   //////////////////////////// Ethers read functions ////////////////////////////
 
   /**
    * Fetch the users balances for all relevant tokens for all Prize Pools in the Prize Pool Network.
-   * @param usersAddress address to get balances for
-   * @returns an array of objects containing the chain id & Prize Pool address and a balances object
-   * with the users balances for relevant tokens to the prize pool
+   * @param usersAddress address to get balances for.
+   * @returns an array of objects containing the chain id & Prize Pool address and a balances object with the users balances for relevant tokens to the prize pool
    */
   async getUsersPrizePoolBalances(usersAddress: string) {
     const balancesPromises = this.prizePools.map(async (prizePool) => {
@@ -111,8 +115,8 @@ export class PrizePoolNetwork {
   }
 
   /**
-   *
-   * @returns
+   * Fetch the current Draw Beacon period data from the beacon Prize Pool.
+   * @returns the current draw beacon period.
    */
   async getDrawBeaconPeriod() {
     const [periodSecondsResult, periodStartedAtResult, nextDrawIdResult] = await Promise.all([
@@ -133,8 +137,8 @@ export class PrizePoolNetwork {
   }
 
   /**
-   *
-   * @returns
+   * Fetch the range of available draw ids in the Draw Buffer for the beacon Prize Pool.
+   * @returns an array of draw ids
    */
   async getBeaconChainDrawIds(): Promise<number[]> {
     const [oldestDrawResponse, newestDrawResponse] = await Promise.allSettled([
@@ -149,7 +153,7 @@ export class PrizePoolNetwork {
     const oldestId = oldestDrawResponse.value[0].drawId
     const newestId = newestDrawResponse.value[0].drawId
 
-    const drawIds = []
+    const drawIds: number[] = []
     for (let i = oldestId; i <= newestId; i++) {
       drawIds.push(i)
     }
@@ -158,8 +162,8 @@ export class PrizePoolNetwork {
   }
 
   /**
-   *
-   * @returns
+   * Fetch all of the available Draws in the Draw Buffer for the beacon Prize Pool.
+   * @returns an object of draws keyed by their draw id
    */
   async getBeaconChainDraws(): Promise<{ [drawId: number]: Draw }> {
     const drawIds = await this.getBeaconChainDrawIds()
@@ -178,8 +182,8 @@ export class PrizePoolNetwork {
   }
 
   /**
-   *
-   * @returns
+   * Fetches the upcoming prize tier data from the prize tier history contract. This data is used for the next prize distribution that will be added to the Prize Distribution Buffer for the beacon Prize Pool.
+   * @returns the upcoming prize tier
    */
   async getUpcomingPrizeTier(): Promise<PrizeTier> {
     const [drawId]: number[] = await this.prizeTierHistoryContract.functions.getNewestDrawId()
@@ -194,9 +198,9 @@ export class PrizePoolNetwork {
   }
 
   /**
-   *
-   * @param chainId
-   * @param address
+   * Returns a PrizePool from the list of Prize Pools that was created on initialization by their primary key. The primary key of a Prize Pool is the chain id it is on and the address of the YieldSourcePrizePool contract.
+   * @param chainId the chain id the requested prize pool is on
+   * @param address the address of the YieldSourcePrizePool contract
    * @returns
    */
   getPrizePool(chainId: number, address: string): PrizePool | undefined {
@@ -206,9 +210,9 @@ export class PrizePoolNetwork {
   }
 
   /**
-   *
-   * @param chainId
-   * @param address
+   * Returns a PrizeDistributor from the list of Prize Distributors that was created on initialization by their primary key. The primary key of a Prize Disctributor is the chain id it is on and the address of the PrizeDistributor contract.
+   * @param chainId the chain id the requested prize distributor is on
+   * @param address the address of the PrizeDistributor contract
    * @returns
    */
   getPrizeDistributor(chainId: number, address: string): PrizeDistributor | undefined {
@@ -216,12 +220,5 @@ export class PrizePoolNetwork {
       (prizeDistributor) =>
         prizeDistributor.chainId === chainId && prizeDistributor.address === address
     )
-  }
-
-  /**
-   *
-   */
-  id(): string {
-    return `prize-pool-network-${this.beaconChainId}-${this.beaconAddress}`
   }
 }
