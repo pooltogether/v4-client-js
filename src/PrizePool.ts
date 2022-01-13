@@ -1,7 +1,7 @@
 import { Result } from '@ethersproject/abi'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
-import { BigNumber } from '@ethersproject/BigNumber'
+import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
 // import { MaxUint256 } from '@ethersproject/constants'
