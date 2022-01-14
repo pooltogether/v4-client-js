@@ -82,7 +82,7 @@ Create an instance of a PrizeDistributor by providing the metadata of the PrizeD
 
 #### Defined in
 
-[src/PrizeDistributor.ts:67](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L67)
+[src/PrizeDistributor.ts:67](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L67)
 
 ## Properties
 
@@ -92,7 +92,7 @@ Create an instance of a PrizeDistributor by providing the metadata of the PrizeD
 
 #### Defined in
 
-[src/PrizeDistributor.ts:43](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L43)
+[src/PrizeDistributor.ts:43](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L43)
 
 ___
 
@@ -102,7 +102,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:42](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L42)
+[src/PrizeDistributor.ts:42](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L42)
 
 ___
 
@@ -112,7 +112,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:40](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L40)
+[src/PrizeDistributor.ts:40](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L40)
 
 ___
 
@@ -122,7 +122,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:57](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L57)
+[src/PrizeDistributor.ts:57](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L57)
 
 ___
 
@@ -132,7 +132,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:49](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L49)
+[src/PrizeDistributor.ts:49](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L49)
 
 ___
 
@@ -142,7 +142,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:56](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L56)
+[src/PrizeDistributor.ts:56](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L56)
 
 ___
 
@@ -152,7 +152,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:48](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L48)
+[src/PrizeDistributor.ts:48](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L48)
 
 ___
 
@@ -162,7 +162,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:55](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L55)
+[src/PrizeDistributor.ts:55](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L55)
 
 ___
 
@@ -172,7 +172,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:47](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L47)
+[src/PrizeDistributor.ts:47](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L47)
 
 ___
 
@@ -182,7 +182,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:58](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L58)
+[src/PrizeDistributor.ts:58](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L58)
 
 ___
 
@@ -192,7 +192,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:50](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L50)
+[src/PrizeDistributor.ts:50](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L50)
 
 ___
 
@@ -202,7 +202,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:54](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L54)
+[src/PrizeDistributor.ts:54](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L54)
 
 ___
 
@@ -212,7 +212,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:46](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L46)
+[src/PrizeDistributor.ts:46](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L46)
 
 ___
 
@@ -222,7 +222,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:41](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L41)
+[src/PrizeDistributor.ts:41](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L41)
 
 ___
 
@@ -232,7 +232,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:59](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L59)
+[src/PrizeDistributor.ts:59](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L59)
 
 ___
 
@@ -242,7 +242,7 @@ ___
 
 #### Defined in
 
-[src/PrizeDistributor.ts:51](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L51)
+[src/PrizeDistributor.ts:51](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L51)
 
 ## Methods
 
@@ -268,7 +268,7 @@ the results for user for the provided draw
 
 #### Defined in
 
-[src/PrizeDistributor.ts:642](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L642)
+[src/PrizeDistributor.ts:642](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L642)
 
 ___
 
@@ -294,7 +294,7 @@ the results for user for the provided draw id
 
 #### Defined in
 
-[src/PrizeDistributor.ts:687](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L687)
+[src/PrizeDistributor.ts:687](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L687)
 
 ___
 
@@ -320,7 +320,7 @@ the transaction response
 
 #### Defined in
 
-[src/PrizeDistributor.ts:180](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L180)
+[src/PrizeDistributor.ts:180](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L180)
 
 ___
 
@@ -346,7 +346,7 @@ the transaction response
 
 #### Defined in
 
-[src/PrizeDistributor.ts:129](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L129)
+[src/PrizeDistributor.ts:129](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L129)
 
 ___
 
@@ -372,7 +372,7 @@ the transaction response
 
 #### Defined in
 
-[src/PrizeDistributor.ts:144](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L144)
+[src/PrizeDistributor.ts:144](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L144)
 
 ___
 
@@ -398,7 +398,7 @@ an ethers Contract for the provided address and contract type
 
 #### Defined in
 
-[src/PrizeDistributor.ts:728](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L728)
+[src/PrizeDistributor.ts:728](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L728)
 
 ___
 
@@ -422,7 +422,7 @@ the Draw
 
 #### Defined in
 
-[src/PrizeDistributor.ts:489](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L489)
+[src/PrizeDistributor.ts:489](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L489)
 
 ___
 
@@ -440,7 +440,7 @@ an ethers Contract for the DrawBuffer related to this PrizeDistributor
 
 #### Defined in
 
-[src/PrizeDistributor.ts:780](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L780)
+[src/PrizeDistributor.ts:780](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L780)
 
 ___
 
@@ -458,7 +458,7 @@ an ethers Contract for the DrawCalculator related to this PrizeDistributor
 
 #### Defined in
 
-[src/PrizeDistributor.ts:757](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L757)
+[src/PrizeDistributor.ts:757](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L757)
 
 ___
 
@@ -476,7 +476,7 @@ a list of draw ids in the buffer
 
 #### Defined in
 
-[src/PrizeDistributor.ts:350](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L350)
+[src/PrizeDistributor.ts:350](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L350)
 
 ___
 
@@ -494,7 +494,7 @@ a list of draw ids in the buffer
 
 #### Defined in
 
-[src/PrizeDistributor.ts:375](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L375)
+[src/PrizeDistributor.ts:375](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L375)
 
 ___
 
@@ -518,7 +518,7 @@ an object with Draws keyed by their draw ids
 
 #### Defined in
 
-[src/PrizeDistributor.ts:506](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L506)
+[src/PrizeDistributor.ts:506](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L506)
 
 ___
 
@@ -542,7 +542,7 @@ an object full of Draws and PrizeDistributions keyed by their draw id
 
 #### Defined in
 
-[src/PrizeDistributor.ts:454](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L454)
+[src/PrizeDistributor.ts:454](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L454)
 
 ___
 
@@ -561,7 +561,7 @@ the newest draw in the draw buffer
 
 #### Defined in
 
-[src/PrizeDistributor.ts:245](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L245)
+[src/PrizeDistributor.ts:245](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L245)
 
 ___
 
@@ -580,7 +580,7 @@ the newest prize distribution in the prize distribution buffer
 
 #### Defined in
 
-[src/PrizeDistributor.ts:280](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L280)
+[src/PrizeDistributor.ts:280](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L280)
 
 ___
 
@@ -598,7 +598,7 @@ the oldest draw in the draw buffer
 
 #### Defined in
 
-[src/PrizeDistributor.ts:262](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L262)
+[src/PrizeDistributor.ts:262](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L262)
 
 ___
 
@@ -616,7 +616,7 @@ the oldest prize distribution in the prize distribution buffer
 
 #### Defined in
 
-[src/PrizeDistributor.ts:307](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L307)
+[src/PrizeDistributor.ts:307](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L307)
 
 ___
 
@@ -640,7 +640,7 @@ the PrizeDistribution
 
 #### Defined in
 
-[src/PrizeDistributor.ts:530](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L530)
+[src/PrizeDistributor.ts:530](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L530)
 
 ___
 
@@ -664,7 +664,7 @@ an object with PrizeDistributions keyed by draw ids
 
 #### Defined in
 
-[src/PrizeDistributor.ts:552](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L552)
+[src/PrizeDistributor.ts:552](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L552)
 
 ___
 
@@ -682,7 +682,7 @@ an ethers Contract for the PrizeDistributionsBuffer related to this PrizeDistrib
 
 #### Defined in
 
-[src/PrizeDistributor.ts:793](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L793)
+[src/PrizeDistributor.ts:793](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L793)
 
 ___
 
@@ -700,7 +700,7 @@ the draw id and the end time as a unix time stamp in seconds
 
 #### Defined in
 
-[src/PrizeDistributor.ts:334](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L334)
+[src/PrizeDistributor.ts:334](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L334)
 
 ___
 
@@ -718,7 +718,7 @@ an ethers Contract for the ERC20 Token related to this PrizeDistributor
 
 #### Defined in
 
-[src/PrizeDistributor.ts:810](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L810)
+[src/PrizeDistributor.ts:810](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L810)
 
 ___
 
@@ -736,7 +736,7 @@ the decimals, name and symbol for the token
 
 #### Defined in
 
-[src/PrizeDistributor.ts:235](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L235)
+[src/PrizeDistributor.ts:235](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L235)
 
 ___
 
@@ -761,7 +761,7 @@ the address of the user
 
 #### Defined in
 
-[src/PrizeDistributor.ts:841](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L841)
+[src/PrizeDistributor.ts:841](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L841)
 
 ___
 
@@ -786,7 +786,7 @@ the amount a user claimed
 
 #### Defined in
 
-[src/PrizeDistributor.ts:582](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L582)
+[src/PrizeDistributor.ts:582](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L582)
 
 ___
 
@@ -811,7 +811,7 @@ an object of claimed amounts keyed by the draw ids
 
 #### Defined in
 
-[src/PrizeDistributor.ts:599](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L599)
+[src/PrizeDistributor.ts:599](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L599)
 
 ___
 
@@ -836,7 +836,7 @@ an object of normalized balances keyed by draw ids
 
 #### Defined in
 
-[src/PrizeDistributor.ts:620](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L620)
+[src/PrizeDistributor.ts:620](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L620)
 
 ___
 
@@ -854,7 +854,7 @@ a list of draw ids in both buffers
 
 #### Defined in
 
-[src/PrizeDistributor.ts:406](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L406)
+[src/PrizeDistributor.ts:406](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L406)
 
 ___
 
@@ -872,7 +872,7 @@ a unique id for the PrizeDistributor
 
 #### Defined in
 
-[src/PrizeDistributor.ts:116](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L116)
+[src/PrizeDistributor.ts:116](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L116)
 
 ___
 
@@ -894,7 +894,7 @@ Validates that the data provided for providerOrSigner is a Signer.
 
 #### Defined in
 
-[src/PrizeDistributor.ts:860](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L860)
+[src/PrizeDistributor.ts:860](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L860)
 
 ___
 
@@ -916,4 +916,4 @@ Validates that a Signer is on the network the PrizeDistributor is deployed on.
 
 #### Defined in
 
-[src/PrizeDistributor.ts:852](https://github.com/pooltogether/v4-js-client/blob/3d129ba/src/PrizeDistributor.ts#L852)
+[src/PrizeDistributor.ts:852](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/PrizeDistributor.ts#L852)

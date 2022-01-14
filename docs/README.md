@@ -1,46 +1,41 @@
 @pooltogether/v4-js-client / [Exports](modules.md)
 
-<p align="center">
-  <a href="https://github.com/pooltogether/pooltogether--brand-assets">
-    <img src="https://github.com/pooltogether/pooltogether--brand-assets/blob/977e03604c49c63314450b5d432fe57d34747c66/logo/pooltogether-logo--purple-gradient.png?raw=true" alt="PoolTogether Brand" style="max-width:100%;" width="200">
-  </a>
-</p>
-
-<br />
-
 # 💻 PoolTogether Client Library || PoolTogether V4
 
+![npm](https://img.shields.io/npm/v/@pooltogether/v4-js-client)
 ![ts](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555)
 ![Tests](https://github.com/pooltogether/v4-js-client/actions/workflows/main.yml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/pooltogether/v4-js-client/badge.svg?branch=main)](https://coveralls.io/github/pooltogether/v4-js-client?branch=main)
-[![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
+[![MIT license](https://img.shields.io/npm/l/@pooltogether/v4-js-client)](https://img.shields.io/npm/l/@pooltogether/v4-js-client)
+
+<img src="https://github.com/pooltogether/pooltogether--brand-assets/blob/977e03604c49c63314450b5d432fe57d34747c66/logo/pooltogether-logo--purple-gradient.png?raw=true" alt="Brand" width="200"/>
 
 [Application](https://app.pooltogether.com/) | [Contracts](https://github.com/pooltogether/v4-core) | [Documentation](https://v4.docs.pooltogether.com/) | [Draw Calculator](https://github.com/pooltogether/draw-calculator-cli) | [Utility Library](https://github.com/pooltogether/v4-utils-js) | [Static Cache](https://github.com/pooltogether/v4-draw-results)
 
-This library includes a simplified interface for interacting with a v4 PoolTogether deployment.
+# 🏆 Quickstart
 
-# 💾 Installation
+This library includes a simplified interface for interacting with a v4 PoolTogether deployment. Create an instance of `PrizePoolNetwork` and use the initialized `PrizePool` and `PrizeDistributor` to begin reading and writing data to the protocol.
+
+There are several classes that provide interfaces to the different aspects of the V4 PoolTogether protocol.
+
+- [PrizePoolNetwork](./classes/PrizePoolNetwork)
+- [PrizePool](./classes/PrizePool)
+- [User](./classes/User)
+- [PrizeDistributor](./classes/PrizeDistributor)
+- [DrawCalculatorApi](./classes/DrawCalculatorApi)
+- [ContractFactory](./classes/ContractFactory)
+
+## 💾 Installation
 
 This project is available as an NPM package:
 
 ```bash
-$ yarn add @pooltogether/v4-js-client
+yarn add @pooltogether/v4-js-client
 ```
 
-# 🏆 Quickstart
+## 🌱 Initialization
 
-This library consists of several classes that provide simplified interfaces to the different aspects of the V4 PoolTogether protocol.
-
-- [PrizePoolNetwork](docs/PrizePoolNetwork.md)
-- [PrizePool](docs/PrizePool.md)
-- [User](docs/User.md)
-- [PrizeDistributor](docs/PrizeDistributor.md)
-- [DrawCalculatorApi](docs/DrawCalculatorApi.md)
-- [ContractFactory](docs/ContractFactory.md)
-
-## Initialization
-
-### `PrizePoolNetwork`
+### PrizePoolNetwork
 
 A `PrizePoolNetwork` is a collection of `PrizePool` and `PrizeDistributor` across several chains that make up a v4 deployment.
 
@@ -56,7 +51,7 @@ import { mainnet } from '@pooltogether/v4-pool-data'
 const PrizePoolNetwork = new PrizePoolNetwork(providers, mainnet)
 ```
 
-### `PrizePool`
+### PrizePool
 
 A `PrizePool` is a representation of a Prize Pool deployment. The Prize Pool is responsible for managing deposits, withdrawals & delegation. `PrizePool` is a read only object, for write capabilities check out `User`
 
@@ -64,7 +59,7 @@ A `PrizePool` is a representation of a Prize Pool deployment. The Prize Pool is 
 const prizePool = PrizePoolNetwork.getPrizePool(1, '0xabc123')
 ```
 
-### `User`
+### User
 
 A `User` is wrapper around `PrizePool` with the ability to send transactions to manage deposits, withdrawals and delegation.
 
@@ -72,7 +67,7 @@ A `User` is wrapper around `PrizePool` with the ability to send transactions to 
 const user = new User(prizePool.prizePoolMetadata, signer, prizePool)
 ```
 
-### `PrizeDistributor`
+### PrizeDistributor
 
 A `PrizeDistributor` is what handles prizes. It is used to determine the current draw, check for prizes & claiming prizes. For write capabilities, pass a Signer when creating an instance.
 
@@ -92,14 +87,14 @@ const signerPrizeDistributor = new PrizeDistributor(
 
 ## Examples
 
-#### Get token data for a Prize Pool
+### Get token data for a Prize Pool
 
 ```js
 const tokenData = await prizePool.getTokenData() // Underlying token (ex. USDC)
 const ticketData = await prizePool.getTicketData() // Ticket token
 ```
 
-#### Get a users deposit token & ticket balances
+### Get a users deposit token & ticket balances
 
 ```js
 const usersBalances: {
@@ -109,13 +104,13 @@ const usersBalances: {
 }[] = await PrizePoolNetwork.getUsersPrizePoolBalances(usersAddress)
 ```
 
-#### Get a users deposit token & ticket balance
+### Get a users deposit token & ticket balance
 
 ```js
 const balance: PrizePoolTokenBalances = await prizePool.getUsersPrizePoolBalances(usersAddress)
 ```
 
-#### Approve deposits
+### Approve deposits
 
 NOTE: Make sure you're shifting by the proper decimal amount
 
@@ -125,7 +120,7 @@ const txResponse: TransactionResponse = await user.approveDeposits(
 )
 ```
 
-#### Deposit and delegate tokens
+### Deposit and delegate tokens
 
 NOTE: Make sure you're shifting by the proper decimal amount
 
@@ -135,7 +130,7 @@ const txResponse: TransactionResponse = await user.depositAndDelegate(
 )
 ```
 
-#### Deposit tokens
+### Deposit tokens
 
 NOTE: Make sure you're shifting by the proper decimal amount
 
@@ -143,7 +138,7 @@ NOTE: Make sure you're shifting by the proper decimal amount
 const txResponse: TransactionResponse = await user.deposit(ethers.utils.parseUnits(10, decimals))
 ```
 
-#### Withdraw tokens
+### Withdraw tokens
 
 NOTE: Make sure you're shifting by the proper decimal amount
 
@@ -151,7 +146,7 @@ NOTE: Make sure you're shifting by the proper decimal amount
 const txResponse: TransactionResponse = await user.withdraw(ethers.utils.parseUnits(10, decimals))
 ```
 
-#### Get valid draw ids
+### Get valid draw ids
 
 Valid draw ids are draw ids that have all of the relevant data pushed to their respective chain & are not expired.
 
@@ -159,7 +154,7 @@ Valid draw ids are draw ids that have all of the relevant data pushed to their r
 const drawIds = await prizeDistributor.getValidDrawIds()
 ```
 
-#### Get a users prizes
+### Get a users prizes
 
 ```js
 const drawResults = await DrawCalculatorAPI.getUsersDrawResultsByDraw(
@@ -170,7 +165,7 @@ const drawResults = await DrawCalculatorAPI.getUsersDrawResultsByDraw(
 )
 ```
 
-#### Claim a users prizes
+### Claim a users prizes
 
 NOTE: Ensure the `PrizeDistributor` was initialized with a `Signer`
 
@@ -178,11 +173,12 @@ NOTE: Ensure the `PrizeDistributor` was initialized with a `Signer`
 const txResponse: TransactionResponse = await prizeDistributor.claimPrizesByDraw(1)
 ```
 
-# 💻 Developer Experience
+## 💻 Developer Experience
 
-## Contributing
+### Contributing
 
 [Create an Issue](https://github.com/pooltogether/v4-utils-js/issues) to request new features.
+
 [Open Pull Request](#) adhering to Contribution guidelines.
 
 The package is setup using the [TSDX zero-config CLI](https://tsdx.io/) which includes:
@@ -195,7 +191,7 @@ The package is setup using the [TSDX zero-config CLI](https://tsdx.io/) which in
 
 **Minor changes have been made to extend the default configuration.**
 
-### ESLint
+#### ESLint
 
 The TSDX linting configuration is overwritten to include override(s)\* for:
 
