@@ -29,7 +29,7 @@
     "size": "size-limit",
     "analyze": "size-limit --why",
     "postpublish": "yarn docs",
-    "docs": "yarn typedoc src/index.ts --out docs"
+    "docs": "yarn typedoc src/index.ts --out docs --readme docs/README.md"
   },
   "husky": {
     "hooks": {
