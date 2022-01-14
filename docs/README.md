@@ -18,12 +18,12 @@ This library includes a simplified interface for interacting with a v4 PoolToget
 
 There are several classes that provide interfaces to the different aspects of the V4 PoolTogether protocol.
 
-- [PrizePoolNetwork](./classes/PrizePoolNetwork)
-- [PrizePool](./classes/PrizePool)
-- [User](./classes/User)
-- [PrizeDistributor](./classes/PrizeDistributor)
-- [DrawCalculatorApi](./classes/DrawCalculatorApi)
-- [ContractFactory](./classes/ContractFactory)
+- [PrizePoolNetwork](./classes/PrizePoolNetwork.md)
+- [PrizePool](./classes/PrizePool.md)
+- [User](./classes/User.md)
+- [PrizeDistributor](./classes/PrizeDistributor.md)
+- [DrawCalculatorApi](./classes/DrawCalculatorApi.md)
+- [ContractFactory](./classes/ContractFactory.md)
 
 ## 💾 Installation
 
