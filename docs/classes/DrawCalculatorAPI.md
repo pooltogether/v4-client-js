@@ -46,7 +46,7 @@ Returns the URL that the prizes can be fetched
 
 #### Defined in
 
-[src/DrawCalculatorAPI.ts:79](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/DrawCalculatorAPI.ts#L79)
+[src/DrawCalculatorAPI.ts:79](https://github.com/pooltogether/v4-js-client/blob/4038583/src/DrawCalculatorAPI.ts#L79)
 
 ___
 
@@ -71,7 +71,7 @@ Fetches a users DrawResults for the provided draw id
 
 #### Defined in
 
-[src/DrawCalculatorAPI.ts:17](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/DrawCalculatorAPI.ts#L17)
+[src/DrawCalculatorAPI.ts:17](https://github.com/pooltogether/v4-js-client/blob/4038583/src/DrawCalculatorAPI.ts#L17)
 
 ___
 
@@ -96,4 +96,4 @@ Fetches a users DrawResults for the provided draw ids
 
 #### Defined in
 
-[src/DrawCalculatorAPI.ts:39](https://github.com/pooltogether/v4-js-client/blob/e36ffdf/src/DrawCalculatorAPI.ts#L39)
+[src/DrawCalculatorAPI.ts:39](https://github.com/pooltogether/v4-js-client/blob/4038583/src/DrawCalculatorAPI.ts#L39)
