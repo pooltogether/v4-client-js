@@ -538,6 +538,7 @@ export class PrizeDistributor {
       bitRangeSize: result[0].bitRangeSize,
       maxPicksPerUser: result[0].maxPicksPerUser,
       numberOfPicks: result[0].numberOfPicks,
+      expiryDuration: result[0].expiryDuration,
       prize: result[0].prize,
       drawStartTimestampOffset: result[0].drawStartTimestampOffset,
       drawEndTimestampOffset: result[0].drawEndTimestampOffset
@@ -566,6 +567,7 @@ export class PrizeDistributor {
         maxPicksPerUser: result.maxPicksPerUser,
         numberOfPicks: result.numberOfPicks,
         prize: result.prize,
+        expiryDuration: result.expiryDuration,
         drawStartTimestampOffset: result.drawStartTimestampOffset,
         drawEndTimestampOffset: result.drawEndTimestampOffset
       }
