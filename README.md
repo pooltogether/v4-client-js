@@ -196,3 +196,15 @@ The TSDX linting configuration is overwritten to include override(s)\* for:
 - Import/Order (used to enforce consistent module import ordering)
 
 ###### \*The ESLint overrides may incorrectly be interpreted by VSCode since the nested config file is ignored in the IDE
+
+### Porting docs
+
+1. `yarn docs`
+2. Copy & paste
+
+- `classes` to `Classes`
+- `interfaces` to `Interfaces`
+- `README.md` below header to `index.md`
+
+3. Replace all `.md` with `` (nothing) in links
+4. Replace all `README` links to `./` and `../README` to `../`
