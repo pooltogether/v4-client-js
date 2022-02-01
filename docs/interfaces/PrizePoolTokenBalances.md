@@ -17,7 +17,7 @@
 
 #### Defined in
 
-[src/types.ts:11](https://github.com/pooltogether/v4-js-client/blob/9a26aba/src/types.ts#L11)
+[src/types.ts:11](https://github.com/pooltogether/v4-client-js/blob/c6fb080/src/types.ts#L11)
 
 ___
 
@@ -27,4 +27,4 @@ ___
 
 #### Defined in
 
-[src/types.ts:12](https://github.com/pooltogether/v4-js-client/blob/9a26aba/src/types.ts#L12)
+[src/types.ts:12](https://github.com/pooltogether/v4-client-js/blob/c6fb080/src/types.ts#L12)
