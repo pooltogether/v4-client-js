@@ -197,7 +197,7 @@ The TSDX linting configuration is overwritten to include override(s)\* for:
 
 ###### \*The ESLint overrides may incorrectly be interpreted by VSCode since the nested config file is ignored in the IDE
 
-### Porting docs
+### Porting docs to PoolTogether V4 Docs
 
 1. `yarn docs`
 2. Copy & paste
