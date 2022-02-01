@@ -1,3 +1,5 @@
+@pooltogether/v4-client-js / [Exports](modules.md)
+
 # 💻 PoolTogether Client Library || PoolTogether V4
 
 ![npm](https://img.shields.io/npm/v/@pooltogether/v4-client-js)

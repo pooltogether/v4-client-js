@@ -18,7 +18,7 @@
 
 #### Defined in
 
-[src/types.ts:7](https://github.com/pooltogether/v4-client-js/blob/c6fb080/src/types.ts#L7)
+[src/types.ts:7](https://github.com/pooltogether/v4-client-js/blob/d352428/src/types.ts#L7)
 
 ___
 
@@ -28,7 +28,7 @@ ___
 
 #### Defined in
 
-[src/types.ts:5](https://github.com/pooltogether/v4-client-js/blob/c6fb080/src/types.ts#L5)
+[src/types.ts:5](https://github.com/pooltogether/v4-client-js/blob/d352428/src/types.ts#L5)
 
 ___
 
@@ -38,4 +38,4 @@ ___
 
 #### Defined in
 
-[src/types.ts:6](https://github.com/pooltogether/v4-client-js/blob/c6fb080/src/types.ts#L6)
+[src/types.ts:6](https://github.com/pooltogether/v4-client-js/blob/d352428/src/types.ts#L6)
