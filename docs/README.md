@@ -1,5 +1,9 @@
 @pooltogether/v4-client-js / [Exports](modules.md)
 
+@pooltogether/v4-client-js / [Exports](modules.md)
+
+@pooltogether/v4-client-js / [Exports](modules.md)
+
 Run instructions for iOS:
     • cd "/Users/dylan_developer/Development/ptApp" && npx react-native run-ios
     - or -

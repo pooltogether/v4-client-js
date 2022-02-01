@@ -20,7 +20,7 @@
 
 #### Defined in
 
-[src/types.ts:38](https://github.com/pooltogether/v4-js-client/blob/8c8198d/src/types.ts#L38)
+[src/types.ts:38](https://github.com/pooltogether/v4-js-client/blob/9a26aba/src/types.ts#L38)
 
 ___
 
@@ -30,7 +30,7 @@ ___
 
 #### Defined in
 
-[src/types.ts:37](https://github.com/pooltogether/v4-js-client/blob/8c8198d/src/types.ts#L37)
+[src/types.ts:37](https://github.com/pooltogether/v4-js-client/blob/9a26aba/src/types.ts#L37)
 
 ___
 
@@ -40,7 +40,7 @@ ___
 
 #### Defined in
 
-[src/types.ts:34](https://github.com/pooltogether/v4-js-client/blob/8c8198d/src/types.ts#L34)
+[src/types.ts:34](https://github.com/pooltogether/v4-js-client/blob/9a26aba/src/types.ts#L34)
 
 ___
 
@@ -50,7 +50,7 @@ ___
 
 #### Defined in
 
-[src/types.ts:35](https://github.com/pooltogether/v4-js-client/blob/8c8198d/src/types.ts#L35)
+[src/types.ts:35](https://github.com/pooltogether/v4-js-client/blob/9a26aba/src/types.ts#L35)
 
 ___
 
@@ -60,4 +60,4 @@ ___
 
 #### Defined in
 
-[src/types.ts:36](https://github.com/pooltogether/v4-js-client/blob/8c8198d/src/types.ts#L36)
+[src/types.ts:36](https://github.com/pooltogether/v4-js-client/blob/9a26aba/src/types.ts#L36)
