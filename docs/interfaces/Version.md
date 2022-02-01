@@ -1,4 +1,4 @@
-[@pooltogether/v4-js-client](../README.md) / [Exports](../modules.md) / Version
+[@pooltogether/v4-client-js](../README.md) / [Exports](../modules.md) / Version
 
 # Interface: Version
 

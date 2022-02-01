@@ -1,4 +1,4 @@
-[@pooltogether/v4-js-client](../README.md) / [Exports](../modules.md) / ABIIdentifier
+[@pooltogether/v4-client-js](../README.md) / [Exports](../modules.md) / ABIIdentifier
 
 # Interface: ABIIdentifier
 
