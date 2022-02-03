@@ -1,7 +1,8 @@
 import { Result } from '@ethersproject/abi'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
-import { TokenData } from 'types'
+
+import { TokenData } from '../types'
 
 export async function getTokenData(tokenContract: Contract): Promise<TokenData> {
   const namePromise = tokenContract.functions.name() as Promise<Result>
