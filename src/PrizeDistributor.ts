@@ -3,15 +3,12 @@ import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
 import { Contract, Overrides } from '@ethersproject/contracts'
 import { TransactionResponse } from '@ethersproject/providers'
-import {
-  prepareClaims,
-  calculateDrawResults,
-  filterResultsByValue
-} from '@pooltogether/draw-calculator-js'
+import { encodeWinningPicks } from '@pooltogether/v4-utils-js'
 import { BigNumber, ethers } from 'ethers'
 
 import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
+import { PrizeApi } from './PrizeApi'
 import {
   Contract as ContractMetadata,
   ContractList,
@@ -19,7 +16,6 @@ import {
   PrizeDistribution,
   DrawResults,
   Claim,
-  DrawCalcUser,
   SignersOrProviders,
   TokenData
 } from './types'
@@ -122,15 +118,24 @@ export class PrizeDistributor {
   /**
    * Fetches a users prizes for the provided draw and submits a transaction to claim them to the Signer.
    * PrizeDistributor must be initialized with a Signer.
-   * @param draw the draw to claim prizes for
+   * @param drawId the draw id to claim prizes for
+   * @param maxPicksPerUser the maximum picks per user from the PrizeDistribution for the provided draw id
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
-  async claimPrizesByDraw(draw: Draw, overrides?: Overrides): Promise<TransactionResponse> {
+  async claimPrizesByDraw(
+    drawId: number,
+    maxPicksPerUser: number,
+    overrides?: Overrides
+  ): Promise<TransactionResponse> {
     const errorPrefix = 'PrizeDistributors [claim] | '
     const usersAddress = await this.getUsersAddress(errorPrefix)
 
-    const drawResults = await this.calculateUsersPrizes(usersAddress, draw)
+    const drawResults = await this.getUsersDrawResultsForDrawId(
+      usersAddress,
+      drawId,
+      maxPicksPerUser
+    )
     return this.claimPrizesByDrawResults(drawResults, overrides)
   }
 
@@ -153,7 +158,7 @@ export class PrizeDistributor {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = prepareClaims({ address: usersAddress } as DrawCalcUser, [drawResults])
+    const claim: Claim = encodeWinningPicks(usersAddress, [drawResults])
     if (Boolean(overrides)) {
       return this.prizeDistributorContract.claim(
         claim.userAddress,
@@ -196,7 +201,7 @@ export class PrizeDistributor {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = prepareClaims({ address: usersAddress } as DrawCalcUser, drawResultsList)
+    const claim: Claim = encodeWinningPicks(usersAddress, drawResultsList)
     if (Boolean(overrides)) {
       return this.prizeDistributorContract.claim(
         claim.userAddress,
@@ -292,8 +297,8 @@ export class PrizeDistributor {
         tiers: prizeDistribution.tiers,
         bitRangeSize: prizeDistribution.bitRangeSize,
         prize: prizeDistribution.prize,
-        drawStartTimestampOffset: prizeDistribution.drawStartTimestampOffset,
-        drawEndTimestampOffset: prizeDistribution.drawEndTimestampOffset,
+        startTimestampOffset: prizeDistribution.drawStartTimestampOffset,
+        endTimestampOffset: prizeDistribution.drawEndTimestampOffset,
         maxPicksPerUser: prizeDistribution.maxPicksPerUser
       } as PrizeDistribution,
       drawId
@@ -319,8 +324,8 @@ export class PrizeDistributor {
         tiers: prizeDistribution.tiers,
         bitRangeSize: prizeDistribution.bitRangeSize,
         prize: prizeDistribution.prize,
-        drawStartTimestampOffset: prizeDistribution.drawStartTimestampOffset,
-        drawEndTimestampOffset: prizeDistribution.drawEndTimestampOffset,
+        startTimestampOffset: prizeDistribution.drawStartTimestampOffset,
+        endTimestampOffset: prizeDistribution.drawEndTimestampOffset,
         maxPicksPerUser: prizeDistribution.maxPicksPerUser
       } as PrizeDistribution,
       drawId
@@ -540,8 +545,8 @@ export class PrizeDistributor {
       numberOfPicks: result[0].numberOfPicks,
       expiryDuration: result[0].expiryDuration,
       prize: result[0].prize,
-      drawStartTimestampOffset: result[0].drawStartTimestampOffset,
-      drawEndTimestampOffset: result[0].drawEndTimestampOffset
+      startTimestampOffset: result[0].drawStartTimestampOffset,
+      endTimestampOffset: result[0].drawEndTimestampOffset
     }
   }
 
@@ -568,8 +573,8 @@ export class PrizeDistributor {
         numberOfPicks: result.numberOfPicks,
         prize: result.prize,
         expiryDuration: result.expiryDuration,
-        drawStartTimestampOffset: result.drawStartTimestampOffset,
-        drawEndTimestampOffset: result.drawEndTimestampOffset
+        startTimestampOffset: result.startTimestampOffset,
+        endTimestampOffset: result.endTimestampOffset
       }
     })
     return prizeDistributions
@@ -635,60 +640,45 @@ export class PrizeDistributor {
   }
 
   /**
-   * Calculates the prizes a user won for a specific Draw.
-   * NOTE: This is computationally expensive and may cause a long delay. It is not recommended to run this on a clients device.
-   * @param usersAddress the users address to compute prizes for
-   * @param draw the draw to compute prizes for
+   * Fetches the claimable prizes a user won for a specific Draw.
+   * @param usersAddress the users address to fetch prizes for
+   * @param drawId the draw id to fetch prizes for
+   * @param maxPicksPerUser the maximum number of picks per user from the matching prize distribution
    * @returns the results for user for the provided draw
    */
-  async calculateUsersPrizes(usersAddress: string, draw: Draw): Promise<DrawResults> {
-    // Fetch the draw settings for the draw
-    const prizeDistribution: PrizeDistribution = await this.getPrizeDistribution(draw.drawId)
-
-    // Fetch users normalized balance
-    const drawCalculatorContract = await this.getDrawCalculatorContract()
-    const balanceResult = await drawCalculatorContract.functions.getNormalizedBalancesForDrawIds(
+  async getUsersDrawResultsForDrawId(
+    usersAddress: string,
+    drawId: number,
+    maxPicksPerUser: number
+  ): Promise<DrawResults> {
+    return PrizeApi.getUsersDrawResultsByDraw(
+      this.chainId,
       usersAddress,
-      [draw.drawId]
+      this.prizeDistributorMetadata.address,
+      drawId,
+      maxPicksPerUser
     )
-
-    const normalizedBalance: BigNumber = balanceResult[0][0]
-
-    const user: DrawCalcUser = {
-      address: usersAddress,
-      normalizedBalances: [normalizedBalance]
-    }
-
-    if (normalizedBalance.isZero()) {
-      return {
-        drawId: draw.drawId,
-        totalValue: ethers.constants.Zero,
-        prizes: []
-      }
-    } else {
-      const drawResults = calculateDrawResults(
-        prizeDistribution,
-        {
-          ...draw,
-          timestamp: draw.timestamp.toNumber(),
-          beaconPeriodStartedAt: draw.beaconPeriodStartedAt.toNumber()
-        },
-        user
-      )
-      return filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
-    }
   }
 
   /**
-   * Fetches Draw data and calculates the prizes a user won for a specific draw id.
-   * NOTE: This is computationally expensive and may cause a long delay. It is not recommended to run this on a clients device.
-   * @param usersAddress the users address to compute prizes for
-   * @param drawId the draw id for fetch and compute prizes for
-   * @returns the results for user for the provided draw id
+   * Fetches the claimable prizes a user won for multiple Draws.
+   * @param usersAddress the users address to fetch prizes for
+   * @param drawIds the draw ids to fetch prizes for
+   * @param maxPicksPerUserPerDraw the maximum number of picks per user from the matching prize distribution for each draw
+   * @returns the results for user for the provided draw
    */
-  async calculateUsersPrizesByDrawId(usersAddress: string, drawId: number): Promise<DrawResults> {
-    const draw = await this.getDraw(drawId)
-    return this.calculateUsersPrizes(usersAddress, draw)
+  async getUsersDrawResultsForDrawIds(
+    usersAddress: string,
+    drawIds: number[],
+    maxPicksPerUserPerDraw: number[]
+  ): Promise<{ [drawId: number]: DrawResults }> {
+    return PrizeApi.getUsersDrawResultsByDraws(
+      this.chainId,
+      usersAddress,
+      this.prizeDistributorMetadata.address,
+      drawIds,
+      maxPicksPerUserPerDraw
+    )
   }
 
   // NOTE: Claimed event functions commented out as events on networks other than Ethereum mainnet are unreliable.

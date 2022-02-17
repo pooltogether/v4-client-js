@@ -1,0 +1,10 @@
+{
+  "version": "v1",
+  "packages": {
+    "@pooltogether/v4-utils-js": {
+      "signature": "766fc1302f61b4d7402f6cab5324a9ec",
+      "file": true,
+      "replaced": "^0.1.0"
+    }
+  }
+}

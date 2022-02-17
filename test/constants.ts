@@ -3,7 +3,6 @@ import { keccak256 } from '@ethersproject/keccak256'
 import { toUtf8Bytes } from '@ethersproject/strings'
 import { parseUnits } from '@ethersproject/units'
 
-import { DrawCalcUser } from '../src/types'
 import { formatTierToBasePercentage } from '../src/utils/formatTierToBasePercentage'
 
 export const CHAIN_ID = 1
@@ -43,12 +42,6 @@ export const TIERS_EXAMPLE_INVALID = [
   0,
   0
 ]
-
-export const USER_EXAMPLE_ONE: DrawCalcUser = {
-  address: ADDRESS_DEAD,
-  picks: [],
-  normalizedBalances: []
-}
 
 export const DRAW_EXAMPLE_ONE = {
   winningRandomNumber: BigNumber.from(

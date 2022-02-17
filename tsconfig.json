@@ -1,5 +1,5 @@
 {
-  "include": ["src", "types", ".yalc"],
+  "include": ["src", "types"],
   "compilerOptions": {
     "target": "ES6",
     "module": "esnext",
@@ -14,10 +14,6 @@
     "resolveJsonModule": true,
     "noUnusedLocals": true,
     "moduleResolution": "node",
-    "baseUrl": "./",
-    "paths": {
-      "*": ["src/*", "node_modules/*", ".yalc/*"]
-    },
     "jsx": "react",
     "esModuleInterop": true
   }

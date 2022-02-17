@@ -1,4 +1,4 @@
-import { filterResultsByValue } from '@pooltogether/draw-calculator-js'
+import { utils as V4Utils } from '@pooltogether/v4-utils-js'
 import { BigNumber } from 'ethers'
 
 import { DrawResults, Prize, PrizeAwardable } from '../types'
@@ -11,11 +11,11 @@ export const prizesToDrawResults = (
 ): DrawResults => {
   const prizes: PrizeAwardable[] = _allPrizes.map((prize) => ({
     amount: BigNumber.from(prize.amount),
-    distributionIndex: prize.tier,
+    tierIndex: prize.tier,
     pick: BigNumber.from(prize.pick)
   }))
   const totalValue = sumBigNumbers(prizes.map((prize) => prize.amount))
-  const drawResults = filterResultsByValue(
+  const drawResults = V4Utils.filterResultsByValue(
     {
       drawId,
       totalValue,

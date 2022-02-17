@@ -2,11 +2,11 @@ import { deserializeBigNumbers, getReadProvider } from '@pooltogether/utilities'
 import { PrizeApiStatus } from './constants'
 import { getAddress } from 'ethers/lib/utils'
 
-import { DrawCalcDraw, DrawCalcUser, DrawResults, Prize, PrizeDistribution } from './types'
+import { DrawCalcDraw, DrawResults, Prize, PrizeDistribution } from './types'
 import { prizesToDrawResults } from './utils/prizesToDrawResults'
 import { batch, contract } from '@pooltogether/etherplex'
 import { BigNumber } from 'ethers'
-import { calculateDrawResults, filterResultsByValue } from '@pooltogether/draw-calculator-js'
+import { computeUserWinningPicksForRandomNumber, utils as V4Utils } from '@pooltogether/v4-utils-js'
 
 /**
  * PoolTogether Prize API.
@@ -33,7 +33,7 @@ export class PrizeApi {
       usersAddress,
       prizeDistributorAddress,
       [drawId],
-      maxPicksPerUser
+      [maxPicksPerUser]
     )
     return drawResults[drawId]
   }
@@ -45,18 +45,18 @@ export class PrizeApi {
    * @param usersAddress the address of the user to fetch draw results for
    * @param prizeDistributorAddress the address of the PrizeDistributor to fetch prizes for
    * @param drawIds a list of draw ids to check for prizes
-   * @param maxPicksPerUser the maximum number of picks per user
+   * @param maxPicksPerUserPerDraw the maximum number of picks per user for each drwa
    */
   static async getUsersDrawResultsByDraws(
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
     drawIds: number[],
-    maxPicksPerUser: number
+    maxPicksPerUserPerDraw: number[]
   ): Promise<{ [drawId: number]: DrawResults }> {
     const drawResults: { [drawId: number]: DrawResults } = {}
 
-    const drawResultsPromises = drawIds.map(async (drawId) => {
+    const drawResultsPromises = drawIds.map(async (drawId, index) => {
       try {
         const apiStatus = await this.checkPrizeApiStatus(chainId, prizeDistributorAddress, drawId)
         if (apiStatus) {
@@ -65,12 +65,12 @@ export class PrizeApi {
             usersAddress,
             prizeDistributorAddress,
             drawId,
-            maxPicksPerUser
+            maxPicksPerUserPerDraw[index]
           )
           console.log('Main - Prize API', { drawResult })
           drawResults[drawId] = drawResult
         } else {
-          const drawResult = await this.calculateDrawResultsOnCloudFlareWorker(
+          const drawResult = await this.computeDrawResultsOnCloudFlareWorker(
             chainId,
             usersAddress,
             prizeDistributorAddress,
@@ -123,7 +123,7 @@ export class PrizeApi {
    * @param prizeDistributorAddress
    * @param drawId
    */
-  static async calculateDrawResultsOnCloudFlareWorker(
+  static async computeDrawResultsOnCloudFlareWorker(
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
@@ -149,7 +149,7 @@ export class PrizeApi {
    * @param prizeDistributorAddress
    * @param drawId
    */
-  static async calculateDrawResults(
+  static async computeDrawResults(
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
@@ -227,17 +227,22 @@ export class PrizeApi {
     const draw: DrawCalcDraw = response[drawBufferAddress].getDraw[0]
     const prizeDistribution: PrizeDistribution =
       response[prizeDistributionBufferAddress].getPrizeDistribution[0]
-    const user: DrawCalcUser = {
-      address: usersAddress,
-      normalizedBalances: [normalizedBalance]
-    }
 
-    const drawResults = calculateDrawResults(prizeDistribution, draw, user)
+    const drawResults = computeUserWinningPicksForRandomNumber(
+      draw.winningRandomNumber,
+      prizeDistribution.bitRangeSize,
+      prizeDistribution.matchCardinality,
+      prizeDistribution.numberOfPicks,
+      prizeDistribution.prize,
+      prizeDistribution.tiers,
+      usersAddress,
+      normalizedBalance
+    )
     console.log('calc', {
-      drawResults: filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
+      drawResults: V4Utils.filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
     })
 
-    return filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
+    return V4Utils.filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
   }
 
   /**
@@ -323,6 +328,8 @@ export class PrizeApi {
     return `https://tsunami-prizes-production.pooltogether-api.workers.dev/${chainId}/${prizeDistributorAddress}/prizes/${usersAddress}/${drawId}/`
   }
 }
+
+// Partial ABIs with the minimal interfaces to fetch the required data for computing prizes
 
 const PartialPrizeDistributorAbi = [
   {

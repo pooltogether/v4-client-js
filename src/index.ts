@@ -7,16 +7,4 @@ export * from './PrizeApi'
 export * from './types'
 export * from './utils'
 
-export {
-  batchCalculateDrawResults,
-  calculateDrawResults,
-  prepareClaims,
-  computeCardinality,
-  computeDrawResults,
-  computePicks,
-  generatePicks,
-  calculateNumberOfPrizesForIndex,
-  calculatePrizeForDistributionIndex,
-  calculateNumberOfPicksForUser,
-  filterResultsByValue
-} from '@pooltogether/draw-calculator-js'
+export { calculate, compute, utils } from '@pooltogether/v4-utils-js'
