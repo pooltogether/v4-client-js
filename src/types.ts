@@ -28,6 +28,14 @@ export interface ChildContractAddresses {
   }
 }
 
+// Format of data from the Prize API
+export interface Prize {
+  address: string
+  pick: string
+  tier: number
+  amount: string
+}
+
 // Modelled after the generated types
 
 export interface Draw {

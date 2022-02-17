@@ -20,3 +20,9 @@ export enum ContractType {
   PrizeTierHistory = 'PrizeTierHistory'
   // ... more contract types
 }
+
+export enum PrizeApiStatus {
+  loading = 'LOADING',
+  success = 'SUCCESS',
+  failure = 'FAILURE'
+}

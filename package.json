@@ -58,10 +58,8 @@
     }
   ],
   "devDependencies": {
-    "@pooltogether/evm-chains-extended": "^0.6.4-beta.1",
     "@size-limit/preset-small-lib": "^5.0.3",
     "@types/lodash.memoize": "^4.1.6",
-    "ethers": "^5.4.6",
     "husky": "^7.0.2",
     "size-limit": "^5.0.3",
     "tsdx": "^0.14.1",
@@ -73,12 +71,11 @@
   "dependencies": {
     "@ethersproject/abi": "^5.1.0",
     "@pooltogether/contract-list-schema": "^0.1.4",
-    "@pooltogether/draw-calculator-js": "^1.0.3-beta.2",
+    "@pooltogether/draw-calculator-js": "1.0.3-beta.4",
     "@pooltogether/etherplex": "^1.1.2",
     "@pooltogether/utilities": "^0.3.7",
-    "debug": "^4.3.3"
-  },
-  "peerDependencies": {
-    "ethers": "^5.4.6"
+    "debug": "^4.3.3",
+    "ethers": "^5.4.6",
+    "@pooltogether/evm-chains-extended": "^0.6.4-beta.1"
   }
 }

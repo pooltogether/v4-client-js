@@ -7,7 +7,7 @@
 ### Classes
 
 - [ContractFactory](classes/ContractFactory.md)
-- [DrawCalculatorAPI](classes/DrawCalculatorAPI.md)
+- [PrizeApi](classes/PrizeApi.md)
 - [PrizeDistributor](classes/PrizeDistributor.md)
 - [PrizePool](classes/PrizePool.md)
 - [PrizePoolNetwork](classes/PrizePoolNetwork.md)
@@ -21,6 +21,7 @@
 - [ContractIdentifier](interfaces/ContractIdentifier.md)
 - [ContractList](interfaces/ContractList.md)
 - [Draw](interfaces/Draw.md)
+- [Prize](interfaces/Prize.md)
 - [PrizePoolTokenBalances](interfaces/PrizePoolTokenBalances.md)
 - [Providers](interfaces/Providers.md)
 - [SignersOrProviders](interfaces/SignersOrProviders.md)
@@ -440,7 +441,7 @@ ___
 
 #### Defined in
 
-[src/utils/createContract.ts:6](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/createContract.ts#L6)
+[src/utils/createContract.ts:6](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/createContract.ts#L6)
 
 ___
 
@@ -466,7 +467,7 @@ ___
 
 #### Defined in
 
-[src/utils/createContractMetadata.ts:6](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/createContractMetadata.ts#L6)
+[src/utils/createContractMetadata.ts:6](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/createContractMetadata.ts#L6)
 
 ___
 
@@ -486,7 +487,7 @@ ___
 
 #### Defined in
 
-[src/utils/createInterface.ts:3](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/createInterface.ts#L3)
+[src/utils/createInterface.ts:3](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/createInterface.ts#L3)
 
 ___
 
@@ -533,7 +534,7 @@ ___
 
 #### Defined in
 
-[src/utils/formatTierToBasePercentage.ts:5](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/formatTierToBasePercentage.ts#L5)
+[src/utils/formatTierToBasePercentage.ts:5](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/formatTierToBasePercentage.ts#L5)
 
 ___
 
@@ -575,7 +576,7 @@ ___
 
 #### Defined in
 
-[src/utils/getContractListChainIds.ts:3](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/getContractListChainIds.ts#L3)
+[src/utils/getContractListChainIds.ts:3](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/getContractListChainIds.ts#L3)
 
 ___
 
@@ -596,7 +597,7 @@ ___
 
 #### Defined in
 
-[src/utils/getContractsByType.ts:4](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/getContractsByType.ts#L4)
+[src/utils/getContractsByType.ts:4](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/getContractsByType.ts#L4)
 
 ___
 
@@ -625,7 +626,7 @@ ___
 
 #### Defined in
 
-[src/utils/getMetadataAndContract.ts:10](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/getMetadataAndContract.ts#L10)
+[src/utils/getMetadataAndContract.ts:10](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/getMetadataAndContract.ts#L10)
 
 ___
 
@@ -645,7 +646,7 @@ ___
 
 #### Defined in
 
-[src/utils/contractGetters.ts:7](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/contractGetters.ts#L7)
+[src/utils/contractGetters.ts:7](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/contractGetters.ts#L7)
 
 ___
 
@@ -666,7 +667,7 @@ ___
 
 #### Defined in
 
-[src/utils/contractGetters.ts:19](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/contractGetters.ts#L19)
+[src/utils/contractGetters.ts:19](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/contractGetters.ts#L19)
 
 ___
 
@@ -688,7 +689,7 @@ ___
 
 #### Defined in
 
-[src/utils/contractGetters.ts:27](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/contractGetters.ts#L27)
+[src/utils/contractGetters.ts:27](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/contractGetters.ts#L27)
 
 ___
 
@@ -713,7 +714,7 @@ a list of PrizeDistributors
 
 #### Defined in
 
-[src/PrizeDistributor.ts:873](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizeDistributor.ts#L873)
+[src/PrizeDistributor.ts:873](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizeDistributor.ts#L873)
 
 ___
 
@@ -738,7 +739,7 @@ a list of initialized PrizePools
 
 #### Defined in
 
-[src/PrizePool.ts:326](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L326)
+[src/PrizePool.ts:326](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L326)
 
 ___
 
@@ -779,7 +780,7 @@ ___
 
 #### Defined in
 
-[src/utils/sortContractsByChainId.ts:3](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/sortContractsByChainId.ts#L3)
+[src/utils/sortContractsByChainId.ts:3](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/sortContractsByChainId.ts#L3)
 
 ___
 
@@ -806,7 +807,7 @@ PrizePoolNetwork and PrizeDistributors
 
 #### Defined in
 
-[src/utils/sortContractsByContractTypeAndChildren.ts:12](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/sortContractsByContractTypeAndChildren.ts#L12)
+[src/utils/sortContractsByContractTypeAndChildren.ts:12](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/sortContractsByContractTypeAndChildren.ts#L12)
 
 ___
 
@@ -829,7 +830,7 @@ Throws an error if the provided address is invalid.
 
 #### Defined in
 
-[src/utils/validation.ts:10](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/validation.ts#L10)
+[src/utils/validation.ts:10](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/validation.ts#L10)
 
 ___
 
@@ -852,7 +853,7 @@ Throws an error if the signerOrProvider is not a Signer
 
 #### Defined in
 
-[src/utils/validation.ts:37](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/validation.ts#L37)
+[src/utils/validation.ts:37](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/validation.ts#L37)
 
 ___
 
@@ -876,7 +877,7 @@ Throws an error if the Signer provided is not on the chain id provided.
 
 #### Defined in
 
-[src/utils/validation.ts:23](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/validation.ts#L23)
+[src/utils/validation.ts:23](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/validation.ts#L23)
 
 ___
 
@@ -900,4 +901,4 @@ Throws and error if the Signer or Provider is not on the chain id provided.
 
 #### Defined in
 
-[src/utils/validation.ts:49](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/utils/validation.ts#L49)
+[src/utils/validation.ts:49](https://github.com/pooltogether/v4-client-js/blob/7357147/src/utils/validation.ts#L49)

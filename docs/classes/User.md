@@ -79,7 +79,7 @@ Creates an instance of a User for a specific PrizePool
 
 #### Defined in
 
-[src/User.ts:24](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L24)
+[src/User.ts:24](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L24)
 
 ## Properties
 
@@ -93,7 +93,7 @@ Creates an instance of a User for a specific PrizePool
 
 #### Defined in
 
-[src/PrizePool.ts:30](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L30)
+[src/PrizePool.ts:30](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L30)
 
 ___
 
@@ -107,7 +107,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:29](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L29)
+[src/PrizePool.ts:29](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L29)
 
 ___
 
@@ -121,7 +121,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:27](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L27)
+[src/PrizePool.ts:27](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L27)
 
 ___
 
@@ -135,7 +135,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:38](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L38)
+[src/PrizePool.ts:38](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L38)
 
 ___
 
@@ -149,7 +149,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:33](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L33)
+[src/PrizePool.ts:33](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L33)
 
 ___
 
@@ -159,7 +159,7 @@ ___
 
 #### Defined in
 
-[src/User.ts:17](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L17)
+[src/User.ts:17](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L17)
 
 ___
 
@@ -173,7 +173,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:28](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L28)
+[src/PrizePool.ts:28](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L28)
 
 ___
 
@@ -187,7 +187,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:39](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L39)
+[src/PrizePool.ts:39](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L39)
 
 ___
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:34](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L34)
+[src/PrizePool.ts:34](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L34)
 
 ___
 
@@ -215,7 +215,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:40](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L40)
+[src/PrizePool.ts:40](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L40)
 
 ___
 
@@ -229,7 +229,7 @@ ___
 
 #### Defined in
 
-[src/PrizePool.ts:35](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L35)
+[src/PrizePool.ts:35](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L35)
 
 ## Methods
 
@@ -254,7 +254,7 @@ the transaction response
 
 #### Defined in
 
-[src/User.ts:111](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L111)
+[src/User.ts:111](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L111)
 
 ___
 
@@ -279,7 +279,7 @@ the transaction response
 
 #### Defined in
 
-[src/User.ts:150](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L150)
+[src/User.ts:150](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L150)
 
 ___
 
@@ -304,7 +304,7 @@ the transaction response
 
 #### Defined in
 
-[src/User.ts:59](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L59)
+[src/User.ts:59](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L59)
 
 ___
 
@@ -330,7 +330,7 @@ the transaction response
 
 #### Defined in
 
-[src/User.ts:77](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L77)
+[src/User.ts:77](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L77)
 
 ___
 
@@ -348,7 +348,7 @@ the allowance the user has set for deposits
 
 #### Defined in
 
-[src/User.ts:187](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L187)
+[src/User.ts:187](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L187)
 
 ___
 
@@ -366,7 +366,7 @@ the users ticket balance
 
 #### Defined in
 
-[src/User.ts:169](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L169)
+[src/User.ts:169](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L169)
 
 ___
 
@@ -388,7 +388,7 @@ an ethers contract for the ticket
 
 #### Defined in
 
-[src/PrizePool.ts:273](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L273)
+[src/PrizePool.ts:273](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L273)
 
 ___
 
@@ -410,7 +410,7 @@ decimals, name and symbol for the ticket
 
 #### Defined in
 
-[src/PrizePool.ts:201](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L201)
+[src/PrizePool.ts:201](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L201)
 
 ___
 
@@ -428,7 +428,7 @@ the address the user has delegated to
 
 #### Defined in
 
-[src/User.ts:196](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L196)
+[src/User.ts:196](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L196)
 
 ___
 
@@ -450,7 +450,7 @@ the total supply of the ticket
 
 #### Defined in
 
-[src/PrizePool.ts:213](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L213)
+[src/PrizePool.ts:213](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L213)
 
 ___
 
@@ -468,7 +468,7 @@ the users underlying token balance
 
 #### Defined in
 
-[src/User.ts:178](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L178)
+[src/User.ts:178](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L178)
 
 ___
 
@@ -490,7 +490,7 @@ an ethers contract for the underlying token
 
 #### Defined in
 
-[src/PrizePool.ts:296](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L296)
+[src/PrizePool.ts:296](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L296)
 
 ___
 
@@ -512,7 +512,7 @@ decimals, name and symbol for the underling token
 
 #### Defined in
 
-[src/PrizePool.ts:189](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L189)
+[src/PrizePool.ts:189](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L189)
 
 ___
 
@@ -540,7 +540,7 @@ the amount the user has approved for deposits
 
 #### Defined in
 
-[src/PrizePool.ts:159](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L159)
+[src/PrizePool.ts:159](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L159)
 
 ___
 
@@ -568,7 +568,7 @@ the users balances for the underlying deposit token and the ticket token
 
 #### Defined in
 
-[src/PrizePool.ts:93](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L93)
+[src/PrizePool.ts:93](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L93)
 
 ___
 
@@ -596,7 +596,7 @@ the users ticket balance
 
 #### Defined in
 
-[src/PrizePool.ts:114](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L114)
+[src/PrizePool.ts:114](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L114)
 
 ___
 
@@ -624,7 +624,7 @@ the address a user has delegated to
 
 #### Defined in
 
-[src/PrizePool.ts:176](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L176)
+[src/PrizePool.ts:176](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L176)
 
 ___
 
@@ -653,7 +653,7 @@ the users TWAB at the requested time
 
 #### Defined in
 
-[src/PrizePool.ts:129](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L129)
+[src/PrizePool.ts:129](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L129)
 
 ___
 
@@ -681,7 +681,7 @@ the users token balance
 
 #### Defined in
 
-[src/PrizePool.ts:145](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L145)
+[src/PrizePool.ts:145](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L145)
 
 ___
 
@@ -703,7 +703,7 @@ a unique id for the Prize Pool
 
 #### Defined in
 
-[src/PrizePool.ts:82](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/PrizePool.ts#L82)
+[src/PrizePool.ts:82](https://github.com/pooltogether/v4-client-js/blob/7357147/src/PrizePool.ts#L82)
 
 ___
 
@@ -727,7 +727,7 @@ the transaction response
 
 #### Defined in
 
-[src/User.ts:132](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L132)
+[src/User.ts:132](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L132)
 
 ___
 
@@ -750,7 +750,7 @@ Throws if it does not match the expected network.
 
 #### Defined in
 
-[src/User.ts:208](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L208)
+[src/User.ts:208](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L208)
 
 ___
 
@@ -775,4 +775,4 @@ the transaction response
 
 #### Defined in
 
-[src/User.ts:38](https://github.com/pooltogether/v4-client-js/blob/f28e2f3/src/User.ts#L38)
+[src/User.ts:38](https://github.com/pooltogether/v4-client-js/blob/7357147/src/User.ts#L38)
