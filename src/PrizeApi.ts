@@ -1,12 +1,25 @@
-import { deserializeBigNumbers, getReadProvider } from '@pooltogether/utilities'
+import { deserializeBigNumbers, getReadProvider, NETWORK } from '@pooltogether/utilities'
 import { PrizeApiStatus } from './constants'
-import { getAddress } from 'ethers/lib/utils'
-
-import { DrawCalcDraw, DrawResults, Prize, PrizeDistribution } from './types'
-import { prizesToDrawResults } from './utils/prizesToDrawResults'
 import { batch, contract } from '@pooltogether/etherplex'
 import { BigNumber } from 'ethers'
-import { computeUserWinningPicksForRandomNumber, utils as V4Utils } from '@pooltogether/v4-utils-js'
+import {
+  computeUserWinningPicksForRandomNumber,
+  Draw,
+  utils as V4Utils
+} from '@pooltogether/v4-utils-js'
+
+import { DrawResults, Prize, PrizeDistribution } from './types'
+import { prizesToDrawResults } from './utils/prizesToDrawResults'
+import { createEmptyDrawResult } from './utils/createEmptyDrawResult'
+
+/**
+ * Currently the Prize API is only running for a select group of networks.
+ */
+const PRIZE_API_SUPPORTED_NETWORKS = Object.freeze([
+  NETWORK.avalanche,
+  NETWORK.mainnet,
+  NETWORK.polygon
+])
 
 /**
  * PoolTogether Prize API.
@@ -58,26 +71,39 @@ export class PrizeApi {
 
     const drawResultsPromises = drawIds.map(async (drawId, index) => {
       try {
-        const apiStatus = await this.checkPrizeApiStatus(chainId, prizeDistributorAddress, drawId)
-        if (apiStatus) {
-          const drawResult = await this.getDrawResultsFromPrizeApi(
-            chainId,
-            usersAddress,
-            prizeDistributorAddress,
-            drawId,
-            maxPicksPerUserPerDraw[index]
+        // Check if Prize API supports network, if not, use CloudFlare
+        if (!PRIZE_API_SUPPORTED_NETWORKS.includes(chainId)) {
+          console.warn(
+            `Prize API only supports networks: ${PRIZE_API_SUPPORTED_NETWORKS.join(', ')}.`
           )
-          console.log('Main - Prize API', { drawResult })
-          drawResults[drawId] = drawResult
-        } else {
           const drawResult = await this.computeDrawResultsOnCloudFlareWorker(
             chainId,
             usersAddress,
             prizeDistributorAddress,
             drawId
           )
-          console.log('Main - CloudFlare', { drawResult })
           drawResults[drawId] = drawResult
+        } else {
+          // Check if Prize API executed for the draw id requested, if not, use CloudFlare
+          const apiStatus = await this.checkPrizeApiStatus(chainId, prizeDistributorAddress, drawId)
+          if (apiStatus) {
+            const drawResult = await this.getDrawResultsFromPrizeApi(
+              chainId,
+              usersAddress,
+              prizeDistributorAddress,
+              drawId,
+              maxPicksPerUserPerDraw[index]
+            )
+            drawResults[drawId] = drawResult
+          } else {
+            const drawResult = await this.computeDrawResultsOnCloudFlareWorker(
+              chainId,
+              usersAddress,
+              prizeDistributorAddress,
+              drawId
+            )
+            drawResults[drawId] = drawResult
+          }
         }
       } catch (e) {
         const error = e as Error
@@ -92,7 +118,8 @@ export class PrizeApi {
   }
 
   /**
-   *
+   * Fetches precomputed prizes from the Prize API.
+   * The Prize API only supports a limited set of networks, see https://dev.pooltogether.com/protocol/api/prize-api for more info.
    * @param chainId
    * @param usersAddress
    * @param prizeDistributorAddress
@@ -107,17 +134,26 @@ export class PrizeApi {
     drawId: number,
     maxPicksPerUser: number
   ) {
+    if (!PRIZE_API_SUPPORTED_NETWORKS.includes(chainId)) {
+      throw new Error(
+        `PrizeApi | Prize API only supports networks: ${PRIZE_API_SUPPORTED_NETWORKS.join(', ')}.`
+      )
+    }
+
     const url = this.getDrawResultsUrl(chainId, prizeDistributorAddress, usersAddress, drawId)
     const response = await fetch(url)
+    // If there is no data in Prize API, they won nothing.
+    if (response.status === 404) {
+      return createEmptyDrawResult(drawId)
+    }
     const prizesJson = await response.json()
     const prizes: Prize[] = deserializeBigNumbers(prizesJson)
     const drawResult: DrawResults = prizesToDrawResults(drawId, prizes, maxPicksPerUser)
-    console.log('Prize API', { drawResult })
     return drawResult
   }
 
   /**
-   *
+   * Computes the users prizes in a CloudFlare worker.
    * @param chainId
    * @param usersAddress
    * @param prizeDistributorAddress
@@ -138,12 +174,12 @@ export class PrizeApi {
     const response = await fetch(url)
     const drawResultsJson = await response.json()
     const drawResult: DrawResults = deserializeBigNumbers(drawResultsJson)
-    console.log('CloudFlare', { drawResult })
     return drawResult
   }
 
   /**
-   *
+   * Computes the users prizes locally.
+   * NOTE: This is a heavy calculation and not recommended on users devices.
    * @param chainId
    * @param usersAddress
    * @param prizeDistributorAddress
@@ -201,11 +237,7 @@ export class PrizeApi {
 
     // If user had no balance, short circuit
     if (normalizedBalance.isZero()) {
-      return {
-        drawId: drawId,
-        totalValue: BigNumber.from(0),
-        prizes: []
-      }
+      return createEmptyDrawResult(drawId)
     }
 
     // Get the draw and prize distribution
@@ -224,7 +256,7 @@ export class PrizeApi {
       prizeDistributionBufferContract.getPrizeDistribution(drawId)
     )
 
-    const draw: DrawCalcDraw = response[drawBufferAddress].getDraw[0]
+    const draw: Draw = response[drawBufferAddress].getDraw[0]
     const prizeDistribution: PrizeDistribution =
       response[prizeDistributionBufferAddress].getPrizeDistribution[0]
 
@@ -236,17 +268,15 @@ export class PrizeApi {
       prizeDistribution.prize,
       prizeDistribution.tiers,
       usersAddress,
-      normalizedBalance
+      normalizedBalance,
+      draw.drawId
     )
-    console.log('calc', {
-      drawResults: V4Utils.filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
-    })
 
     return V4Utils.filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
   }
 
   /**
-   *
+   * Checks the status of a particular draw and returns true if the data is available for the requested draw.
    * @param chainId
    * @param prizeDistributorAddress
    * @param drawId
@@ -263,11 +293,16 @@ export class PrizeApi {
     const requestStatus = response.status
     if (requestStatus !== 200) {
       throw new Error(
-        `Draw ${drawId} for Prize Distributor ${prizeDistributorAddress} on ${chainId} calculation status not found`
+        `PrizeApi | Draw ${drawId} for Prize Distributor ${prizeDistributorAddress} on ${chainId} calculation status not found.`
       )
     }
-    const drawResultsStatusJson: { status: PrizeApiStatus } = await response.json()
-    console.log({ drawResultsStatusJson })
+    const drawResultsStatusJson: {
+      status: PrizeApiStatus
+      cliStatus: string
+    } = await response.json()
+    if (drawResultsStatusJson.cliStatus !== undefined) {
+      return drawResultsStatusJson.cliStatus === 'ok'
+    }
     return drawResultsStatusJson.status === PrizeApiStatus.success
   }
 
@@ -288,9 +323,7 @@ export class PrizeApi {
     usersAddress: string,
     drawId: number
   ): string {
-    return `https://api.pooltogether.com/prizes/${chainId}/${getAddress(
-      prizeDistributorAddress
-    )}/draw/${drawId}/${usersAddress.toLowerCase()}.json`
+    return `https://api.pooltogether.com/prizes/${chainId}/${prizeDistributorAddress.toLowerCase()}/draw/${drawId}/${usersAddress.toLowerCase()}.json`
   }
 
   /**
@@ -306,9 +339,7 @@ export class PrizeApi {
     prizeDistributorAddress: string,
     drawId: number
   ): string {
-    return `https://api.pooltogether.com/prizes/${chainId}/${getAddress(
-      prizeDistributorAddress
-    )}/draw/${drawId}/status.json`
+    return `https://api.pooltogether.com/prizes/${chainId}/${prizeDistributorAddress.toLowerCase()}/draw/${drawId}/status.json`
   }
 
   /**
