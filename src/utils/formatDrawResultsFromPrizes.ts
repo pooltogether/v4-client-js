@@ -4,7 +4,7 @@ import { BigNumber } from 'ethers'
 import { DrawResults, Prize, PrizeAwardable } from '../types'
 import { sumBigNumbers } from './sumBigNumbers'
 
-export const prizesToDrawResults = (
+export const formatDrawResultsFromPrizes = (
   drawId: number,
   _allPrizes: Prize[],
   maxPicksPerUser: number

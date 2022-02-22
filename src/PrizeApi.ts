@@ -8,9 +8,10 @@ import {
   utils as V4Utils
 } from '@pooltogether/v4-utils-js'
 
-import { DrawResults, Prize, PrizeDistribution } from './types'
-import { prizesToDrawResults } from './utils/prizesToDrawResults'
+import { DrawResults, LEGACY_DrawResults, Prize, PrizeDistribution } from './types'
+import { formatDrawResultsFromPrizes } from './utils/formatDrawResultsFromPrizes'
 import { createEmptyDrawResult } from './utils/createEmptyDrawResult'
+import { formatDrawResultsFromLegacyDrawResults } from './utils/formatDrawResultsFromLegacyDrawResults'
 
 /**
  * Currently the Prize API is only running for a select group of networks.
@@ -148,7 +149,7 @@ export class PrizeApi {
     }
     const prizesJson = await response.json()
     const prizes: Prize[] = deserializeBigNumbers(prizesJson)
-    const drawResult: DrawResults = prizesToDrawResults(drawId, prizes, maxPicksPerUser)
+    const drawResult: DrawResults = formatDrawResultsFromPrizes(drawId, prizes, maxPicksPerUser)
     return drawResult
   }
 
@@ -173,7 +174,8 @@ export class PrizeApi {
     )
     const response = await fetch(url)
     const drawResultsJson = await response.json()
-    const drawResult: DrawResults = deserializeBigNumbers(drawResultsJson)
+    const LEGACY_drawResult: LEGACY_DrawResults = deserializeBigNumbers(drawResultsJson)
+    const drawResult = formatDrawResultsFromLegacyDrawResults(LEGACY_drawResult)
     return drawResult
   }
 
@@ -205,15 +207,23 @@ export class PrizeApi {
       response[prizeDistributorAddress].getDrawCalculator[0]
 
     // Get Draw Calculator address
+    // It's assumed that the PristDistributor has a DrawCalculatorTimelock set up, if it does not, this second getDrawCalculator call will fail. That means the contract is not a DrawCalculatorTimelock and just a DrawCalculator.
     const drawCalculatorTimelockContract = contract(
       drawCalculatorTimelockAddress,
       PartialDrawCalculatorTimelockAbi,
       drawCalculatorTimelockAddress
     )
-    // @ts-ignore
-    response = await batch(readProvider, drawCalculatorTimelockContract.getDrawCalculator())
-    const drawCalculatorAddress: string =
-      response[drawCalculatorTimelockAddress].getDrawCalculator[0]
+    let drawCalculatorAddress: string
+    try {
+      // @ts-ignore
+      response = await batch(readProvider, drawCalculatorTimelockContract.getDrawCalculator())
+      drawCalculatorAddress = response[drawCalculatorTimelockAddress].getDrawCalculator[0]
+    } catch (e) {
+      console.warn(
+        `Prize Distributor at ${prizeDistributorAddress} is not using a DrawCalculatorTimelock`
+      )
+      drawCalculatorAddress = drawCalculatorTimelockAddress
+    }
 
     // Get Draw Buffer & Prize Distribution Buffer addresses and the users normalized balance
     const drawCalculatorContract = contract(
@@ -255,7 +265,6 @@ export class PrizeApi {
       // @ts-ignore
       prizeDistributionBufferContract.getPrizeDistribution(drawId)
     )
-
     const draw: Draw = response[drawBufferAddress].getDraw[0]
     const prizeDistribution: PrizeDistribution =
       response[prizeDistributionBufferAddress].getPrizeDistribution[0]

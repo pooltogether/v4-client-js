@@ -41,6 +41,18 @@ export interface SignersOrProviders {
   [chainId: number]: Provider | Signer
 }
 
+export interface LEGACY_DrawResults {
+  drawId: number
+  totalValue: BigNumber
+  prizes: LEGACY_Prize[]
+}
+
+export interface LEGACY_Prize {
+  amount: BigNumber
+  distributionIndex: number
+  pick: BigNumber
+}
+
 export interface ChildContractAddresses {
   [chainId: number]: {
     [contractAddress: string]: {
