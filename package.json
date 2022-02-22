@@ -1,11 +1,16 @@
 {
   "name": "@pooltogether/v4-client-js",
   "author": "PoolTogether Inc.",
+  "description": "Client library for simple interactions with PoolTogether V4 contracts.",
   "module": "dist/v4-client-js.esm.js",
   "version": "0.10.2",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/pooltogether/issues",
+    "email": "bugs@pooltogether.com"
+  },
   "files": [
     "dist",
     "src"
@@ -29,8 +34,10 @@
     "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
-    "prepublish": "yarn docs",
-    "docs": "yarn typedoc src/index.ts --out docs --readme docs/README.md"
+    "docs": "yarn docs:md ; yarn docs:clean",
+    "docs:md": "yarn typedoc --plugin typedoc-plugin-markdown --entryDocument index.md --hideBreadcrumbs true --namedAnchors false --out docs/md",
+    "docs:html": "yarn typedoc --plugin none --out docs/app src/index.ts ",
+    "docs:clean": "node ./scripts/docsFindAndReplace.js ; node ./scripts/docsCleanup.js"
   },
   "husky": {
     "hooks": {
@@ -62,6 +69,7 @@
     "@size-limit/preset-small-lib": "^5.0.3",
     "@types/lodash.memoize": "^4.1.6",
     "husky": "^7.0.2",
+    "replace-in-files": "^3.0.0",
     "size-limit": "^5.0.3",
     "tsdx": "^0.14.1",
     "tslib": "^2.3.1",
