@@ -173,11 +173,12 @@ const drawIds = await prizeDistributor.getValidDrawIds()
 ### Get a users prizes
 
 ```js
-const drawResults = await DrawCalculatorAPI.getUsersDrawResultsByDraw(
-  1,
+const drawResults = await PrizeApi.getUsersDrawResultsByDraw(
+  chainId,
   usersAddress,
   prizeDistributorAddress,
-  1
+  drawId,
+  maxPicksPerUser
 )
 ```
 
