@@ -1,9 +1,17 @@
 const replaceInFiles = require('replace-in-files')
 
 const replaces = [
-  //   [/modules.md/g, 'modules'],
-  //   [/calculate.md/g, ''],
-  //   [/Namespace:/g, '']
+  [/modules\/calculate/g, '/protocol/libraries/v4-utils-js/calculate'],
+  [/modules\/compute/g, '/protocol/libraries/v4-utils-js/compute'],
+  [/modules\/utils/g, '/protocol/libraries/v4-utils-js/utils'],
+  [/modules.md/g, 'Exports'],
+  [/.md#/g, '#'],
+  [/.md/g, ' '],
+  [/# @pooltogether\/v4-client-js/g, '# Exports'],
+  [/interfaces\//g, 'Interfaces/'],
+  [/classes\//g, 'Classes/'],
+  [/Class:/g, ' '],
+  [/Interface:/g, ' ']
 ]
 
 const createOptions = (from, to) => {
@@ -14,6 +22,7 @@ const createOptions = (from, to) => {
     optionsForFiles: {
       ignore: ['**/node_modules/**']
     },
+    allowEmptyPaths: true,
     saveOldFile: false,
     encoding: 'utf8',
     shouldSkipBinaryFiles: true,
@@ -24,15 +33,19 @@ const createOptions = (from, to) => {
   return options
 }
 
-for (let index = 0; index < replaces.length; index++) {
+const doNextPromise = (index) => {
   const element = replaces[index]
-  replaceInFiles(createOptions(element[0], element[1]))
-    .then(({ changedFiles, countOfMatchesByPaths }) => {
+
+  replaceInFiles(createOptions(element[0], element[1])).then(
+    ({ changedFiles, countOfMatchesByPaths }) => {
       console.log('Modified files:', changedFiles)
       console.log('Count of matches by paths:', countOfMatchesByPaths)
-      console.log('was called with:', options)
-    })
-    .catch((error) => {
-      console.error('Error occurred:', error)
-    })
+      index++
+      if (index < replaces.length) {
+        doNextPromise(index)
+      }
+    }
+  )
 }
+
+doNextPromise(0)

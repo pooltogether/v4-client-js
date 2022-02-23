@@ -9,15 +9,20 @@
 
 This library includes a simplified interface for interacting with a v4 PoolTogether deployment. Create an instance of `PrizePoolNetwork` and use the initialized `PrizePool` and `PrizeDistributor` to begin reading and writing data to the protocol.
 
-There are several classes that provide interfaces to the different aspects of the V4 PoolTogether protocol. `PrizePoolNetwork` is the main entry point. A full tutorial is available [here](/protocol/tutorials/js-client-quickstart/)
+There are several classes that provide interfaces to the different aspects of the V4 PoolTogether protocol. `PrizePoolNetwork` is the main entry point. A full tutorial is available [here](/protocol/tutorials/js-client-quickstart/).
 
-- [PrizePoolNetwork](./classes/PrizePoolNetwork.md)
+- [PrizePoolNetwork](./Classes/PrizePoolNetwork/)
+- [PrizePool](./Classes/PrizePool/)
+- [User](./Classes/User/)
+- [PrizeDistributor](./Classes/PrizeDistributor/)
+- [PrizeApi](./Classes/PrizeApi/)
+- [ContractFactory](./Classes/ContractFactory/)
 
-- [PrizePool](./classes/PrizePool.md)
-- [User](./classes/User.md)
-- [PrizeDistributor](./classes/PrizeDistributor.md)
-- [DrawCalculatorApi](./classes/DrawCalculatorApi.md)
-- [ContractFactory](./classes/ContractFactory.md)
+The Client library also exports several namespaces from the Utility library for convenience.
+
+- [PrizePoolNetwork](/protocol/libraries/v4-utils-js/calculate)
+- [PrizePool](/protocol/libraries/v4-utils-js/compute)
+- [User](/protocol/libraries/v4-utils-js/utils)
 
 ## 💾 &nbsp; Installation
 

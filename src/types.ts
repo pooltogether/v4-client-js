@@ -41,13 +41,13 @@ export interface SignersOrProviders {
   [chainId: number]: Provider | Signer
 }
 
-export interface LEGACY_DrawResults {
+export interface LEGACYDrawResults {
   drawId: number
   totalValue: BigNumber
-  prizes: LEGACY_Prize[]
+  prizes: LEGACYPrize[]
 }
 
-export interface LEGACY_Prize {
+export interface LEGACYPrize {
   amount: BigNumber
   distributionIndex: number
   pick: BigNumber

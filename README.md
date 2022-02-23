@@ -14,7 +14,7 @@
 [![MIT license](https://img.shields.io/npm/l/@pooltogether/v4-client-js)](https://img.shields.io/npm/l/@pooltogether/v4-client-js)
 ![npm](https://img.shields.io/npm/v/@pooltogether/v4-client-js)
 
-[Application](https://app.pooltogether.com/) | [Contracts](https://github.com/pooltogether/v4-core) | [Documentation](https://v4.docs.pooltogether.com/) | [Draw Calculator](https://github.com/pooltogether/draw-calculator-cli) | [Utility Library](https://github.com/pooltogether/v4-utils-js) | [Static Cache](https://github.com/pooltogether/v4-draw-results)
+[Application](https://app.pooltogether.com/) | [Contracts](https://github.com/pooltogether/v4-core) | [Documentation](https://dev.docs.pooltogether.com/) | [Draw Calculator](https://github.com/pooltogether/draw-calculator-cli) | [Utility Library](https://github.com/pooltogether/v4-utils-js) | [Static Cache](https://github.com/pooltogether/v4-draw-results)
 
 # 🏆 &nbsp; Overview
 
@@ -22,13 +22,12 @@ This library includes a simplified interface for interacting with a v4 PoolToget
 
 There are several classes that provide interfaces to the different aspects of the V4 PoolTogether protocol. `PrizePoolNetwork` is the main entry point.
 
-- [PrizePoolNetwork](./classes/PrizePoolNetwork.md)
-
-- [PrizePool](./classes/PrizePool.md)
-- [User](./classes/User.md)
-- [PrizeDistributor](./classes/PrizeDistributor.md)
-- [DrawCalculatorApi](./classes/DrawCalculatorApi.md)
-- [ContractFactory](./classes/ContractFactory.md)
+- [PrizePoolNetwork](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/PrizePoolNetwork)
+- [PrizePool](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/PrizePool)
+- [User](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/User)
+- [PrizeDistributor](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/PrizeDistributor)
+- [DrawCalculatorApi](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/DrawCalculatorApi)
+- [ContractFactory](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/ContractFactory)
 
 ## 💾 &nbsp; Installation
 

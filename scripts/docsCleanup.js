@@ -2,23 +2,38 @@
 
 const fs = require('fs')
 
-// const path = './docs/md/modules.md'
-// try {
-//   fs.unlinkSync(path)
-// } catch (err) {
-//   console.error(err)
-// }
+// Delete files
+let paths = []
+try {
+  for (let index = 0; index < paths.length; index++) {
+    const element = paths[index]
+    fs.unlinkSync(element)
+  }
+} catch (err) {
+  console.error(err)
+}
 
-const paths = [
-  //   ['./docs/md/modules/calculate.md', './docs/md/calculate.md'],
-  //   ['./docs/md/modules/compute.md', './docs/md/compute.md'],
-  //   ['./docs/md/modules/utils.md', './docs/md/utils.md']
+// Move files
+paths = [
+  ['./docs/md/classes', './docs/md/Classes'],
+  ['./docs/md/interfaces', './docs/md/Interfaces'],
+  ['./docs/md/modules.md', './docs/md/Exports.md']
 ]
-
 try {
   for (let index = 0; index < paths.length; index++) {
     const element = paths[index]
     fs.renameSync(element[0], element[1])
+  }
+} catch (err) {
+  console.error(err)
+}
+
+// Delete folders
+paths = ['./docs/md/modules']
+try {
+  for (let index = 0; index < paths.length; index++) {
+    const element = paths[index]
+    fs.rmdirSync(element, { recursive: true })
   }
 } catch (err) {
   console.error(err)

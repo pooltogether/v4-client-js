@@ -8,7 +8,7 @@ import {
   utils as V4Utils
 } from '@pooltogether/v4-utils-js'
 
-import { DrawResults, LEGACY_DrawResults, Prize, PrizeDistribution } from './types'
+import { DrawResults, LEGACYDrawResults, Prize, PrizeDistribution } from './types'
 import { formatDrawResultsFromPrizes } from './utils/formatDrawResultsFromPrizes'
 import { createEmptyDrawResult } from './utils/createEmptyDrawResult'
 import { formatDrawResultsFromLegacyDrawResults } from './utils/formatDrawResultsFromLegacyDrawResults'
@@ -174,7 +174,7 @@ export class PrizeApi {
     )
     const response = await fetch(url)
     const drawResultsJson = await response.json()
-    const LEGACY_drawResult: LEGACY_DrawResults = deserializeBigNumbers(drawResultsJson)
+    const LEGACY_drawResult: LEGACYDrawResults = deserializeBigNumbers(drawResultsJson)
     const drawResult = formatDrawResultsFromLegacyDrawResults(LEGACY_drawResult)
     return drawResult
   }
