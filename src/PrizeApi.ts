@@ -1,17 +1,17 @@
-import { deserializeBigNumbers, getReadProvider, NETWORK } from '@pooltogether/utilities'
-import { PrizeApiStatus } from './constants'
 import { batch, contract } from '@pooltogether/etherplex'
-import { BigNumber } from 'ethers'
+import { deserializeBigNumbers, getReadProvider, NETWORK } from '@pooltogether/utilities'
 import {
   computeUserWinningPicksForRandomNumber,
   Draw,
   utils as V4Utils
 } from '@pooltogether/v4-utils-js'
+import { BigNumber } from 'ethers'
 
+import { PrizeApiStatus } from './constants'
 import { DrawResults, LEGACYDrawResults, Prize, PrizeDistribution } from './types'
-import { formatDrawResultsFromPrizes } from './utils/formatDrawResultsFromPrizes'
 import { createEmptyDrawResult } from './utils/createEmptyDrawResult'
 import { formatDrawResultsFromLegacyDrawResults } from './utils/formatDrawResultsFromLegacyDrawResults'
+import { formatDrawResultsFromPrizes } from './utils/formatDrawResultsFromPrizes'
 
 /**
  * Currently the Prize API is only running for a select group of networks.
