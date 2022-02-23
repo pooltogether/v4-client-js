@@ -1,6 +1,27 @@
 import { Provider } from '@ethersproject/abstract-provider'
 import { BigNumber, Signer } from 'ethers'
 
+export {
+  Version,
+  Tags,
+  ABIIdentifier,
+  ContractIdentifier,
+  Contract,
+  ContractList
+} from '@pooltogether/contract-list-schema'
+
+export {
+  Draw,
+  PrizeTier,
+  PrizeDistribution,
+  Pick,
+  DrawResults,
+  PrizeAwardable,
+  PickPrize,
+  Claim,
+  Prize
+} from '@pooltogether/v4-utils-js'
+
 export interface TokenData {
   name: string
   symbol: string
@@ -20,6 +41,18 @@ export interface SignersOrProviders {
   [chainId: number]: Provider | Signer
 }
 
+export interface LEGACYDrawResults {
+  drawId: number
+  totalValue: BigNumber
+  prizes: LEGACYPrize[]
+}
+
+export interface LEGACYPrize {
+  amount: BigNumber
+  distributionIndex: number
+  pick: BigNumber
+}
+
 export interface ChildContractAddresses {
   [chainId: number]: {
     [contractAddress: string]: {
@@ -27,36 +60,3 @@ export interface ChildContractAddresses {
     }
   }
 }
-
-// Modelled after the generated types
-
-export interface Draw {
-  drawId: number
-  timestamp: BigNumber
-  winningRandomNumber: BigNumber
-  beaconPeriodStartedAt: BigNumber
-  beaconPeriodSeconds: number
-}
-
-export {
-  Version,
-  Tags,
-  ABIIdentifier,
-  ContractIdentifier,
-  Contract,
-  ContractList
-} from '@pooltogether/contract-list-schema'
-
-// Forward other PoolTogether types
-export {
-  Draw as DrawCalcDraw,
-  User as DrawCalcUser,
-  UserDrawResult as DrawCalcUserDrawResult,
-  PrizeTier,
-  PrizeDistribution,
-  Pick,
-  DrawResults,
-  PrizeAwardable,
-  PickPrize,
-  Claim
-} from '@pooltogether/draw-calculator-js'

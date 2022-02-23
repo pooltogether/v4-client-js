@@ -1,37 +1,55 @@
-# 💻 PoolTogether Client Library || PoolTogether V4
+<p align="center">
+  <a href="https://github.com/pooltogether/pooltogether--brand-assets">
+    <img src="https://github.com/pooltogether/pooltogether--brand-assets/blob/977e03604c49c63314450b5d432fe57d34747c66/logo/pooltogether-logo--purple-gradient.png?raw=true" alt="PoolTogether Brand" style="max-width:100%;" width="200">
+  </a>
+</p>
 
-![npm](https://img.shields.io/npm/v/@pooltogether/v4-client-js)
-![ts](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555)
+<br />
+
+# 💻 &nbsp; PoolTogether Client Library || PoolTogether V4
+
 ![Tests](https://github.com/pooltogether/v4-client-js/actions/workflows/main.yml/badge.svg)
 [![Coverage Status](https://coveralls.io/repos/github/pooltogether/v4-client-js/badge.svg?branch=main)](https://coveralls.io/github/pooltogether/v4-client-js?branch=main)
+![ts](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555)
 [![MIT license](https://img.shields.io/npm/l/@pooltogether/v4-client-js)](https://img.shields.io/npm/l/@pooltogether/v4-client-js)
+![npm](https://img.shields.io/npm/v/@pooltogether/v4-client-js)
 
-<img src="https://github.com/pooltogether/pooltogether--brand-assets/blob/977e03604c49c63314450b5d432fe57d34747c66/logo/pooltogether-logo--purple-gradient.png?raw=true" alt="Brand" width="200"/>
+[Application](https://app.pooltogether.com/) | [Contracts](https://github.com/pooltogether/v4-core) | [Documentation](https://dev.docs.pooltogether.com/) | [Draw Calculator](https://github.com/pooltogether/draw-calculator-cli) | [Utility Library](https://github.com/pooltogether/v4-utils-js) | [Static Cache](https://github.com/pooltogether/v4-draw-results)
 
-[Application](https://app.pooltogether.com/) | [Contracts](https://github.com/pooltogether/v4-core) | [Documentation](https://v4.docs.pooltogether.com/) | [Draw Calculator](https://github.com/pooltogether/draw-calculator-cli) | [Utility Library](https://github.com/pooltogether/v4-utils-js) | [Static Cache](https://github.com/pooltogether/v4-draw-results)
-
-# 🏆 Quickstart
+# 🏆 &nbsp; Overview
 
 This library includes a simplified interface for interacting with a v4 PoolTogether deployment. Create an instance of `PrizePoolNetwork` and use the initialized `PrizePool` and `PrizeDistributor` to begin reading and writing data to the protocol.
 
-There are several classes that provide interfaces to the different aspects of the V4 PoolTogether protocol.
+There are several classes that provide interfaces to the different aspects of the V4 PoolTogether protocol. `PrizePoolNetwork` is the main entry point.
 
-- [PrizePoolNetwork](./classes/PrizePoolNetwork.md)
-- [PrizePool](./classes/PrizePool.md)
-- [User](./classes/User.md)
-- [PrizeDistributor](./classes/PrizeDistributor.md)
-- [DrawCalculatorApi](./classes/DrawCalculatorApi.md)
-- [ContractFactory](./classes/ContractFactory.md)
+- [PrizePoolNetwork](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/PrizePoolNetwork)
+- [PrizePool](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/PrizePool)
+- [User](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/User)
+- [PrizeDistributor](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/PrizeDistributor)
+- [DrawCalculatorApi](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/DrawCalculatorApi)
+- [ContractFactory](https://dev.pooltogether.com/protocol/libraries/v4-client-js/Classes/ContractFactory)
 
-## 💾 Installation
+## 💾 &nbsp; Installation
 
 This project is available as an NPM package:
 
-```bash
+```sh
+npm install @pooltogether/v4-utils-js
+```
+
+or
+
+```sh
 yarn add @pooltogether/v4-client-js
 ```
 
-## 🌱 Initialization
+The repo can be cloned from Github for contributions.
+
+```sh
+git clone https://github.com/pooltogether/v4-client-js.git
+```
+
+## 🏎️ &nbsp; Quickstart
 
 ### PrizePoolNetwork
 
@@ -83,7 +101,7 @@ const signerPrizeDistributor = new PrizeDistributor(
 )
 ```
 
-## Examples
+## 🧮 &nbsp; Examples
 
 ### Get token data for a Prize Pool
 
@@ -171,7 +189,7 @@ NOTE: Ensure the `PrizeDistributor` was initialized with a `Signer`
 const txResponse: TransactionResponse = await prizeDistributor.claimPrizesByDraw(1)
 ```
 
-## 💻 Developer Experience
+## 💻 &nbsp; Developer Experience
 
 ### Contributing
 

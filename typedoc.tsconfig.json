@@ -1,0 +1,29 @@
+{
+  "include": ["src", "types"],
+  "typedocOptions": {
+    "entryPoints": ["./src/index.ts"],
+    "out": "docs",
+    "readme": "DOCUMENTATION.md"
+  },
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "module": "esnext",
+    "lib": ["dom", "esnext"],
+    "importHelpers": false,
+    "declaration": true,
+    "sourceMap": false,
+    "rootDir": "./src",
+    "strict": false,
+    "noImplicitReturns": false,
+    "noImplicitAny": false,
+    "noFallthroughCasesInSwitch": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "moduleResolution": "node",
+    "jsx": "react",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true
+  }
+}
