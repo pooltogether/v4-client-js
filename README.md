@@ -34,7 +34,7 @@ There are several classes that provide interfaces to the different aspects of th
 This project is available as an NPM package:
 
 ```sh
-npm install @pooltogether/v4-utils-js
+npm install @pooltogether/v4-client-js
 ```
 
 or
