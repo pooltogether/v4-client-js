@@ -220,6 +220,21 @@ export class PrizePool {
     return totalSupply
   }
 
+  /**
+   * Fetches total supply for the Ticket accounting for the TWAB.
+   * @param unixTimestamp the unix timestamp to fetch in seconds
+   * @returns the ticket total supply TWAB at the requested time
+   */
+  async getTicketTwabTotalSupplyAt(unixTimestamp: number): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getTicketTwabTotalSupplyAt] | '
+    await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
+    const ticketContract = await this.getTicketContract()
+
+    const result = await ticketContract.functions.getTotalSupplyAt(unixTimestamp)
+    const totalSupply: BigNumber = result[0]
+    return totalSupply
+  }
+
   // NOTE: Gas estimates are commented out as they are quite unreliable.
 
   /**
