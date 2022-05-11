@@ -157,12 +157,12 @@ NOTE: Make sure you're shifting by the proper decimal amount
 const txResponse: TransactionResponse = await user.withdraw(ethers.utils.parseUnits(10, decimals))
 ```
 
-### Get valid draw ids
+### Get available draw ids
 
 Valid draw ids are draw ids that have all of the relevant data pushed to their respective chain & are not expired.
 
 ```js
-const drawIds = await prizeDistributor.getValidDrawIds()
+const drawIds = await prizeDistributor.getAvailableDrawIds()
 ```
 
 ### Get a users prizes

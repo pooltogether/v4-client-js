@@ -10,6 +10,7 @@ export async function getTokenData(tokenContract: Contract): Promise<TokenData> 
   const decimalsPromise = tokenContract.functions.decimals() as Promise<Result>
   const results = await Promise.all([namePromise, symbolPromise, decimalsPromise])
   return {
+    address: tokenContract.address,
     name: results[0][0],
     symbol: results[1][0],
     decimals: results[2][0]

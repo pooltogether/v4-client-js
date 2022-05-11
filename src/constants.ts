@@ -8,16 +8,14 @@ export const TIER_DENOMINATION = 9
  * A shortlist of PoolTogether v4 contract names that are used by the classes in this repo.
  */
 export enum ContractType {
-  YieldSourcePrizePool = 'YieldSourcePrizePool',
+  PrizePool = 'PrizePool',
   Ticket = 'Ticket',
   Token = 'Token',
   PrizeDistributor = 'PrizeDistributor',
   DrawBuffer = 'DrawBuffer',
   DrawBeacon = 'DrawBeacon',
   DrawCalculator = 'DrawCalculator',
-  DrawCalculatorTimelock = 'DrawCalculatorTimelock',
-  PrizeDistributionBuffer = 'PrizeDistributionBuffer',
-  PrizeTierHistory = 'PrizeTierHistory'
+  GaugeController = 'GaugeController'
   // ... more contract types
 }
 

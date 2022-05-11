@@ -8,12 +8,14 @@ import { BigNumber, ethers } from 'ethers'
 
 import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
+import { ContractWrapper } from './ContractWrapper'
+import { GaugeController } from './GaugeController'
 import { PrizeApi } from './PrizeApi'
 import {
   Contract as ContractMetadata,
   ContractList,
   Draw,
-  PrizeDistribution,
+  PrizeTier,
   DrawResults,
   Claim,
   SignersOrProviders,
@@ -21,37 +23,30 @@ import {
 } from './types'
 import {
   createContractMetadata,
-  getMetadataAndContract,
   getTokenData,
   validateAddress,
   validateIsSigner,
   validateSignerNetwork
 } from './utils'
+import { findInContractList } from './utils/findInContractList'
 
 /**
  * A Prize Distributor.
  * Provides access to the contracts for viewing expiration times on draws, timelock timers and checking/claiming prizes for a user. Can be instantiated with an ethers Signer or Provider. Use a Signer if you want to claim transactions for a user. If a provider is provided, only read methods are available.
  */
-export class PrizeDistributor {
-  readonly contractMetadataList: ContractMetadata[]
-  readonly signerOrProvider: Provider | Signer
-  readonly chainId: number
-  readonly address: string
+export class PrizeDistributor extends ContractWrapper {
+  private gaugeController: GaugeController | undefined
 
   // Contract metadata
   readonly prizeDistributorMetadata: ContractMetadata
-  readonly drawCalculatorTimelockMetadata: ContractMetadata
   drawCalculatorMetadata: ContractMetadata | undefined
   drawBufferMetadata: ContractMetadata | undefined
-  prizeDistributionsBufferMetadata: ContractMetadata | undefined
   tokenMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizeDistributorContract: Contract
-  readonly drawCalculatorTimelockContract: Contract
   drawCalculatorContract: Contract | undefined
   drawBufferContract: Contract | undefined
-  prizeDistributionsBufferContract: Contract | undefined
   tokenContract: Contract | undefined
 
   /**
@@ -65,16 +60,7 @@ export class PrizeDistributor {
     signerOrProvider: Provider | Signer,
     contractMetadataList: ContractMetadata[]
   ) {
-    // Get contract metadata & ethers contracts
-    const {
-      contractMetadata: drawCalculatorTimelockMetadata,
-      contract: drawCalculatorTimelockContract
-    } = getMetadataAndContract(
-      prizeDistributorMetadata.chainId,
-      signerOrProvider,
-      ContractType.DrawCalculatorTimelock,
-      contractMetadataList
-    )
+    super(prizeDistributorMetadata, signerOrProvider, contractMetadataList)
 
     const prizeDistributorContract = new Contract(
       prizeDistributorMetadata.address,
@@ -82,35 +68,17 @@ export class PrizeDistributor {
       signerOrProvider
     )
 
-    // Set data
-    this.signerOrProvider = signerOrProvider
-    this.contractMetadataList = contractMetadataList
-    this.chainId = prizeDistributorMetadata.chainId
-    this.address = prizeDistributorMetadata.address
-
     // Set metadata
     this.prizeDistributorMetadata = prizeDistributorMetadata
-    this.drawCalculatorTimelockMetadata = drawCalculatorTimelockMetadata
 
     // Set ethers contracts
     this.prizeDistributorContract = prizeDistributorContract
-    this.drawCalculatorTimelockContract = drawCalculatorTimelockContract
 
     // Initialized later - requires a fetch
     this.drawCalculatorMetadata = undefined
     this.drawCalculatorContract = undefined
     this.drawBufferMetadata = undefined
     this.drawBufferContract = undefined
-    this.prizeDistributionsBufferMetadata = undefined
-    this.prizeDistributionsBufferContract = undefined
-  }
-
-  /**
-   * Returns a unique id string for this PrizeDistributor.
-   * @returns a unique id for the PrizeDistributor
-   */
-  id(): string {
-    return `${this.prizeDistributorMetadata.address}-${this.prizeDistributorMetadata.chainId}`
   }
 
   //////////////////////////// Ethers write functions ////////////////////////////
@@ -118,25 +86,28 @@ export class PrizeDistributor {
   /**
    * Fetches a users prizes for the provided draw and submits a transaction to claim them to the Signer.
    * PrizeDistributor must be initialized with a Signer.
+   * TODO: NEED TO FUNNEL TICKET ADDRESS TO BE ABLE TO CLAIM PRIZES
    * @param drawId the draw id to claim prizes for
-   * @param maxPicksPerUser the maximum picks per user from the PrizeDistribution for the provided draw id
+   * @param maxPicksPerUser the maximum picks per user from the PrizeTier for the provided draw id
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
   async claimPrizesByDraw(
+    ticketAddress: string,
     drawId: number,
     maxPicksPerUser: number,
     overrides?: Overrides
   ): Promise<TransactionResponse> {
-    const errorPrefix = 'PrizeDistributors [claim] | '
+    const errorPrefix = 'PrizeDistributor [claim] | '
     const usersAddress = await this.getUsersAddress(errorPrefix)
 
     const drawResults = await this.getUsersDrawResultsForDrawId(
       usersAddress,
+      ticketAddress,
       drawId,
       maxPicksPerUser
     )
-    return this.claimPrizesByDrawResults(drawResults, overrides)
+    return this.claimPrizesByDrawResults(ticketAddress, drawResults, overrides)
   }
 
   /**
@@ -147,10 +118,11 @@ export class PrizeDistributor {
    * @returns the transaction response
    */
   async claimPrizesByDrawResults(
+    ticketAddress: string,
     drawResults: DrawResults,
     overrides?: Overrides
   ): Promise<TransactionResponse> {
-    const errorPrefix = 'PrizeDistributors [claimPrizes] | '
+    const errorPrefix = 'PrizeDistributor [claimPrizes] | '
     const usersAddress = await this.getUsersAddress(errorPrefix)
     await this.validateSignerNetwork(errorPrefix)
 
@@ -158,7 +130,7 @@ export class PrizeDistributor {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = encodeWinningPicks(usersAddress, [drawResults])
+    const claim: Claim = encodeWinningPicks(usersAddress, ticketAddress, [drawResults])
     if (Boolean(overrides)) {
       return this.prizeDistributorContract.claim(
         claim.userAddress,
@@ -183,14 +155,18 @@ export class PrizeDistributor {
    * @returns the transaction response
    */
   async claimPrizesAcrossMultipleDrawsByDrawResults(
+    ticketAddress: string,
     drawResults: {
       [drawId: number]: DrawResults
     },
     overrides?: Overrides
   ): Promise<TransactionResponse> {
-    const errorPrefix = 'PrizeDistributors [claimPrizes] | '
+    console.log({ ticketAddress, drawResults })
+
+    const errorPrefix = 'PrizeDistributor [claimPrizes] | '
     const usersAddress = await this.getUsersAddress(errorPrefix)
     await this.validateSignerNetwork(errorPrefix)
+    await validateAddress(errorPrefix, ticketAddress)
 
     const drawResultsList = Object.values(drawResults)
     const totalValueToClaim = drawResultsList.reduce((total, drawResult) => {
@@ -201,9 +177,10 @@ export class PrizeDistributor {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = encodeWinningPicks(usersAddress, drawResultsList)
+    const claim: Claim = encodeWinningPicks(usersAddress, ticketAddress, drawResultsList)
     if (Boolean(overrides)) {
       return this.prizeDistributorContract.claim(
+        claim.ticketAddress,
         claim.userAddress,
         claim.drawIds,
         claim.encodedWinningPickIndices,
@@ -211,6 +188,7 @@ export class PrizeDistributor {
       )
     } else {
       return this.prizeDistributorContract.claim(
+        claim.ticketAddress,
         claim.userAddress,
         claim.drawIds,
         claim.encodedWinningPickIndices
@@ -225,7 +203,7 @@ export class PrizeDistributor {
    * @returns Event
    */
   // async getClaimedEvents() {
-  //   const errorPrefix = 'PrizeDistributors [getClaimedEvents] |'
+  //   const errorPrefix = 'PrizeDistributor [getClaimedEvents] |'
   //   const usersAddress = await this.getUsersAddress(errorPrefix)
 
   //   return this.getUsersClaimedEvents(usersAddress)
@@ -278,77 +256,6 @@ export class PrizeDistributor {
   }
 
   /**
-   * Fetches the newest PrizeDistribution in the PrizeDistributionBuffer related to the PrizeDistributor.
-   * NOTE: Will throw an error if the buffer is empty.
-   * @returns the newest prize distribution in the prize distribution buffer
-   */
-  async getNewestPrizeDistribution(): Promise<{
-    prizeDistribution: PrizeDistribution
-    drawId: number
-  }> {
-    const prizeDistributionBufferContract = await this.getPrizeDistributionsBufferContract()
-    const result: Result = await prizeDistributionBufferContract.functions.getNewestPrizeDistribution()
-    const prizeDistribution = result[0]
-    const drawId: number = result[1]
-    return {
-      prizeDistribution: {
-        matchCardinality: prizeDistribution.matchCardinality,
-        numberOfPicks: prizeDistribution.numberOfPicks,
-        tiers: prizeDistribution.tiers,
-        bitRangeSize: prizeDistribution.bitRangeSize,
-        prize: prizeDistribution.prize,
-        startTimestampOffset: prizeDistribution.drawStartTimestampOffset,
-        endTimestampOffset: prizeDistribution.drawEndTimestampOffset,
-        maxPicksPerUser: prizeDistribution.maxPicksPerUser
-      } as PrizeDistribution,
-      drawId
-    }
-  }
-
-  /**
-   * Fetches the oldest PrizeDistribution in the PrizeDistributionBuffer related to the PrizeDistributor.
-   * @returns the oldest prize distribution in the prize distribution buffer
-   */
-  async getOldestPrizeDistribution(): Promise<{
-    prizeDistribution: PrizeDistribution
-    drawId: number
-  }> {
-    const prizeDistributionBufferContract = await this.getPrizeDistributionsBufferContract()
-    const result: Result = await prizeDistributionBufferContract.functions.getOldestPrizeDistribution()
-    const prizeDistribution = result[0]
-    const drawId: number = result[1]
-    return {
-      prizeDistribution: {
-        matchCardinality: prizeDistribution.matchCardinality,
-        numberOfPicks: prizeDistribution.numberOfPicks,
-        tiers: prizeDistribution.tiers,
-        bitRangeSize: prizeDistribution.bitRangeSize,
-        prize: prizeDistribution.prize,
-        startTimestampOffset: prizeDistribution.drawStartTimestampOffset,
-        endTimestampOffset: prizeDistribution.drawEndTimestampOffset,
-        maxPicksPerUser: prizeDistribution.maxPicksPerUser
-      } as PrizeDistribution,
-      drawId
-    }
-  }
-
-  /**
-   * Fetches the id and end time stamp of the draw that is currently in the DrawCalcluatorTimelock.
-   * @returns the draw id and the end time as a unix time stamp in seconds
-   */
-  async getTimelockDrawId(): Promise<{
-    drawId: number
-    endTimeSeconds: BigNumber
-  }> {
-    const timelockResult = await this.drawCalculatorTimelockContract.functions.getTimelock()
-    const [endTimeSeconds, drawId] = timelockResult[0]
-    return {
-      drawId,
-      endTimeSeconds
-    }
-  }
-
-  /**
    * Fetches the range of draw ids that are available in the DrawBuffer.
    * @returns a list of draw ids in the buffer
    */
@@ -374,116 +281,64 @@ export class PrizeDistributor {
   }
 
   /**
-   * Fetches the range of draw ids for the prize distributions that are available in the PrizeDistributionBuffer.
-   * @returns a list of draw ids in the buffer
-   */
-  async getDrawIdsFromPrizeDistributionBuffer(): Promise<number[]> {
-    const [
-      oldestPrizeDistributionResponse,
-      newestPrizeDistributionResponse
-    ] = await Promise.allSettled([
-      this.getOldestPrizeDistribution(),
-      this.getNewestPrizeDistribution()
-    ])
-
-    if (
-      newestPrizeDistributionResponse.status === 'rejected' ||
-      oldestPrizeDistributionResponse.status === 'rejected'
-    ) {
-      return []
-    }
-
-    const oldestId = oldestPrizeDistributionResponse.value.drawId
-    const newestId = newestPrizeDistributionResponse.value.drawId
-
-    const drawIds = []
-    for (let i = oldestId; i <= newestId; i++) {
-      drawIds.push(i)
-    }
-
-    return drawIds
-  }
-
-  /**
-   * Gets the list of draw ids of draws that have are available in both the DrawBuffer and PrizeDistributionBuffer.
+   * Gets the list of draw ids of draws that have are available in both the DrawBuffer and PrizeTierBuffer.
    * @returns a list of draw ids in both buffers
    */
-  async getValidDrawIds(): Promise<number[]> {
-    const [
-      oldestPrizeDistributionResponse,
-      newestPrizeDistributionResponse,
-      oldestDrawResponse,
-      newestDrawResponse
-    ] = await Promise.allSettled([
-      this.getOldestPrizeDistribution(),
-      this.getNewestPrizeDistribution(),
+  async getAvailableDrawIds(): Promise<number[]> {
+    const [oldestDrawResponse, newestDrawResponse] = await Promise.allSettled([
       this.getOldestDraw(),
       this.getNewestDraw()
     ])
     // If newest failed, there are none
     // TODO: Check oldest for id 0 as well
     // TODO: Do the same empty states apply for the prize distribution buffer?
-    if (
-      oldestPrizeDistributionResponse.status === 'rejected' ||
-      newestPrizeDistributionResponse.status === 'rejected' ||
-      newestDrawResponse.status === 'rejected' ||
-      oldestDrawResponse.status === 'rejected'
-    ) {
+    if (newestDrawResponse.status === 'rejected' || oldestDrawResponse.status === 'rejected') {
       return []
     }
 
-    const oldestPrizeDistributionId = oldestPrizeDistributionResponse.value.drawId
-    const newestPrizeDistributionId = newestPrizeDistributionResponse.value.drawId
     const oldestDrawId = oldestDrawResponse.value.drawId
     const newestDrawId = newestDrawResponse.value.drawId
 
-    const newestIds = [newestDrawId, newestPrizeDistributionId]
-
-    const oldestId = Math.max(oldestPrizeDistributionId, oldestDrawId)
-    const newestId = Math.min(...newestIds)
-
-    if (newestId < oldestId) return []
+    if (newestDrawId < oldestDrawId) return []
 
     const validIds = []
-    for (let i = oldestId; i <= newestId; i++) {
+    for (let i = oldestDrawId; i <= newestDrawId; i++) {
       validIds.push(i)
     }
     return validIds
   }
 
   /**
-   * Fetches Draws and PrizeDistributions from their respective buffers for the provided list of draw ids.
-   * @param drawIds the list of draw ids to fetch Draws and PrizeDistributions for
-   * @returns an object full of Draws and PrizeDistributions keyed by their draw id
+   * Fetches Draws and PrizeTiers from their respective buffers for the provided list of draw ids.
+   * @param drawIds the list of draw ids to fetch Draws and PrizeTiers for
+   * @returns an object full of Draws and PrizeTiers keyed by their draw id
    */
-  async getDrawsAndPrizeDistributions(
+  async getDrawsAndPrizeTiers(
     drawIds: number[]
-  ): Promise<{ [drawId: number]: { draw: Draw; prizeDistribution: PrizeDistribution } }> {
-    const [drawsResponse, prizeDistributionsResponse] = await Promise.allSettled([
+  ): Promise<{ [drawId: number]: { draw: Draw; prizeTier: PrizeTier } }> {
+    const [drawsResponse, prizeTiersResponse] = await Promise.allSettled([
       this.getDraws(drawIds),
-      this.getPrizeDistributions(drawIds)
+      this.getPrizeTiers(drawIds)
     ])
 
     // If any are rejected, drop the largest draw id and retry
     // TODO: Make this error handling better.
     // There's a delay between setting the draw and the prize distribution so this will happen frequently.
-    if (drawsResponse.status === 'rejected' || prizeDistributionsResponse.status === 'rejected') {
-      return this.getDrawsAndPrizeDistributions(
-        drawIds.sort((a, b) => a - b).slice(0, drawIds.length - 1)
-      )
+    if (drawsResponse.status === 'rejected' || prizeTiersResponse.status === 'rejected') {
+      return this.getDrawsAndPrizeTiers(drawIds.sort((a, b) => a - b).slice(0, drawIds.length - 1))
     }
 
-    const drawsAndPrizeDistributions: {
-      [drawId: number]: { draw: Draw; prizeDistribution: PrizeDistribution }
+    const drawsAndPrizeTiers: {
+      [drawId: number]: { draw: Draw; prizeTier: PrizeTier }
     } = {}
     Object.values(drawsResponse.value).forEach((draw, index) => {
-      drawsAndPrizeDistributions[draw.drawId] = {
+      drawsAndPrizeTiers[draw.drawId] = {
         draw,
-        prizeDistribution: prizeDistributionsResponse.value[index]
+        prizeTier: prizeTiersResponse.value[index]
       }
     })
 
-    return drawsAndPrizeDistributions
+    return drawsAndPrizeTiers
   }
 
   /**
@@ -528,56 +383,54 @@ export class PrizeDistributor {
   }
 
   /**
-   * Fetches a PrizeDistribution from the PrizeDistributionBuffer.
-   * @param drawId the draw id for the PrizeDistribution to fetch
-   * @returns the PrizeDistribution
+   * Fetches a PrizeTier from the PrizeTierBuffer.
+   * @param drawId the draw id for the PrizeTier to fetch
+   * @returns the PrizeTier
    */
-  async getPrizeDistribution(drawId: number): Promise<PrizeDistribution> {
-    const prizeDistributionsBufferContract = await this.getPrizeDistributionsBufferContract()
-    const result: Result = await prizeDistributionsBufferContract.functions.getPrizeDistribution(
-      drawId
-    )
+  async getPrizeTier(drawId: number): Promise<PrizeTier> {
+    const drawCalculatorContract = await this.getDrawCalculatorContract()
+    const result: Result = await drawCalculatorContract.functions.getPrizeTier(drawId)
     return {
       matchCardinality: result[0].matchCardinality,
       tiers: result[0].tiers,
       bitRangeSize: result[0].bitRangeSize,
       maxPicksPerUser: result[0].maxPicksPerUser,
-      numberOfPicks: result[0].numberOfPicks,
       expiryDuration: result[0].expiryDuration,
       prize: result[0].prize,
-      startTimestampOffset: result[0].drawStartTimestampOffset,
-      endTimestampOffset: result[0].drawEndTimestampOffset
+      endTimestampOffset: result[0].drawEndTimestampOffset,
+      drawId: result[0].drawId,
+      poolStakeTotal: result[0].poolStakeTotal
     }
   }
 
   /**
-   * Fetches multiple PrizeDistributions from the PrizeDistributionBuffer.
-   * @param drawIds a list of draw ids to fetch PrizeDistributions for
-   * @returns an object with PrizeDistributions keyed by draw ids
+   * Fetches multiple PrizeTiers from the PrizeTierBuffer.
+   * @param drawIds a list of draw ids to fetch PrizeTiers for
+   * @returns an object with PrizeTiers keyed by draw ids
    */
-  async getPrizeDistributions(drawIds: number[]): Promise<{ [drawId: number]: PrizeDistribution }> {
+  async getPrizeTiers(drawIds: number[]): Promise<{ [drawId: number]: PrizeTier }> {
     if (!drawIds || drawIds.length === 0) {
       return {}
     }
-    const prizeDistributionsBufferContract = await this.getPrizeDistributionsBufferContract()
-    const prizeDistributionsResults: Result = await prizeDistributionsBufferContract.functions.getPrizeDistributions(
+    const drawCalculatorContract = await this.getDrawCalculatorContract()
+    const prizeTierResults: Result = await drawCalculatorContract.functions.getPrizeTierList(
       drawIds
     )
-    const prizeDistributions: { [drawId: number]: PrizeDistribution } = {}
-    prizeDistributionsResults[0].forEach((result: PrizeDistribution, index: number) => {
-      prizeDistributions[drawIds[index]] = {
+    const prizeTiers: { [drawId: number]: PrizeTier } = {}
+    prizeTierResults[0].forEach((result: PrizeTier, index: number) => {
+      prizeTiers[drawIds[index]] = {
         matchCardinality: result.matchCardinality,
         tiers: result.tiers,
         bitRangeSize: result.bitRangeSize,
         maxPicksPerUser: result.maxPicksPerUser,
-        numberOfPicks: result.numberOfPicks,
         prize: result.prize,
         expiryDuration: result.expiryDuration,
-        startTimestampOffset: result.startTimestampOffset,
-        endTimestampOffset: result.endTimestampOffset
+        endTimestampOffset: result.endTimestampOffset,
+        drawId: result.drawId,
+        poolStakeTotal: result.poolStakeTotal
       }
     })
-    return prizeDistributions
+    return prizeTiers
   }
 
   /**
@@ -587,7 +440,7 @@ export class PrizeDistributor {
    * @returns the amount a user claimed
    */
   async getUsersClaimedAmount(usersAddress: string, drawId: number): Promise<BigNumber> {
-    const errorPrefix = 'PrizeDistributors [getUsersClaimedAmount] |'
+    const errorPrefix = 'PrizeDistributor [getUsersClaimedAmount] |'
     await validateAddress(errorPrefix, usersAddress)
 
     const result: Result = await this.prizeDistributorContract.functions.getDrawPayoutBalanceOf(
@@ -619,20 +472,23 @@ export class PrizeDistributor {
   }
 
   /**
-   * Fetches a users normalized balance for several draw ids.
-   * @param usersAddress the address of a user to fetch normalized balances for
-   * @param drawIds a list of draw ids to fetch normalized balances for
-   * @returns an object of normalized balances keyed by draw ids
+   * Fetches a users pick count for several draw ids.
+   * @param usersAddress the address of a user to fetch pick counts for
+   * @param ticketAddress the address of the ticket identifying the prize pool
+   * @param drawIds a list of draw ids to fetch pick counts for
+   * @returns an object of pick counts keyed by draw ids
    */
-  async getUsersNormalizedBalancesForDrawIds(
+  async getUsersPickCountForDrawIds(
     usersAddress: string,
+    ticketAddress: string,
     drawIds: number[]
   ): Promise<{ [drawId: number]: BigNumber }> {
-    const errorPrefix = 'PrizeDistributors [getUsersNormalizedBalancesForDrawIds] |'
+    const errorPrefix = 'PrizeDistributor [getUsersPickCountForDrawIds] |'
     await validateAddress(errorPrefix, usersAddress)
 
     const drawCalculatorContract = await this.getDrawCalculatorContract()
-    const result: Result = await drawCalculatorContract.functions.getNormalizedBalancesForDrawIds(
+    const result: Result = await drawCalculatorContract.functions.calculateUserPicks(
+      ticketAddress,
       usersAddress,
       drawIds
     )
@@ -648,12 +504,14 @@ export class PrizeDistributor {
    */
   async getUsersDrawResultsForDrawId(
     usersAddress: string,
+    ticketAddress: string,
     drawId: number,
     maxPicksPerUser: number
   ): Promise<DrawResults> {
     return PrizeApi.getUsersDrawResultsByDraw(
       this.chainId,
       usersAddress,
+      ticketAddress,
       this.prizeDistributorMetadata.address,
       drawId,
       maxPicksPerUser
@@ -669,12 +527,14 @@ export class PrizeDistributor {
    */
   async getUsersDrawResultsForDrawIds(
     usersAddress: string,
+    ticketAddress: string,
     drawIds: number[],
     maxPicksPerUserPerDraw: number[]
   ): Promise<{ [drawId: number]: DrawResults }> {
     return PrizeApi.getUsersDrawResultsByDraws(
       this.chainId,
       usersAddress,
+      ticketAddress,
       this.prizeDistributorMetadata.address,
       drawIds,
       maxPicksPerUserPerDraw
@@ -689,7 +549,7 @@ export class PrizeDistributor {
    * @returns
    */
   // async getUsersClaimedEvents(usersAddress: string) {
-  //   const errorPrefix = 'PrizeDistributors [getUsersClaimedEvents] |'
+  //   const errorPrefix = 'PrizeDistributor [getUsersClaimedEvents] |'
   //   await validateAddress(errorPrefix, usersAddress)
 
   //   const eventFilter = this.prizeDistributorContract.filters.ClaimedDraw(usersAddress)
@@ -711,35 +571,24 @@ export class PrizeDistributor {
   //////////////////////////// Ethers Contracts Initializers ////////////////////////////
 
   /**
-   * Fetches a contract address, finds the relevant metadata in the ContractList and creates an ethers Contract for that contract. The ethers Contract is cached on the instance of the PrizeDistributor and is returned immediately if already stored.
-   * @param key the key for the requested contract to be stored on the PrizeDistributor
-   * @param contractType the contract name
-   * @param getContractAddress a function to fetch the contract address
-   * @returns an ethers Contract for the provided address and contract type
+   * Fetches the address of the DrawCalculator and caches the ethers Contract for the DrawCalculator
+   * @returns an ethers Contract for the DrawCalculator related to this PrizeDistributor
    */
-  private async getAndSetEthersContract(
-    key: string,
-    contractType: ContractType,
-    getContractAddress: () => Promise<string>
-  ): Promise<Contract> {
-    const contractKey = `${key}Contract`
-    const metadataKey = `${key}Metadata`
-    // @ts-ignore
-    if (this[contractKey] !== undefined) return this[contractKey]
-
-    const contractAddress = await getContractAddress()
-    const { contractMetadata, contract } = getMetadataAndContract(
-      this.chainId,
+  async getGaugeController(): Promise<GaugeController> {
+    const errorPrefix = 'PrizeDistributor [getGaugeController] | '
+    if (this.gaugeController) return this.gaugeController
+    const drawCalculatorContract = await this.getDrawCalculatorContract()
+    const result: Result = await drawCalculatorContract.functions.gaugeController()
+    const metadata = findInContractList(this.contractMetadataList, this.chainId, result[0])
+    if (!metadata) {
+      throw new Error(errorPrefix + ` GaugeController metadata not provided`)
+    }
+    this.gaugeController = new GaugeController(
+      metadata,
       this.signerOrProvider,
-      contractType,
-      this.contractMetadataList,
-      contractAddress
+      this.contractMetadataList
     )
-    // @ts-ignore
-    this[metadataKey] = contractMetadata
-    // @ts-ignore
-    this[contractKey] = contract
-    return contract
+    return this.gaugeController
   }
 
   /**
@@ -749,18 +598,7 @@ export class PrizeDistributor {
   async getDrawCalculatorContract(): Promise<Contract> {
     const getAddress = async () => {
       let result: Result = await this.prizeDistributorContract.functions.getDrawCalculator()
-      let address = result[0]
-      const contractMetadata = this.contractMetadataList.find(
-        (contractMetadata) =>
-          contractMetadata.chainId === this.chainId && contractMetadata.address === address
-      )
-      if (contractMetadata?.type === ContractType.DrawCalculatorTimelock) {
-        result = await this.drawCalculatorTimelockContract.functions.getDrawCalculator()
-        address = result[0]
-        return address
-      } else {
-        return address
-      }
+      return result[0]
     }
     return this.getAndSetEthersContract('drawCalculator', ContractType.DrawCalculator, getAddress)
   }
@@ -776,23 +614,6 @@ export class PrizeDistributor {
       return result[0]
     }
     return this.getAndSetEthersContract('drawBuffer', ContractType.DrawBuffer, getAddress)
-  }
-
-  /**
-   * Fetches the address of the PrizeDistributionsBuffer and caches the ethers Contract for the PrizeDistributionsBuffer.
-   * @returns an ethers Contract for the PrizeDistributionsBuffer related to this PrizeDistributor
-   */
-  async getPrizeDistributionsBufferContract(): Promise<Contract> {
-    const getAddress = async () => {
-      const drawCalculatorContract = await this.getDrawCalculatorContract()
-      const result: Result = await drawCalculatorContract.functions.getPrizeDistributionBuffer()
-      return result[0]
-    }
-    return this.getAndSetEthersContract(
-      'prizeDistributionsBuffer',
-      ContractType.PrizeDistributionBuffer,
-      getAddress
-    )
   }
 
   /**
@@ -822,15 +643,30 @@ export class PrizeDistributor {
     return tokenContract
   }
 
+  /**
+   * Fetches the upcoming prize tier data from the prize tier history contract. This data is used for the next prize distribution that will be added to the Prize Distribution Buffer for the beacon Prize Pool.
+   * @returns the upcoming prize tier
+   */
+  async getUpcomingPrizeTier(): Promise<PrizeTier> {
+    const drawCalculatorContract = await this.getDrawCalculatorContract()
+    let drawId: number = 0
+    try {
+      drawId = await drawCalculatorContract.functions.getNewestDrawId()
+    } catch (e) {
+      console.log(`Error fetching newest draw id on ${drawCalculatorContract}`, { e })
+    }
+    return this.getPrizeTier(drawId + 1)
+  }
+
   //////////////////////////// Methods ////////////////////////////
 
   /**
    * Returns the users address of the provided Signer.
-   * PrizeDistributor must be initialized with a Signer.
+   * PrizeDistributor can be initialized with a Signer.
    * @param errorPrefix the class and function name of where the error occurred
    * @returns the address of the user
    */
-  async getUsersAddress(errorPrefix = 'PrizeDistributors [getUsersAddress] |') {
+  async getUsersAddress(errorPrefix = 'PrizeDistributor [getUsersAddress] |') {
     await this.validateIsSigner(errorPrefix)
     return await (this.signerOrProvider as Signer).getAddress()
   }

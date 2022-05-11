@@ -4,53 +4,53 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
-// import { MaxUint256 } from '@ethersproject/constants'
 
 import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
 import { PrizePoolTokenBalances, Providers, TokenData } from './types'
 import {
-  sortContractsByContractTypeAndChildren,
   getTokenData,
   getUsersERC20Balance,
   validateAddress,
   validateSignerOrProviderNetwork,
   getMetadataAndContract,
-  createContractMetadata
+  createContractMetadata,
+  getContractsByType
 } from './utils'
+import { ContractWrapper } from './ContractWrapper'
 
 /**
  * A Prize Pool.
  * Provides read only functions for the contracts that make up the deployment of this Prize Pool.
  */
-export class PrizePool {
-  readonly contractMetadataList: ContractMetadata[]
-  readonly signerOrProvider: Provider | Signer
-  readonly chainId: number
-  readonly address: string
-
+export class PrizePool extends ContractWrapper {
   // Contract metadata
   readonly prizePoolMetadata: ContractMetadata
+  readonly drawBeaconMetadata: ContractMetadata
   ticketMetadata: ContractMetadata | undefined
   tokenMetadata: ContractMetadata | undefined
+  drawBufferMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizePoolContract: Contract
+  readonly drawBeaconContract: Contract
   ticketContract: Contract | undefined
   tokenContract: Contract | undefined
+  drawBufferContract: Contract | undefined
 
   /**
    * Create an instance of a PrizePool by providing the metadata for the YieldSourcePrizePool contract, an ethers Provider or Signer for the network the Prize Pool is deployed on and a list of contract metadata for the other contracts that make up the Prize Pool.
    * @constructor
    * @param prizePoolMetadata the metadata for the YieldSourcePrizePool contract in the Prize Pool
    * @param signerOrProvider a Provider or Signer for the network the Prize Pool deployment is on
-   * @param contractMetadataList an array of metadata for the Prize Pool
+   * @param contractMetadataList an array of metadata for the Prize Pool. Assumes there is a single DrawBeacon per chain id.
    */
   constructor(
     prizePoolMetadata: ContractMetadata,
     signerOrProvider: Provider | Signer,
     contractMetadataList: ContractMetadata[]
   ) {
+    super(prizePoolMetadata, signerOrProvider, contractMetadataList)
     // Get contract metadata & ethers contracts
     const prizePoolContract = new Contract(
       prizePoolMetadata.address,
@@ -58,29 +58,27 @@ export class PrizePool {
       signerOrProvider
     )
 
-    // Set data
-    this.contractMetadataList = contractMetadataList
-    this.signerOrProvider = signerOrProvider
-    this.chainId = prizePoolMetadata.chainId
-    this.address = prizePoolMetadata.address
+    const {
+      contractMetadata: drawBeaconMetadata,
+      contract: drawBeaconContract
+    } = getMetadataAndContract(
+      prizePoolMetadata.chainId,
+      signerOrProvider,
+      ContractType.DrawBeacon,
+      contractMetadataList
+    )
 
     // Set metadata
     this.prizePoolMetadata = prizePoolMetadata
+    this.drawBeaconMetadata = drawBeaconMetadata
     this.ticketMetadata = undefined
     this.tokenMetadata = undefined
 
     // Set ethers contracts
     this.prizePoolContract = prizePoolContract
+    this.drawBeaconContract = drawBeaconContract
     this.ticketContract = undefined
     this.tokenContract = undefined
-  }
-
-  /**
-   * Returns a unique id string for this Prize Pool.
-   * @returns a unique id for the Prize Pool
-   */
-  id(): string {
-    return `${this.prizePoolMetadata.address}-${this.prizePoolMetadata.chainId}`
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
@@ -235,49 +233,53 @@ export class PrizePool {
     return totalSupply
   }
 
-  // NOTE: Gas estimates are commented out as they are quite unreliable.
+  /**
+   * Fetch the current Draw Beacon period data from the beacon Prize Pool.
+   * @returns the current draw beacon period.
+   */
+  async getDrawBeaconPeriod() {
+    const [periodSecondsResult, periodStartedAtResult, nextDrawIdResult] = await Promise.all([
+      this.drawBeaconContract.functions.getBeaconPeriodSeconds(),
+      this.drawBeaconContract.functions.getBeaconPeriodStartedAt(),
+      this.drawBeaconContract.functions.getNextDrawId()
+    ])
+    const startedAtSeconds: BigNumber = periodStartedAtResult[0]
+    const periodSeconds: number = periodSecondsResult[0]
+    const endsAtSeconds: BigNumber = startedAtSeconds.add(periodSeconds)
+    const drawId: number = nextDrawIdResult[0]
+    return {
+      startedAtSeconds,
+      periodSeconds,
+      endsAtSeconds,
+      drawId
+    }
+  }
 
   /**
-   * Fetches a gas estimate for depositing from the Prize Pool.
-   * @param usersAddress string
-   * @param amount BigNumber
-   * @returns BigNumber
+   * Fetch the range of available draw ids in the Draw Buffer for the beacon Prize Pool.
+   * @returns an array of draw ids
    */
-  // async getDepositGasEstimate(usersAddress: string, amount: BigNumber): Promise<BigNumber> {
-  //   const errorPrefix = 'PrizePool [getUsersDepositAllowance] | '
-  //   await validateAddress(errorPrefix, usersAddress)
-  //   await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
+  async getBeaconChainDrawIds(): Promise<number[]> {
+    const drawBufferContract = await this.getDrawBufferContract()
+    const [oldestDrawResponse, newestDrawResponse] = await Promise.allSettled([
+      drawBufferContract.functions.getOldestDraw(),
+      drawBufferContract.functions.getNewestDraw()
+    ])
 
-  //   return await this.prizePoolContract.estimateGas.depositTo(usersAddress, amount)
-  // }
+    if (newestDrawResponse.status === 'rejected' || oldestDrawResponse.status === 'rejected') {
+      return []
+    }
 
-  /**
-   * Fetches a gas estimate for withdrawing from the Prize Pool.
-   * @param usersAddress string
-   * @param amount BigNumber
-   * @returns BigNumber
-   */
-  // async getWithdrawGasEstimate(usersAddress: string, amount: BigNumber): Promise<BigNumber> {
-  //   const errorPrefix = 'PrizePool [getWithdrawGasEstimate] | '
-  //   await validateAddress(errorPrefix, usersAddress)
-  //   await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
+    const oldestId = oldestDrawResponse.value[0].drawId
+    const newestId = newestDrawResponse.value[0].drawId
 
-  //   return await this.prizePoolContract.estimateGas.withdrawFrom(usersAddress, amount)
-  // }
+    const drawIds: number[] = []
+    for (let i = oldestId; i <= newestId; i++) {
+      drawIds.push(i)
+    }
 
-  /**
-   * Fetches a gas estimate for approving deposits into the Prize Pool.
-   * @param usersAddress string
-   * @returns BigNumber
-   */
-  // async getApprovalGasEstimate(usersAddress: string): Promise<BigNumber> {
-  //   const errorPrefix = 'PrizePool [getApprovalGasEstimate] | '
-  //   await validateAddress(errorPrefix, usersAddress)
-  //   const tokenContract = await this.getTokenContract()
-
-  //   const prizePoolAddress = this.prizePoolMetadata.address
-  //   return await tokenContract.estimateGas.approve(prizePoolAddress, MaxUint256)
-  // }
+    return drawIds
+  }
 
   //////////////////////////// Ethers Contracts Initializers ////////////////////////////
 
@@ -286,22 +288,11 @@ export class PrizePool {
    * @returns an ethers contract for the ticket
    */
   async getTicketContract(): Promise<Contract> {
-    if (this.ticketContract !== undefined) return this.ticketContract
     const getAddress = async () => {
       const result: Result = await this.prizePoolContract.functions.getTicket()
       return result[0]
     }
-    const ticketAddress = await getAddress()
-    const { contractMetadata: ticketMetadata, contract: ticketContract } = getMetadataAndContract(
-      this.chainId,
-      this.signerOrProvider,
-      ContractType.Ticket,
-      this.contractMetadataList,
-      ticketAddress
-    )
-    this.ticketMetadata = ticketMetadata
-    this.ticketContract = ticketContract
-    return ticketContract
+    return this.getAndSetEthersContract('ticket', ContractType.Ticket, getAddress)
   }
 
   /**
@@ -330,6 +321,18 @@ export class PrizePool {
     this.tokenContract = tokenContract
     return tokenContract
   }
+
+  /**
+   * Fetches the addresses to build an instance of an ethers Contract for the draw buffer
+   * @returns an ethers contract for the underlying token
+   */
+  async getDrawBufferContract(): Promise<Contract> {
+    const getAddress = async () => {
+      const result: Result = await this.drawBeaconContract.functions.getDrawBuffer()
+      return result[0]
+    }
+    return this.getAndSetEthersContract('drawBuffer', ContractType.DrawBuffer, getAddress)
+  }
 }
 
 /**
@@ -342,15 +345,9 @@ export function initializePrizePools(
   contractList: ContractList,
   providers: Providers
 ): PrizePool[] {
-  const prizePoolContractLists = sortContractsByContractTypeAndChildren(
-    contractList.contracts,
-    ContractType.YieldSourcePrizePool
-  )
+  const prizePoolMetadatas = getContractsByType(contractList.contracts, ContractType.PrizePool)
   const prizePools: PrizePool[] = []
-  prizePoolContractLists.forEach((contracts) => {
-    const prizePoolMetadata = contracts.find(
-      (contract) => contract.type === ContractType.YieldSourcePrizePool
-    ) as ContractMetadata
+  prizePoolMetadatas.forEach((prizePoolMetadata) => {
     const provider = providers[prizePoolMetadata.chainId]
     try {
       prizePools.push(new PrizePool(prizePoolMetadata, provider, contractList.contracts))
