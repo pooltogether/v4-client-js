@@ -15,7 +15,10 @@ export enum ContractType {
   DrawBuffer = 'DrawBuffer',
   DrawBeacon = 'DrawBeacon',
   DrawCalculator = 'DrawCalculator',
-  GaugeController = 'GaugeController'
+  PrizeConfigHistory = 'PrizeConfigHistory',
+  GaugeController = 'GaugeController',
+  GaugeReward = 'GaugeReward',
+  Liquidator = 'Liquidator'
   // ... more contract types
 }
 

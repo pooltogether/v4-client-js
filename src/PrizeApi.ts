@@ -3,7 +3,7 @@ import { deserializeBigNumbers, getReadProvider, NETWORK } from '@pooltogether/u
 import {
   computeUserWinningPicksForRandomNumber,
   Draw,
-  PrizeTier,
+  PrizeConfig,
   utils as V4Utils
 } from '@pooltogether/v4-utils-js'
 import { BigNumber } from 'ethers'
@@ -243,14 +243,14 @@ export class PrizeApi {
         // @ts-ignore
         .getDrawBuffer()
         .calculateUserPicks(ticketAddress, usersAddress, [drawId])
-        .getPrizeTier(drawId)
+        .getPrizeConfig(drawId)
     )
     const drawBufferAddress = response[drawCalculatorAddress].getDrawBuffer[0]
 
-    const prizeTier: PrizeTier = response[drawCalculatorAddress].getPrizeTier[0]
+    const prizeConfig: PrizeConfig = response[drawCalculatorAddress].getPrizeConfig[0]
     const usersPickCount: BigNumber = response[drawCalculatorAddress].calculateUserPicks[0][0]
 
-    console.log('Computing', { drawId, usersPickCount, prizeTier, drawCalculatorAddress })
+    console.log('Computing', { drawId, usersPickCount, prizeConfig, drawCalculatorAddress })
     // If user had no balance, short circuit
     if (usersPickCount.isZero()) {
       return createEmptyDrawResult(drawId)
@@ -268,16 +268,16 @@ export class PrizeApi {
 
     const drawResults = computeUserWinningPicksForRandomNumber(
       draw.winningRandomNumber,
-      prizeTier.bitRangeSize,
-      prizeTier.matchCardinality,
-      prizeTier.prize,
-      prizeTier.tiers,
+      prizeConfig.bitRangeSize,
+      prizeConfig.matchCardinality,
+      prizeConfig.prize,
+      prizeConfig.tiers,
       usersAddress,
       usersPickCount,
       draw.drawId
     )
 
-    return V4Utils.filterResultsByValue(drawResults, prizeTier.maxPicksPerUser)
+    return V4Utils.filterResultsByValue(drawResults, prizeConfig.maxPicksPerUser)
   }
 
   /**
@@ -469,7 +469,7 @@ const PartialDrawCalculatorAbi = [
   },
   {
     inputs: [{ internalType: 'uint32', name: 'drawId', type: 'uint32' }],
-    name: 'getPrizeTier',
+    name: 'getPrizeConfig',
     outputs: [
       {
         components: [
@@ -483,7 +483,7 @@ const PartialDrawCalculatorAbi = [
           { internalType: 'uint256', name: 'prize', type: 'uint256' },
           { internalType: 'uint32[16]', name: 'tiers', type: 'uint32[16]' }
         ],
-        internalType: 'struct DrawCalculator.PrizeTier',
+        internalType: 'struct DrawCalculator.PrizeConfig',
         name: '',
         type: 'tuple'
       }

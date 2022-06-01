@@ -13,7 +13,6 @@ import {
   getUsersERC20Balance,
   validateAddress,
   validateSignerOrProviderNetwork,
-  getMetadataAndContract,
   createContractMetadata,
   getContractsByType
 } from './utils'
@@ -26,24 +25,20 @@ import { ContractWrapper } from './ContractWrapper'
 export class PrizePool extends ContractWrapper {
   // Contract metadata
   readonly prizePoolMetadata: ContractMetadata
-  readonly drawBeaconMetadata: ContractMetadata
   ticketMetadata: ContractMetadata | undefined
   tokenMetadata: ContractMetadata | undefined
-  drawBufferMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizePoolContract: Contract
-  readonly drawBeaconContract: Contract
   ticketContract: Contract | undefined
   tokenContract: Contract | undefined
-  drawBufferContract: Contract | undefined
 
   /**
    * Create an instance of a PrizePool by providing the metadata for the YieldSourcePrizePool contract, an ethers Provider or Signer for the network the Prize Pool is deployed on and a list of contract metadata for the other contracts that make up the Prize Pool.
    * @constructor
    * @param prizePoolMetadata the metadata for the YieldSourcePrizePool contract in the Prize Pool
    * @param signerOrProvider a Provider or Signer for the network the Prize Pool deployment is on
-   * @param contractMetadataList an array of metadata for the Prize Pool. Assumes there is a single DrawBeacon per chain id.
+   * @param contractMetadataList an array of metadata for the Prize Pool.
    */
   constructor(
     prizePoolMetadata: ContractMetadata,
@@ -58,25 +53,13 @@ export class PrizePool extends ContractWrapper {
       signerOrProvider
     )
 
-    const {
-      contractMetadata: drawBeaconMetadata,
-      contract: drawBeaconContract
-    } = getMetadataAndContract(
-      prizePoolMetadata.chainId,
-      signerOrProvider,
-      ContractType.DrawBeacon,
-      contractMetadataList
-    )
-
     // Set metadata
     this.prizePoolMetadata = prizePoolMetadata
-    this.drawBeaconMetadata = drawBeaconMetadata
     this.ticketMetadata = undefined
     this.tokenMetadata = undefined
 
     // Set ethers contracts
     this.prizePoolContract = prizePoolContract
-    this.drawBeaconContract = drawBeaconContract
     this.ticketContract = undefined
     this.tokenContract = undefined
   }
@@ -233,54 +216,6 @@ export class PrizePool extends ContractWrapper {
     return totalSupply
   }
 
-  /**
-   * Fetch the current Draw Beacon period data from the beacon Prize Pool.
-   * @returns the current draw beacon period.
-   */
-  async getDrawBeaconPeriod() {
-    const [periodSecondsResult, periodStartedAtResult, nextDrawIdResult] = await Promise.all([
-      this.drawBeaconContract.functions.getBeaconPeriodSeconds(),
-      this.drawBeaconContract.functions.getBeaconPeriodStartedAt(),
-      this.drawBeaconContract.functions.getNextDrawId()
-    ])
-    const startedAtSeconds: BigNumber = periodStartedAtResult[0]
-    const periodSeconds: number = periodSecondsResult[0]
-    const endsAtSeconds: BigNumber = startedAtSeconds.add(periodSeconds)
-    const drawId: number = nextDrawIdResult[0]
-    return {
-      startedAtSeconds,
-      periodSeconds,
-      endsAtSeconds,
-      drawId
-    }
-  }
-
-  /**
-   * Fetch the range of available draw ids in the Draw Buffer for the beacon Prize Pool.
-   * @returns an array of draw ids
-   */
-  async getBeaconChainDrawIds(): Promise<number[]> {
-    const drawBufferContract = await this.getDrawBufferContract()
-    const [oldestDrawResponse, newestDrawResponse] = await Promise.allSettled([
-      drawBufferContract.functions.getOldestDraw(),
-      drawBufferContract.functions.getNewestDraw()
-    ])
-
-    if (newestDrawResponse.status === 'rejected' || oldestDrawResponse.status === 'rejected') {
-      return []
-    }
-
-    const oldestId = oldestDrawResponse.value[0].drawId
-    const newestId = newestDrawResponse.value[0].drawId
-
-    const drawIds: number[] = []
-    for (let i = oldestId; i <= newestId; i++) {
-      drawIds.push(i)
-    }
-
-    return drawIds
-  }
-
   //////////////////////////// Ethers Contracts Initializers ////////////////////////////
 
   /**
@@ -320,18 +255,6 @@ export class PrizePool extends ContractWrapper {
     this.tokenMetadata = tokenMetadata
     this.tokenContract = tokenContract
     return tokenContract
-  }
-
-  /**
-   * Fetches the addresses to build an instance of an ethers Contract for the draw buffer
-   * @returns an ethers contract for the underlying token
-   */
-  async getDrawBufferContract(): Promise<Contract> {
-    const getAddress = async () => {
-      const result: Result = await this.drawBeaconContract.functions.getDrawBuffer()
-      return result[0]
-    }
-    return this.getAndSetEthersContract('drawBuffer', ContractType.DrawBuffer, getAddress)
   }
 }
 
