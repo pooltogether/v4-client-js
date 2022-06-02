@@ -217,8 +217,6 @@ export class GaugeController extends ContractWrapper {
     }
   }
 
-  // TODO: MULTICALL THIS SHIT
-
   /**
    * Submits a transaction to deposit the gauge token into the GaugeController to the Signer.
    * @param amountUnformatted an unformatted and decimal shifted amount to deposit

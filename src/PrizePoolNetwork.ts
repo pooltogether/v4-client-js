@@ -1,6 +1,7 @@
 import { ContractList } from '@pooltogether/contract-list-schema'
 
-import { initializePrizeDistributors, PrizeDistributor } from './PrizeDistributor'
+import { initializeV1PrizeDistributors, PrizeDistributorV1 } from './PrizeDistributorV1'
+import { initializeV2PrizeDistributors, PrizeDistributorV2 } from './PrizeDistributorV2'
 import { initializePrizePools, PrizePool } from './PrizePool'
 import { Providers } from './types'
 
@@ -15,8 +16,9 @@ export class PrizePoolNetwork {
   readonly providers: Providers
   // N Prize Pools
   readonly prizePools: PrizePool[]
-  // 1 Prize Distributor per chain
-  readonly prizeDistributors: PrizeDistributor[]
+  // N Prize Distributors
+  readonly v1PrizeDistributors: PrizeDistributorV1[]
+  readonly v2PrizeDistributors: PrizeDistributorV2[]
 
   /**
    * Create an instance of a PrizePoolNetwork by providing ethers Providers for each relevant network and a Contract List.
@@ -28,7 +30,8 @@ export class PrizePoolNetwork {
     this.providers = providers
     this.contractList = contractList
     this.prizePools = initializePrizePools(contractList, providers)
-    this.prizeDistributors = initializePrizeDistributors(contractList, providers)
+    this.v1PrizeDistributors = initializeV1PrizeDistributors(contractList, providers)
+    this.v2PrizeDistributors = initializeV2PrizeDistributors(contractList, providers)
   }
 
   /**
@@ -38,7 +41,9 @@ export class PrizePoolNetwork {
   id(): string {
     return `prize-pool-network-${this.prizePools
       .map((p) => p.id())
-      .join('-')}-${this.prizeDistributors.map((p) => p.id()).join('-')}`
+      .join('-')}-${this.v1PrizeDistributors
+      .map((p) => p.id())
+      .join('-')}-${this.v2PrizeDistributors.map((p) => p.id()).join('-')}`
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
@@ -73,13 +78,22 @@ export class PrizePoolNetwork {
   }
 
   /**
-   * Returns a PrizeDistributor from the list of Prize Distributors that was created on initialization by their primary key. The primary key of a Prize Disctributor is the chain id it is on and the address of the PrizeDistributor contract.
+   * Returns a PrizeDistributorV2 from the list of Prize Distributors that was created on initialization by their primary key. The primary key of a Prize Disctributor is the chain id it is on and the address of the PrizeDistributorV2 contract.
    * @param chainId the chain id the requested prize distributor is on
-   * @param address the address of the PrizeDistributor contract
+   * @param address the address of the PrizeDistributorV2 contract
    * @returns
    */
-  getPrizeDistributor(chainId: number, address: string): PrizeDistributor | undefined {
-    return this.prizeDistributors.find(
+  getPrizeDistributor(
+    chainId: number,
+    address: string
+  ): PrizeDistributorV1 | PrizeDistributorV2 | undefined {
+    let prizeDistributor = this.v1PrizeDistributors.find(
+      (prizeDistributor) =>
+        prizeDistributor.chainId === chainId && prizeDistributor.address === address
+    )
+    if (!!prizeDistributor) return prizeDistributor
+
+    return this.v2PrizeDistributors.find(
       (prizeDistributor) =>
         prizeDistributor.chainId === chainId && prizeDistributor.address === address
     )

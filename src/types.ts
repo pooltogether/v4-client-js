@@ -12,6 +12,8 @@ export {
 
 export {
   Draw,
+  PrizeDistribution,
+  PrizeTier,
   PrizeConfig,
   Pick,
   DrawResults,

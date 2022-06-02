@@ -13,12 +13,14 @@ export enum ContractType {
   Token = 'Token',
   PrizeDistributor = 'PrizeDistributor',
   DrawBuffer = 'DrawBuffer',
+  PrizeDistributionBuffer = 'PrizeDistributionBuffer',
   DrawBeacon = 'DrawBeacon',
   DrawCalculator = 'DrawCalculator',
   PrizeConfigHistory = 'PrizeConfigHistory',
   GaugeController = 'GaugeController',
   GaugeReward = 'GaugeReward',
-  Liquidator = 'Liquidator'
+  Liquidator = 'Liquidator',
+  DrawCalculatorTimelock = 'DrawCalculatorTimelock'
   // ... more contract types
 }
 

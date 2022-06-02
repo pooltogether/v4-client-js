@@ -37,8 +37,8 @@ export class ContractWrapper {
   //////////////////////////// Ethers Contracts Initializers ////////////////////////////
 
   /**
-   * Fetches a contract address, finds the relevant metadata in the ContractList and creates an ethers Contract for that contract. The ethers Contract is cached on the instance of the PrizeDistributor and is returned immediately if already stored.
-   * @param key the key for the requested contract to be stored on the PrizeDistributor
+   * Fetches a contract address, finds the relevant metadata in the ContractList and creates an ethers Contract for that contract. The ethers Contract is cached on the instance of the PrizeDistributorV2 and is returned immediately if already stored.
+   * @param key the key for the requested contract to be stored on the PrizeDistributorV2
    * @param contractType the contract name
    * @param getContractAddress a function to fetch the contract address
    * @returns an ethers Contract for the provided address and contract type
