@@ -53,9 +53,9 @@ export class PrizePoolNetwork {
    * @param usersAddress address to get balances for.
    * @returns an array of objects containing the chain id & Prize Pool address and a balances object with the users balances for relevant tokens to the prize pool
    */
-  async getUsersPrizePoolBalances(usersAddress: string) {
+  async getUserPrizePoolBalances(usersAddress: string) {
     const balancesPromises = this.prizePools.map(async (prizePool) => {
-      const balances = await prizePool.getUsersPrizePoolBalances(usersAddress)
+      const balances = await prizePool.getUserPrizePoolBalances(usersAddress)
       return {
         chainId: prizePool.chainId,
         address: prizePool.address,

@@ -10,7 +10,7 @@ import { ContractType } from './constants'
 import { PrizePoolTokenBalances, Providers, TokenData } from './types'
 import {
   getTokenData,
-  getUsersERC20Balance,
+  getUserERC20Balance,
   validateAddress,
   validateSignerOrProviderNetwork,
   createContractMetadata,
@@ -71,15 +71,15 @@ export class PrizePool extends ContractWrapper {
    * @param usersAddress the users address to fetch balances for
    * @returns the users balances for the underlying deposit token and the ticket token
    */
-  async getUsersPrizePoolBalances(usersAddress: string): Promise<PrizePoolTokenBalances> {
-    const errorPrefix = 'PrizePool [getUsersPrizePoolBalances] | '
+  async getUserPrizePoolBalances(usersAddress: string): Promise<PrizePoolTokenBalances> {
+    const errorPrefix = 'PrizePool [getUserPrizePoolBalances] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const tokenContract = await this.getTokenContract()
     const ticketContract = await this.getTicketContract()
 
-    const tokenBalancePromise = getUsersERC20Balance(usersAddress, tokenContract)
-    const ticketBalancePromise = getUsersERC20Balance(usersAddress, ticketContract)
+    const tokenBalancePromise = getUserERC20Balance(usersAddress, tokenContract)
+    const ticketBalancePromise = getUserERC20Balance(usersAddress, ticketContract)
     const [token, ticket] = await Promise.all([tokenBalancePromise, ticketBalancePromise])
     return {
       token,
@@ -92,13 +92,13 @@ export class PrizePool extends ContractWrapper {
    * @param usersAddress the address to fetch the balance for
    * @returns the users ticket balance
    */
-  async getUsersTicketBalance(usersAddress: string): Promise<BigNumber> {
-    const errorPrefix = 'PrizePool [getUsersTicketBalance] | '
+  async getUserTicketBalance(usersAddress: string): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUserTicketBalance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const ticketContract = await this.getTicketContract()
 
-    return getUsersERC20Balance(usersAddress, ticketContract)
+    return getUserERC20Balance(usersAddress, ticketContract)
   }
 
   /**
@@ -107,8 +107,8 @@ export class PrizePool extends ContractWrapper {
    * @param unixTimestamp the unix timestamp to fetch in seconds
    * @returns the users TWAB at the requested time
    */
-  async getUsersTicketTwabAt(usersAddress: string, unixTimestamp: number): Promise<BigNumber> {
-    const errorPrefix = 'PrizePool [getUsersTicketBalance] | '
+  async getUserTicketTwabAt(usersAddress: string, unixTimestamp: number): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUserTicketBalance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const ticketContract = await this.getTicketContract()
@@ -123,13 +123,13 @@ export class PrizePool extends ContractWrapper {
    * @param usersAddress the address to fetch the balance for
    * @returns the users token balance
    */
-  async getUsersTokenBalance(usersAddress: string): Promise<BigNumber> {
-    const errorPrefix = 'PrizePool [getUsersTokenBalance] | '
+  async getUserTokenBalance(usersAddress: string): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUserTokenBalance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const tokenContract = await this.getTokenContract()
 
-    return getUsersERC20Balance(usersAddress, tokenContract)
+    return getUserERC20Balance(usersAddress, tokenContract)
   }
 
   /**
@@ -137,8 +137,8 @@ export class PrizePool extends ContractWrapper {
    * @param usersAddress the address to fetch the deposit allowance for
    * @returns the amount the user has approved for deposits
    */
-  async getUsersDepositAllowance(usersAddress: string) {
-    const errorPrefix = 'PrizePool [getUsersDepositAllowance] | '
+  async getUserDepositAllowance(usersAddress: string) {
+    const errorPrefix = 'PrizePool [getUserDepositAllowance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const tokenContract = await this.getTokenContract()
@@ -154,8 +154,8 @@ export class PrizePool extends ContractWrapper {
    * @param usersAddress the address to fetch the delegate for
    * @returns the address a user has delegated to
    */
-  async getUsersTicketDelegate(usersAddress: string): Promise<string> {
-    const errorPrefix = 'PrizePool [getUsersTicketDelegate] | '
+  async getUserTicketDelegate(usersAddress: string): Promise<string> {
+    const errorPrefix = 'PrizePool [getUserTicketDelegate] | '
     await validateAddress(errorPrefix, usersAddress)
     const ticketContract = await this.getTicketContract()
 

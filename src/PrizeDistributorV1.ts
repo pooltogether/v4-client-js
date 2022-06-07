@@ -64,7 +64,7 @@ export class PrizeDistributorV1 extends PrizeDistributor {
   //////////////////////////// Ethers write functions ////////////////////////////
 
   /**
-   * Fetches a users prizes for the provided draw and submits a transaction to claim them to the Signer.
+   * Fetches a user prizes for the provided draw and submits a transaction to claim them to the Signer.
    * PrizeDistributor must be initialized with a Signer.
    * @param drawId the draw id to claim prizes for
    * @param maxPicksPerUser the maximum picks per user from the PrizeDistribution for the provided draw id
@@ -77,18 +77,14 @@ export class PrizeDistributorV1 extends PrizeDistributor {
     overrides?: Overrides
   ): Promise<TransactionResponse> {
     const errorPrefix = 'PrizeDistributorV1 [claim] | '
-    const usersAddress = await this.getUsersAddress(errorPrefix)
+    const userAddress = await this.getUserAddress(errorPrefix)
 
-    const drawResults = await this.getUsersDrawResultsForDrawId(
-      usersAddress,
-      drawId,
-      maxPicksPerUser
-    )
+    const drawResults = await this.getUserDrawResultsForDrawId(userAddress, drawId, maxPicksPerUser)
     return this.claimPrizesByDrawResults(drawResults, overrides)
   }
 
   /**
-   * Submits a transaction to claim a users prizes
+   * Submits a transaction to claim a user prizes
    * PrizeDistributor must be initialized with a Signer.
    * @param drawResults the prize results for a user for a specific draw
    * @param overrides optional overrides for the transaction creation
@@ -99,14 +95,14 @@ export class PrizeDistributorV1 extends PrizeDistributor {
     overrides?: Overrides
   ): Promise<TransactionResponse> {
     const errorPrefix = 'PrizeDistributorV1 [claimPrizes] | '
-    const usersAddress = await this.getUsersAddress(errorPrefix)
+    const userAddress = await this.getUserAddress(errorPrefix)
     await this.validateSignerNetwork(errorPrefix)
 
     if (drawResults.totalValue.isZero()) {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = encodeWinningPicks(usersAddress, [drawResults])
+    const claim: Claim = encodeWinningPicks(userAddress, [drawResults])
     if (Boolean(overrides)) {
       return this.prizeDistributorContract.claim(
         claim.userAddress,
@@ -124,9 +120,9 @@ export class PrizeDistributorV1 extends PrizeDistributor {
   }
 
   /**
-   * Submits a transaction to claim a users prizes across multiple draws
+   * Submits a transaction to claim a user prizes across multiple draws
    * PrizeDistributor must be initialized with a Signer.
-   * @param drawResults an object of the users draw results to claim keyed by draw ids
+   * @param drawResults an object of the user draw results to claim keyed by draw ids
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
@@ -137,7 +133,7 @@ export class PrizeDistributorV1 extends PrizeDistributor {
     overrides?: Overrides
   ): Promise<TransactionResponse> {
     const errorPrefix = 'PrizeDistributorV1 [claimPrizes] | '
-    const usersAddress = await this.getUsersAddress(errorPrefix)
+    const userAddress = await this.getUserAddress(errorPrefix)
     await this.validateSignerNetwork(errorPrefix)
 
     const drawResultsList = Object.values(drawResults)
@@ -149,7 +145,7 @@ export class PrizeDistributorV1 extends PrizeDistributor {
       throw new Error(errorPrefix + 'No prizes to claim.')
     }
 
-    const claim: Claim = encodeWinningPicks(usersAddress, drawResultsList)
+    const claim: Claim = encodeWinningPicks(userAddress, drawResultsList)
     if (Boolean(overrides)) {
       return this.prizeDistributorContract.claim(
         claim.userAddress,
@@ -174,9 +170,9 @@ export class PrizeDistributorV1 extends PrizeDistributor {
    */
   // async getClaimedEvents() {
   //   const errorPrefix = 'PrizeDistributorV1 [getClaimedEvents] |'
-  //   const usersAddress = await this.getUsersAddress(errorPrefix)
+  //   const userAddress = await this.getUserAddress(errorPrefix)
 
-  //   return this.getUsersClaimedEvents(usersAddress)
+  //   return this.getUserClaimedEvents(userAddress)
   // }
 
   //////////////////////////// Ethers read functions ////////////////////////////
@@ -425,21 +421,21 @@ export class PrizeDistributorV1 extends PrizeDistributor {
   }
 
   /**
-   * Fetches a users normalized balance for several draw ids.
-   * @param usersAddress the address of a user to fetch normalized balances for
+   * Fetches a user normalized balance for several draw ids.
+   * @param userAddress the address of a user to fetch normalized balances for
    * @param drawIds a list of draw ids to fetch normalized balances for
    * @returns an object of normalized balances keyed by draw ids
    */
-  async getUsersNormalizedBalancesForDrawIds(
-    usersAddress: string,
+  async getUserNormalizedBalancesForDrawIds(
+    userAddress: string,
     drawIds: number[]
   ): Promise<{ [drawId: number]: BigNumber }> {
-    const errorPrefix = 'PrizeDistributorV1 [getUsersNormalizedBalancesForDrawIds] |'
-    await validateAddress(errorPrefix, usersAddress)
+    const errorPrefix = 'PrizeDistributorV1 [getUserNormalizedBalancesForDrawIds] |'
+    await validateAddress(errorPrefix, userAddress)
 
     const drawCalculatorContract = await this.getDrawCalculatorContract()
     const result: Result = await drawCalculatorContract.functions.getNormalizedBalancesForDrawIds(
-      usersAddress,
+      userAddress,
       drawIds
     )
     return result[0]
@@ -447,19 +443,19 @@ export class PrizeDistributorV1 extends PrizeDistributor {
 
   /**
    * Fetches the claimable prizes a user won for a specific Draw.
-   * @param usersAddress the users address to fetch prizes for
+   * @param userAddress the user address to fetch prizes for
    * @param drawId the draw id to fetch prizes for
    * @param maxPicksPerUser the maximum number of picks per user from the matching prize distribution
    * @returns the results for user for the provided draw
    */
-  async getUsersDrawResultsForDrawId(
-    usersAddress: string,
+  async getUserDrawResultsForDrawId(
+    userAddress: string,
     drawId: number,
     maxPicksPerUser: number
   ): Promise<DrawResults> {
-    return PrizeApi.getUsersDrawResultsByDraw(
+    return PrizeApi.getUserDrawResultsByDraw(
       this.chainId,
-      usersAddress,
+      userAddress,
       this.prizeDistributorMetadata.address,
       drawId,
       maxPicksPerUser
@@ -468,19 +464,19 @@ export class PrizeDistributorV1 extends PrizeDistributor {
 
   /**
    * Fetches the claimable prizes a user won for multiple Draws.
-   * @param usersAddress the users address to fetch prizes for
+   * @param userAddress the user address to fetch prizes for
    * @param drawIds the draw ids to fetch prizes for
    * @param maxPicksPerUserPerDraw the maximum number of picks per user from the matching prize distribution for each draw
    * @returns the results for user for the provided draw
    */
-  async getUsersDrawResultsForDrawIds(
-    usersAddress: string,
+  async getUserDrawResultsForDrawIds(
+    userAddress: string,
     drawIds: number[],
     maxPicksPerUserPerDraw: number[]
   ): Promise<{ [drawId: number]: DrawResults }> {
-    return PrizeApi.getUsersDrawResultsByDraws(
+    return PrizeApi.getUserDrawResultsByDraws(
       this.chainId,
-      usersAddress,
+      userAddress,
       this.prizeDistributorMetadata.address,
       drawIds,
       maxPicksPerUserPerDraw
@@ -498,6 +494,19 @@ export class PrizeDistributorV1 extends PrizeDistributor {
       drawCalculatorContract
     } = await this.getAndSetDrawCalculatorTimelockAndDrawCalculatorContracts()
     return drawCalculatorContract
+  }
+
+  /**
+   * Fetches the address of the DrawBuffer and caches the ethers Contract for the DrawBuffer.
+   * @returns an ethers Contract for the DrawBuffer related to this PrizeDistributorV2
+   */
+  async getDrawBufferContract(): Promise<Contract> {
+    const getAddress = async () => {
+      const drawCalculatorContract = await this.getDrawCalculatorContract()
+      const result: Result = await drawCalculatorContract.functions.drawBuffer()
+      return result[0]
+    }
+    return this.getAndSetEthersContract('drawBuffer', ContractType.DrawBuffer, getAddress)
   }
 
   /**

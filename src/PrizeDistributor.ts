@@ -36,7 +36,7 @@ export abstract class PrizeDistributor extends ContractWrapper {
   tokenContract: Contract | undefined
 
   /**
-   * Create an instance of a PrizeDistributorV2 by providing the metadata of the PrizeDistributorV2 contract, an ethers Provider or Signer for the network the PrizeDistributorV2 contract is deployed on and a list of contract metadata for the other contracts that make up the PrizeDistributorV2.
+   * Create an instance of a PrizeDistributor by providing the metadata of the PrizeDistributor contract, an ethers Provider or Signer for the network the PrizeDistributor contract is deployed on and a list of contract metadata for the other contracts that make up the PrizeDistributor.
    * @param prizeDistributorMetadata
    * @param signerOrProvider
    * @param contractMetadataList
@@ -73,7 +73,7 @@ export abstract class PrizeDistributor extends ContractWrapper {
   }
 
   /**
-   * Fetches the newest Draw in the DrawBuffer related to the PrizeDistributorV2.
+   * Fetches the newest Draw in the DrawBuffer related to the PrizeDistributor.
    * NOTE: Will throw an error if the buffer is empty.
    * @returns the newest draw in the draw buffer
    */
@@ -91,7 +91,7 @@ export abstract class PrizeDistributor extends ContractWrapper {
   }
 
   /**
-   * Fetches the oldest Draw in the DrawBuffer related to the PrizeDistributorV2.
+   * Fetches the oldest Draw in the DrawBuffer related to the PrizeDistributor.
    * @returns the oldest draw in the draw buffer
    */
   async getOldestDraw(): Promise<Draw> {
@@ -175,16 +175,16 @@ export abstract class PrizeDistributor extends ContractWrapper {
 
   /**
    * Fetches the amount of tokens a user claimed for a draw.
-   * @param usersAddress the address of the user to check
+   * @param userAddress the address of the user to check
    * @param drawId the draw id to check
    * @returns the amount a user claimed
    */
-  async getUsersClaimedAmount(usersAddress: string, drawId: number): Promise<BigNumber> {
-    const errorPrefix = 'PrizeDistributorV2 [getUsersClaimedAmount] |'
-    await validateAddress(errorPrefix, usersAddress)
+  async getUserClaimedAmount(userAddress: string, drawId: number): Promise<BigNumber> {
+    const errorPrefix = 'PrizeDistributor [getUserClaimedAmount] |'
+    await validateAddress(errorPrefix, userAddress)
 
     const result: Result = await this.prizeDistributorContract.functions.getDrawPayoutBalanceOf(
-      usersAddress,
+      userAddress,
       drawId
     )
     return result[0]
@@ -192,18 +192,18 @@ export abstract class PrizeDistributor extends ContractWrapper {
 
   /**
    * Fetches the amount of tokens a user claimed for multiple draws.
-   * @param usersAddress the address of the user to check
+   * @param userAddress the address of the user to check
    * @param drawIds a list of draw ids to check
    * @returns an object of claimed amounts keyed by the draw ids
    */
-  async getUsersClaimedAmounts(
-    usersAddress: string,
+  async getUserClaimedAmounts(
+    userAddress: string,
     drawIds: number[]
   ): Promise<{ [drawId: number]: BigNumber }> {
     const claimedAmounts: { [drawId: number]: BigNumber } = {}
     await Promise.all(
       drawIds.map((drawId) => {
-        return this.getUsersClaimedAmount(usersAddress, drawId).then((claimedAmount) => {
+        return this.getUserClaimedAmount(userAddress, drawId).then((claimedAmount) => {
           claimedAmounts[drawId] = claimedAmount
         })
       })
@@ -238,26 +238,19 @@ export abstract class PrizeDistributor extends ContractWrapper {
 
   /**
    * Fetches the address of the DrawCalculator and caches the ethers Contract for the DrawCalculator
-   * @returns an ethers Contract for the DrawCalculator related to this PrizeDistributorV2
+   * @returns an ethers Contract for the DrawCalculator related to this PrizeDistributor
    */
   abstract getDrawCalculatorContract(): Promise<Contract>
 
   /**
    * Fetches the address of the DrawBuffer and caches the ethers Contract for the DrawBuffer.
-   * @returns an ethers Contract for the DrawBuffer related to this PrizeDistributorV2
+   * @returns an ethers Contract for the DrawBuffer related to this PrizeDistributor
    */
-  async getDrawBufferContract(): Promise<Contract> {
-    const getAddress = async () => {
-      const drawCalculatorContract = await this.getDrawCalculatorContract()
-      const result: Result = await drawCalculatorContract.functions.getDrawBuffer()
-      return result[0]
-    }
-    return this.getAndSetEthersContract('drawBuffer', ContractType.DrawBuffer, getAddress)
-  }
+  abstract getDrawBufferContract(): Promise<Contract>
 
   /**
    * Fetches the address of the DrawBeacon and caches the ethers Contract for the DrawBeacon.
-   * @returns an ethers Contract for the DrawBeacon related to this PrizeDistributorV2
+   * @returns an ethers Contract for the DrawBeacon related to this PrizeDistributor
    */
   async getDrawBeaconContract(): Promise<Contract> {
     const getAddress = async () => {
@@ -269,8 +262,8 @@ export abstract class PrizeDistributor extends ContractWrapper {
   }
 
   /**
-   * Fetches the address of the Token that is distributed by this PrizeDistributorV2 and caches the ethers Contract for the ERC20 Token.
-   * @returns an ethers Contract for the ERC20 Token related to this PrizeDistributorV2
+   * Fetches the address of the Token that is distributed by this PrizeDistributor and caches the ethers Contract for the ERC20 Token.
+   * @returns an ethers Contract for the ERC20 Token related to this PrizeDistributor
    */
   async getTokenContract(): Promise<Contract> {
     if (this.tokenContract !== undefined) return this.tokenContract
@@ -298,12 +291,12 @@ export abstract class PrizeDistributor extends ContractWrapper {
   //////////////////////////// Methods ////////////////////////////
 
   /**
-   * Returns the users address of the provided Signer.
-   * PrizeDistributorV2 can be initialized with a Signer.
+   * Returns the user address of the provided Signer.
+   * PrizeDistributor can be initialized with a Signer.
    * @param errorPrefix the class and function name of where the error occurred
    * @returns the address of the user
    */
-  async getUsersAddress(errorPrefix = 'PrizeDistributorV2 [getUsersAddress] |') {
+  async getUserAddress(errorPrefix = 'PrizeDistributor [getUserAddress] |') {
     await this.validateIsSigner(errorPrefix)
     return await (this.signerOrProvider as Signer).getAddress()
   }
@@ -311,7 +304,7 @@ export abstract class PrizeDistributor extends ContractWrapper {
   //////////////////////////// Validation methods ////////////////////////////
 
   /**
-   * Validates that a Signer is on the network the PrizeDistributorV2 is deployed on.
+   * Validates that a Signer is on the network the PrizeDistributor is deployed on.
    * @param errorPrefix the class and function name of where the error occurred
    */
   async validateSignerNetwork(errorPrefix: string) {

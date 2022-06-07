@@ -38,7 +38,7 @@ export class PrizeApi {
    * @param drawId the id of the draw to check
    * @param maxPicksPerUser the maximum number of picks per user
    */
-  static async getUsersDrawResultsByDraw(
+  static async getUserDrawResultsByDraw(
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
@@ -46,7 +46,7 @@ export class PrizeApi {
     maxPicksPerUser: number,
     ticketAddress?: string
   ): Promise<DrawResults> {
-    const drawResults = await this.getUsersDrawResultsByDraws(
+    const drawResults = await this.getUserDrawResultsByDraws(
       chainId,
       usersAddress,
       prizeDistributorAddress,
@@ -66,7 +66,7 @@ export class PrizeApi {
    * @param drawIds a list of draw ids to check for prizes
    * @param maxPicksPerUserPerDraw the maximum number of picks per user for each drwa
    */
-  static async getUsersDrawResultsByDraws(
+  static async getUserDrawResultsByDraws(
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
@@ -329,7 +329,7 @@ export class PrizeApi {
     }
     const prizeData = await getPrizeData()
 
-    const getV1UsersPickCount = async () => {
+    const getV1UserPickCount = async () => {
       let response = await batch(
         readProvider,
         drawCalculatorContract
@@ -345,7 +345,7 @@ export class PrizeApi {
       )
     }
 
-    const getV2UsersPickCount = async () => {
+    const getV2UserPickCount = async () => {
       const response = await batch(
         readProvider,
         drawCalculatorContract
@@ -356,11 +356,11 @@ export class PrizeApi {
       return usersPickCount
     }
 
-    let getUsersPickCount = getV1UsersPickCount
+    let getUserPickCount = getV1UserPickCount
     if (!!ticketAddress) {
-      getUsersPickCount = getV2UsersPickCount
+      getUserPickCount = getV2UserPickCount
     }
-    const usersPickCount = await getUsersPickCount()
+    const usersPickCount = await getUserPickCount()
 
     console.log('Computing', { drawId, usersPickCount, prizeData, drawCalculatorAddress })
     // If user had no balance, short circuit
@@ -575,30 +575,12 @@ const PartialV1DrawCalculatorAbi = [
 const PartialV2DrawCalculatorAbi = [
   {
     inputs: [
-      {
-        internalType: 'contract ITicket',
-        name: '_ticket',
-        type: 'address'
-      },
-      {
-        internalType: 'address',
-        name: '_user',
-        type: 'address'
-      },
-      {
-        internalType: 'uint32[]',
-        name: '_drawIds',
-        type: 'uint32[]'
-      }
+      { internalType: 'contract ITicket', name: '_ticket', type: 'address' },
+      { internalType: 'address', name: '_user', type: 'address' },
+      { internalType: 'uint32[]', name: '_drawIds', type: 'uint32[]' }
     ],
     name: 'calculateUserPicks',
-    outputs: [
-      {
-        internalType: 'uint64[]',
-        name: '',
-        type: 'uint64[]'
-      }
-    ],
+    outputs: [{ internalType: 'uint64[]', name: 'picks', type: 'uint64[]' }],
     stateMutability: 'view',
     type: 'function'
   },

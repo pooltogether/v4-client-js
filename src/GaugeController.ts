@@ -56,60 +56,60 @@ export class GaugeController extends ContractWrapper {
 
   /**
    *
-   * @param usersAddress
+   * @param userAddress
    * @returns
    */
-  async getGaugeControllerBalance(usersAddress: string): Promise<BigNumber> {
+  async getGaugeControllerBalance(userAddress: string): Promise<BigNumber> {
     const errorPrefix = 'GaugeController [getGaugeControllerBalance] | '
-    await validateAddress(errorPrefix, usersAddress)
+    await validateAddress(errorPrefix, userAddress)
 
-    const result: Result = await this.gaugeControllerContract.functions.balances(usersAddress)
+    const result: Result = await this.gaugeControllerContract.functions.balances(userAddress)
     return result[0]
   }
 
   /**
    *
-   * @param usersAddress
-   * @param ticketAddress
+   * @param userAddress
+   * @param gauge the ticket address to identify the gauge
    * @returns
    */
-  async getUsersGaugeBalance(usersAddress: string, ticketAddress: string): Promise<BigNumber> {
+  async getUserGaugeBalance(userAddress: string, gauge: string): Promise<BigNumber> {
     const errorPrefix = 'GaugeController [getGaugeBalance] | '
-    await validateAddress(errorPrefix, usersAddress)
-    await validateAddress(errorPrefix, ticketAddress)
+    await validateAddress(errorPrefix, userAddress)
+    await validateAddress(errorPrefix, gauge)
 
     const result: Result = await this.gaugeControllerContract.functions.userGaugeBalance(
-      usersAddress,
-      ticketAddress
+      userAddress,
+      gauge
     )
     return result[0]
   }
 
   /**
    *
-   * @param usersAddress
+   * @param userAddress
    * @returns
    */
-  async getUsersGaugeTokenBalance(usersAddress: string): Promise<BigNumber> {
-    const errorPrefix = 'GaugeController [getUsersGaugeTokenBalance] | '
-    await validateAddress(errorPrefix, usersAddress)
+  async getUserGaugeTokenBalance(userAddress: string): Promise<BigNumber> {
+    const errorPrefix = 'GaugeController [getUserGaugeTokenBalance] | '
+    await validateAddress(errorPrefix, userAddress)
     const tokenContract = await this.getTokenContract()
 
-    const result: Result = await tokenContract.functions.balanceOf(usersAddress)
+    const result: Result = await tokenContract.functions.balanceOf(userAddress)
     return result[0]
   }
 
   /**
    *
-   * @param usersAddress
+   * @param gauge the ticket address to identify the gauge
    * @returns
    */
-  async getGaugeRewardToken(ticketAddress: string): Promise<TokenData> {
+  async getGaugeRewardToken(gauge: string): Promise<TokenData> {
     const errorPrefix = 'GaugeController [getGaugeRewardsToken] | '
-    await validateAddress(errorPrefix, ticketAddress)
+    await validateAddress(errorPrefix, gauge)
     const gaugeRewardContract = await this.getGaugeRewardContract()
 
-    let result: Result = await gaugeRewardContract.functions.currentRewardToken(ticketAddress)
+    let result: Result = await gaugeRewardContract.functions.currentRewardToken(gauge)
     const tokenAddress = result[0]
 
     const tokenContract = new Contract(tokenAddress, ERC20Abi, this.signerOrProvider)
@@ -118,47 +118,47 @@ export class GaugeController extends ContractWrapper {
 
   /**
    *
-   * @param usersAddress
-   * @param ticketAddress
+   * @param userAddress
+   * @param gauge the ticket address to identify the gauge
    * @returns
    */
-  async getUsersRedeemableGaugeRewardBalance(
-    usersAddress: string,
-    ticketAddress: string
+  async getUserRedeemableGaugeRewardBalance(
+    userAddress: string,
+    gauge: string
   ): Promise<BigNumber> {
-    const errorPrefix = 'GaugeController [getUsersGaugeRewardBalance] | '
-    await validateAddress(errorPrefix, usersAddress)
-    await validateAddress(errorPrefix, ticketAddress)
+    const errorPrefix = 'GaugeController [getUserGaugeRewardBalance] | '
+    await validateAddress(errorPrefix, userAddress)
+    await validateAddress(errorPrefix, gauge)
     const gaugeRewardContract = await this.getGaugeRewardContract()
 
-    const result: Result = await gaugeRewardContract.functions.userTokenRewardBalances(
-      ticketAddress,
-      usersAddress
+    const result: Result = await gaugeRewardContract.functions.userRewardTokenBalances(
+      gauge,
+      userAddress
     )
     return result[0]
   }
 
   /**
    *
-   * @param usersAddress
-   * @param ticketAddress
+   * @param userAddress
+   * @param gauge the ticket address to identify the gauge
    * @returns
    */
-  async getUsersClaimableGaugeRewardBalance(
-    usersAddress: string,
-    ticketAddress: string,
+  async getUserClaimableGaugeRewardBalance(
+    userAddress: string,
+    gauge: string,
     rewardTokenAddress: string
   ): Promise<BigNumber> {
-    const errorPrefix = 'GaugeController [getUsersGaugeRewardBalance] | '
-    await validateAddress(errorPrefix, usersAddress)
-    await validateAddress(errorPrefix, ticketAddress)
+    const errorPrefix = 'GaugeController [getUserGaugeRewardBalance] | '
+    await validateAddress(errorPrefix, userAddress)
+    await validateAddress(errorPrefix, gauge)
     await validateAddress(errorPrefix, rewardTokenAddress)
     const gaugeRewardContract = await this.getGaugeRewardContract()
 
     const result: Result = await gaugeRewardContract.functions.claim(
-      ticketAddress,
+      gauge,
       rewardTokenAddress,
-      usersAddress
+      userAddress
     )
     return result[0]
   }
@@ -168,23 +168,23 @@ export class GaugeController extends ContractWrapper {
    * @returns the allowance the user has set for depositing
    */
   async getDepositAllowance() {
-    const usersAddress = await this.getUsersAddress()
-    return this.getUsersDepositAllowance(usersAddress)
+    const userAddress = await this.getUserAddress()
+    return this.getUserDepositAllowance(userAddress)
   }
 
   /**
-   * Fetches a users deposit allowance for the Gauge Controller.
-   * @param usersAddress the address to fetch the deposit allowance for
+   * Fetches a user deposit allowance for the Gauge Controller.
+   * @param userAddress the address to fetch the deposit allowance for
    * @returns the amount the user has approved for depositing
    */
-  async getUsersDepositAllowance(usersAddress: string) {
-    const errorPrefix = 'GaugeController [getUsersDepositAllowance] | '
-    await validateAddress(errorPrefix, usersAddress)
+  async getUserDepositAllowance(userAddress: string) {
+    const errorPrefix = 'GaugeController [getUserDepositAllowance] | '
+    await validateAddress(errorPrefix, userAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const tokenContract = await this.getTokenContract()
 
     const gaugeControllerAddress = this.gaugeControllerMetadata.address
-    const result = await tokenContract.functions.allowance(usersAddress, gaugeControllerAddress)
+    const result = await tokenContract.functions.allowance(userAddress, gaugeControllerAddress)
     const allowanceUnformatted: BigNumber = result[0]
     return { allowanceUnformatted, isApproved: !allowanceUnformatted.isZero() }
   }
@@ -226,12 +226,12 @@ export class GaugeController extends ContractWrapper {
   async deposit(amountUnformatted: BigNumber, overrides?: Overrides): Promise<TransactionResponse> {
     const errorPrefix = 'GaugeController [deposit]'
     await this.validateSignerNetwork(errorPrefix)
-    const usersAddress = await this.getUsersAddress(errorPrefix)
+    const userAddress = await this.getUserAddress(errorPrefix)
 
     if (Boolean(overrides)) {
-      return this.gaugeControllerContract.deposit(usersAddress, amountUnformatted, overrides)
+      return this.gaugeControllerContract.deposit(userAddress, amountUnformatted, overrides)
     } else {
-      return this.gaugeControllerContract.deposit(usersAddress, amountUnformatted)
+      return this.gaugeControllerContract.deposit(userAddress, amountUnformatted)
     }
   }
 
@@ -258,13 +258,13 @@ export class GaugeController extends ContractWrapper {
 
   /**
    * Submits a transaction to increase the gauge amount on the GaugeController to the Signer.
-   * @param ticketAddress the ticket address to identify the gauge to deposit on
+   * @param gauge the ticket address to identify the gauge to deposit on
    * @param amountUnformatted an unformatted and decimal shifted amount to add to a gauge
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
   async increaseGauge(
-    ticketAddress: string,
+    gauge: string,
     amountUnformatted: BigNumber,
     overrides?: Overrides
   ): Promise<TransactionResponse> {
@@ -273,21 +273,21 @@ export class GaugeController extends ContractWrapper {
     await this.validateIsSigner(errorPrefix)
 
     if (Boolean(overrides)) {
-      return this.gaugeControllerContract.increaseGauge(ticketAddress, amountUnformatted, overrides)
+      return this.gaugeControllerContract.increaseGauge(gauge, amountUnformatted, overrides)
     } else {
-      return this.gaugeControllerContract.increaseGauge(ticketAddress, amountUnformatted)
+      return this.gaugeControllerContract.increaseGauge(gauge, amountUnformatted)
     }
   }
 
   /**
    * Submits a transaction to decrease the gauge amount on the GaugeController to the Signer.
-   * @param ticketAddress the ticket address to identify the gauge to deposit on
+   * @param gauge the ticket address to identify the gauge
    * @param amountUnformatted an unformatted and decimal shifted amount to remove from a gauge
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
   async decreaseGauge(
-    ticketAddress: string,
+    gauge: string,
     amountUnformatted: BigNumber,
     overrides?: Overrides
   ): Promise<TransactionResponse> {
@@ -296,24 +296,23 @@ export class GaugeController extends ContractWrapper {
     await this.validateIsSigner(errorPrefix)
 
     if (Boolean(overrides)) {
-      return this.gaugeControllerContract.decreaseGauge(ticketAddress, amountUnformatted, overrides)
+      return this.gaugeControllerContract.decreaseGauge(gauge, amountUnformatted, overrides)
     } else {
-      return this.gaugeControllerContract.decreaseGauge(ticketAddress, amountUnformatted)
+      return this.gaugeControllerContract.decreaseGauge(gauge, amountUnformatted)
     }
   }
 
   /**
    * Submits a transaction to redeem rewards for a user.
    * Redeeming rewards transfers tokens from the vault to the user.
-   * @param ticketAddress
    * @param rewardTokenAddress
-   * @param usersAddress
+   * @param userAddress
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
-  async redeemUsersRewards(
+  async redeemUserRewards(
     rewardTokenAddress: string,
-    usersAddress: string,
+    userAddress: string,
     overrides?: Overrides
   ): Promise<TransactionResponse> {
     const errorPrefix = 'GaugeController [claimRewards]'
@@ -322,25 +321,25 @@ export class GaugeController extends ContractWrapper {
     const gaugeRewardContract = await this.getGaugeRewardContract()
 
     if (Boolean(overrides)) {
-      return gaugeRewardContract.redeem(usersAddress, rewardTokenAddress, overrides)
+      return gaugeRewardContract.redeem(userAddress, rewardTokenAddress, overrides)
     } else {
-      return gaugeRewardContract.redeem(usersAddress, rewardTokenAddress)
+      return gaugeRewardContract.redeem(userAddress, rewardTokenAddress)
     }
   }
 
   /**
    * Submits a transaction to claim rewards for a user.
    * Claiming rewards updates the amount of tokens that the user will be able to redeem.
-   * @param ticketAddress
+   * @param gauge the ticket address to identify the gauge
    * @param rewardTokenAddress
-   * @param usersAddress
+   * @param userAddress
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
-  async claimUsersRewards(
-    ticketAddress: string,
+  async claimUserRewards(
+    gauge: string,
     rewardTokenAddress: string,
-    usersAddress: string,
+    userAddress: string,
     overrides?: Overrides
   ): Promise<TransactionResponse> {
     const errorPrefix = 'GaugeController [claimRewards]'
@@ -349,38 +348,38 @@ export class GaugeController extends ContractWrapper {
     const gaugeRewardContract = await this.getGaugeRewardContract()
 
     if (Boolean(overrides)) {
-      return gaugeRewardContract.claim(ticketAddress, rewardTokenAddress, usersAddress, overrides)
+      return gaugeRewardContract.claim(gauge, rewardTokenAddress, userAddress, overrides)
     } else {
-      return gaugeRewardContract.claim(ticketAddress, rewardTokenAddress, usersAddress)
+      return gaugeRewardContract.claim(gauge, rewardTokenAddress, userAddress)
     }
   }
 
   /**
    * Submits a transaction to claim rewards for a user using the current on chain rewards token.
    * Claiming rewards updates the amount of tokens that the user will be able to redeem.
-   * @param ticketAddress
-   * @param usersAddress
+   * @param gauge the ticket address to identify the gauge
+   * @param userAddress
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
-  async claimCurrentUsersRewards(
-    ticketAddress: string,
-    usersAddress: string,
+  async claimCurrentUserRewards(
+    gauge: string,
+    userAddress: string,
     overrides?: Overrides
   ): Promise<TransactionResponse> {
-    const token = await this.getGaugeRewardToken(ticketAddress)
-    return this.claimUsersRewards(ticketAddress, token.address, usersAddress, overrides)
+    const token = await this.getGaugeRewardToken(gauge)
+    return this.claimUserRewards(gauge, token.address, userAddress, overrides)
   }
 
   //////////////////////////// Methods ////////////////////////////
 
   /**
-   * Returns the users address of the provided Signer.
+   * Returns the user address of the provided Signer.
    * GaugeController can be initialized with a Signer.
    * @param errorPrefix the class and function name of where the error occurred
    * @returns the address of the user
    */
-  async getUsersAddress(errorPrefix = 'GaugeController [getUsersAddress] |') {
+  async getUserAddress(errorPrefix = 'GaugeController [getUserAddress] |') {
     await this.validateIsSigner(errorPrefix)
     return await (this.signerOrProvider as Signer).getAddress()
   }

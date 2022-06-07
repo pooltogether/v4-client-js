@@ -17,7 +17,7 @@ export async function getTokenData(tokenContract: Contract): Promise<TokenData> 
   }
 }
 
-export async function getUsersERC20Balance(
+export async function getUserERC20Balance(
   usersAddress: string,
   tokenContract: Contract
 ): Promise<BigNumber> {
@@ -25,7 +25,7 @@ export async function getUsersERC20Balance(
   return result[0]
 }
 
-export async function getUsersTokenAllowance(
+export async function getUserTokenAllowance(
   usersAddress: string,
   spendersAddress: string,
   tokenContract: Contract

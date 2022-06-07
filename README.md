@@ -117,13 +117,13 @@ const usersBalances: {
   chainId: number,
   address: string,
   balances: PrizePoolTokenBalances
-}[] = await PrizePoolNetwork.getUsersPrizePoolBalances(usersAddress)
+}[] = await PrizePoolNetwork.getUserPrizePoolBalances(usersAddress)
 ```
 
 ### Get a users deposit token & ticket balance
 
 ```js
-const balance: PrizePoolTokenBalances = await prizePool.getUsersPrizePoolBalances(usersAddress)
+const balance: PrizePoolTokenBalances = await prizePool.getUserPrizePoolBalances(usersAddress)
 ```
 
 ### Approve deposits
@@ -173,7 +173,7 @@ const drawIds = await prizeDistributor.getAvailableDrawIds()
 ### Get a users prizes
 
 ```js
-const drawResults = await PrizeApi.getUsersDrawResultsByDraw(
+const drawResults = await PrizeApi.getUserDrawResultsByDraw(
   chainId,
   usersAddress,
   prizeDistributorAddress,

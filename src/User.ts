@@ -186,7 +186,7 @@ export class User extends PrizePool {
    */
   async getTicketBalance(): Promise<BigNumber> {
     const usersAddress = await this.signer.getAddress()
-    return this.getUsersTicketBalance(usersAddress)
+    return this.getUserTicketBalance(usersAddress)
   }
 
   /**
@@ -195,7 +195,7 @@ export class User extends PrizePool {
    */
   async getTokenBalance(): Promise<BigNumber> {
     const usersAddress = await this.signer.getAddress()
-    return this.getUsersTokenBalance(usersAddress)
+    return this.getUserTokenBalance(usersAddress)
   }
 
   /**
@@ -204,7 +204,7 @@ export class User extends PrizePool {
    */
   async getDepositAllowance() {
     const usersAddress = await this.signer.getAddress()
-    return this.getUsersDepositAllowance(usersAddress)
+    return this.getUserDepositAllowance(usersAddress)
   }
 
   /**
@@ -213,7 +213,7 @@ export class User extends PrizePool {
    */
   async getTicketDelegate() {
     const usersAddress = await this.signer.getAddress()
-    return this.getUsersTicketDelegate(usersAddress)
+    return this.getUserTicketDelegate(usersAddress)
   }
 
   //////////////////////////// Validation methods ////////////////////////////
