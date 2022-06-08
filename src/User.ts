@@ -125,6 +125,24 @@ export class User extends PrizePool {
   }
 
   /**
+   * Submits a transaction to set an allowance for deposits to 0 for the Prize Pool.
+   * @param overrides optional overrides for the transaction creation
+   * @returns the transaction response
+   */
+  async revokeDeposits(overrides?: Overrides): Promise<TransactionResponse> {
+    const errorPrefix = 'User [revokeDeposits]'
+    await this.validateSignerNetwork(errorPrefix)
+
+    const prizePoolAddress = this.prizePoolMetadata.address
+    const tokenContract = await this.getTokenContract()
+    if (Boolean(overrides)) {
+      return tokenContract.approve(prizePoolAddress, 0 || MaxUint256, overrides)
+    } else {
+      return tokenContract.approve(prizePoolAddress, 0 || MaxUint256)
+    }
+  }
+
+  /**
    * Submits a transaction to delegate to ticket chance to the users self
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
@@ -168,7 +186,7 @@ export class User extends PrizePool {
    */
   async getTicketBalance(): Promise<BigNumber> {
     const usersAddress = await this.signer.getAddress()
-    return this.getUsersTicketBalance(usersAddress)
+    return this.getUserTicketBalance(usersAddress)
   }
 
   /**
@@ -177,7 +195,7 @@ export class User extends PrizePool {
    */
   async getTokenBalance(): Promise<BigNumber> {
     const usersAddress = await this.signer.getAddress()
-    return this.getUsersTokenBalance(usersAddress)
+    return this.getUserTokenBalance(usersAddress)
   }
 
   /**
@@ -186,7 +204,7 @@ export class User extends PrizePool {
    */
   async getDepositAllowance() {
     const usersAddress = await this.signer.getAddress()
-    return this.getUsersDepositAllowance(usersAddress)
+    return this.getUserDepositAllowance(usersAddress)
   }
 
   /**
@@ -195,7 +213,7 @@ export class User extends PrizePool {
    */
   async getTicketDelegate() {
     const usersAddress = await this.signer.getAddress()
-    return this.getUsersTicketDelegate(usersAddress)
+    return this.getUserTicketDelegate(usersAddress)
   }
 
   //////////////////////////// Validation methods ////////////////////////////

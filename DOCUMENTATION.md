@@ -7,14 +7,14 @@
 ![npm](https://img.shields.io/npm/v/@pooltogether/v4-client-js)
 [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label)](https://pooltogether.com/discord)
 
-This library includes a simplified interface for interacting with a v4 PoolTogether deployment. Create an instance of `PrizePoolNetwork` and use the initialized `PrizePool` and `PrizeDistributor` to begin reading and writing data to the protocol.
+This library includes a simplified interface for interacting with a v4 PoolTogether deployment. Create an instance of `PrizePoolNetwork` and use the initialized `PrizePool` and `PrizeDistributorV2` to begin reading and writing data to the protocol.
 
 There are several classes that provide interfaces to the different aspects of the V4 PoolTogether protocol. `PrizePoolNetwork` is the main entry point. A full tutorial is available [here](/protocol/tutorials/js-client-quickstart/).
 
 - [PrizePoolNetwork](./Classes/PrizePoolNetwork/)
 - [PrizePool](./Classes/PrizePool/)
 - [User](./Classes/User/)
-- [PrizeDistributor](./Classes/PrizeDistributor/)
+- [PrizeDistributorV2](./Classes/PrizeDistributor/)
 - [PrizeApi](./Classes/PrizeApi/)
 - [ContractFactory](./Classes/ContractFactory/)
 
@@ -48,7 +48,7 @@ git clone https://github.com/pooltogether/v4-client-js.git
 
 ### PrizePoolNetwork
 
-A `PrizePoolNetwork` is a collection of `PrizePool` and `PrizeDistributor` across several chains that make up a v4 deployment.
+A `PrizePoolNetwork` is a collection of `PrizePool` and `PrizeDistributorV2` across several chains that make up a v4 deployment.
 
 To create an instance of `PrizePoolNetwork` you will need:
 
@@ -78,9 +78,9 @@ A `User` is wrapper around `PrizePool` with the ability to send transactions to 
 const user = new User(prizePool.prizePoolMetadata, signer, prizePool)
 ```
 
-### PrizeDistributor
+### PrizeDistributorV2
 
-A `PrizeDistributor` is what handles prizes. It is used to determine the current draw, check for prizes & claiming prizes. For write capabilities, pass a Signer when creating an instance.
+A `PrizeDistributorV2` is what handles prizes. It is used to determine the current draw, check for prizes & claiming prizes. For write capabilities, pass a Signer when creating an instance.
 
 ```js
 const prizeDistributor = PrizePoolNetwork.getPrizeDistributor(1, '0xabc123')
@@ -89,7 +89,7 @@ const prizeDistributor = PrizePoolNetwork.getPrizeDistributor(1, '0xabc123')
 ```js
 const prizeDistributor = PrizePoolNetwork.getPrizeDistributor(1, '0xabc123')
 const signer = provider.getSigner()
-const signerPrizeDistributor = new PrizeDistributor(
+const signerPrizeDistributor = new PrizeDistributorV2(
   prizeDistributor.prizeDistributorMetadata,
   signer,
   prizeDistributor.contractMetadataList
@@ -112,13 +112,13 @@ const usersBalances: {
   chainId: number,
   address: string,
   balances: PrizePoolTokenBalances
-}[] = await PrizePoolNetwork.getUsersPrizePoolBalances(usersAddress)
+}[] = await PrizePoolNetwork.getUserPrizePoolBalances(usersAddress)
 ```
 
 ### Get a users deposit token & ticket balance
 
 ```js
-const balance: PrizePoolTokenBalances = await prizePool.getUsersPrizePoolBalances(usersAddress)
+const balance: PrizePoolTokenBalances = await prizePool.getUserPrizePoolBalances(usersAddress)
 ```
 
 ### Approve deposits
@@ -157,18 +157,18 @@ NOTE: Make sure you're shifting by the proper decimal amount
 const txResponse: TransactionResponse = await user.withdraw(ethers.utils.parseUnits(10, decimals))
 ```
 
-### Get valid draw ids
+### Get available draw ids
 
 Valid draw ids are draw ids that have all of the relevant data pushed to their respective chain & are not expired.
 
 ```js
-const drawIds = await prizeDistributor.getValidDrawIds()
+const drawIds = await prizeDistributor.getAvailableDrawIds()
 ```
 
 ### Get a users prizes
 
 ```js
-const drawResults = await PrizeApi.getUsersDrawResultsByDraw(
+const drawResults = await PrizeApi.getUserDrawResultsByDraw(
   chainId,
   usersAddress,
   prizeDistributorAddress,
@@ -179,7 +179,7 @@ const drawResults = await PrizeApi.getUsersDrawResultsByDraw(
 
 ### Claim a users prizes
 
-NOTE: Ensure the `PrizeDistributor` was initialized with a `Signer`
+NOTE: Ensure the `PrizeDistributorV2` was initialized with a `Signer`
 
 ```js
 const txResponse: TransactionResponse = await prizeDistributor.claimPrizesByDraw(1)

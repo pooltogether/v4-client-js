@@ -38,7 +38,7 @@ export class ContractFactory {
    * @returns an ethers contract for the provided contract identifier
    */
   getContract(chainId: number, address: string): Contract {
-    const contract = findInContractList(this.contractList, chainId, address)
+    const contract = findInContractList(this.contractList.contracts, chainId, address)
     debug('PoolTogetherV4:getContract', contract)
     if (!contract) {
       throw new Error(`Contract not found for chainId: ${chainId} and address: ${address}`)

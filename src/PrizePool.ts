@@ -4,31 +4,25 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
-// import { MaxUint256 } from '@ethersproject/constants'
 
 import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
 import { PrizePoolTokenBalances, Providers, TokenData } from './types'
 import {
-  sortContractsByContractTypeAndChildren,
   getTokenData,
-  getUsersERC20Balance,
+  getUserERC20Balance,
   validateAddress,
   validateSignerOrProviderNetwork,
-  getMetadataAndContract,
-  createContractMetadata
+  createContractMetadata,
+  getContractsByType
 } from './utils'
+import { ContractWrapper } from './ContractWrapper'
 
 /**
  * A Prize Pool.
  * Provides read only functions for the contracts that make up the deployment of this Prize Pool.
  */
-export class PrizePool {
-  readonly contractMetadataList: ContractMetadata[]
-  readonly signerOrProvider: Provider | Signer
-  readonly chainId: number
-  readonly address: string
-
+export class PrizePool extends ContractWrapper {
   // Contract metadata
   readonly prizePoolMetadata: ContractMetadata
   ticketMetadata: ContractMetadata | undefined
@@ -44,25 +38,20 @@ export class PrizePool {
    * @constructor
    * @param prizePoolMetadata the metadata for the YieldSourcePrizePool contract in the Prize Pool
    * @param signerOrProvider a Provider or Signer for the network the Prize Pool deployment is on
-   * @param contractMetadataList an array of metadata for the Prize Pool
+   * @param contractMetadataList an array of metadata for the Prize Pool.
    */
   constructor(
     prizePoolMetadata: ContractMetadata,
     signerOrProvider: Provider | Signer,
     contractMetadataList: ContractMetadata[]
   ) {
+    super(prizePoolMetadata, signerOrProvider, contractMetadataList)
     // Get contract metadata & ethers contracts
     const prizePoolContract = new Contract(
       prizePoolMetadata.address,
       prizePoolMetadata.abi,
       signerOrProvider
     )
-
-    // Set data
-    this.contractMetadataList = contractMetadataList
-    this.signerOrProvider = signerOrProvider
-    this.chainId = prizePoolMetadata.chainId
-    this.address = prizePoolMetadata.address
 
     // Set metadata
     this.prizePoolMetadata = prizePoolMetadata
@@ -75,14 +64,6 @@ export class PrizePool {
     this.tokenContract = undefined
   }
 
-  /**
-   * Returns a unique id string for this Prize Pool.
-   * @returns a unique id for the Prize Pool
-   */
-  id(): string {
-    return `${this.prizePoolMetadata.address}-${this.prizePoolMetadata.chainId}`
-  }
-
   //////////////////////////// Ethers read functions ////////////////////////////
 
   /**
@@ -90,15 +71,15 @@ export class PrizePool {
    * @param usersAddress the users address to fetch balances for
    * @returns the users balances for the underlying deposit token and the ticket token
    */
-  async getUsersPrizePoolBalances(usersAddress: string): Promise<PrizePoolTokenBalances> {
-    const errorPrefix = 'PrizePool [getUsersPrizePoolBalances] | '
+  async getUserPrizePoolBalances(usersAddress: string): Promise<PrizePoolTokenBalances> {
+    const errorPrefix = 'PrizePool [getUserPrizePoolBalances] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const tokenContract = await this.getTokenContract()
     const ticketContract = await this.getTicketContract()
 
-    const tokenBalancePromise = getUsersERC20Balance(usersAddress, tokenContract)
-    const ticketBalancePromise = getUsersERC20Balance(usersAddress, ticketContract)
+    const tokenBalancePromise = getUserERC20Balance(usersAddress, tokenContract)
+    const ticketBalancePromise = getUserERC20Balance(usersAddress, ticketContract)
     const [token, ticket] = await Promise.all([tokenBalancePromise, ticketBalancePromise])
     return {
       token,
@@ -111,13 +92,13 @@ export class PrizePool {
    * @param usersAddress the address to fetch the balance for
    * @returns the users ticket balance
    */
-  async getUsersTicketBalance(usersAddress: string): Promise<BigNumber> {
-    const errorPrefix = 'PrizePool [getUsersTicketBalance] | '
+  async getUserTicketBalance(usersAddress: string): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUserTicketBalance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const ticketContract = await this.getTicketContract()
 
-    return getUsersERC20Balance(usersAddress, ticketContract)
+    return getUserERC20Balance(usersAddress, ticketContract)
   }
 
   /**
@@ -126,8 +107,8 @@ export class PrizePool {
    * @param unixTimestamp the unix timestamp to fetch in seconds
    * @returns the users TWAB at the requested time
    */
-  async getUsersTicketTwabAt(usersAddress: string, unixTimestamp: number): Promise<BigNumber> {
-    const errorPrefix = 'PrizePool [getUsersTicketBalance] | '
+  async getUserTicketTwabAt(usersAddress: string, unixTimestamp: number): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUserTicketBalance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const ticketContract = await this.getTicketContract()
@@ -142,13 +123,13 @@ export class PrizePool {
    * @param usersAddress the address to fetch the balance for
    * @returns the users token balance
    */
-  async getUsersTokenBalance(usersAddress: string): Promise<BigNumber> {
-    const errorPrefix = 'PrizePool [getUsersTokenBalance] | '
+  async getUserTokenBalance(usersAddress: string): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUserTokenBalance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const tokenContract = await this.getTokenContract()
 
-    return getUsersERC20Balance(usersAddress, tokenContract)
+    return getUserERC20Balance(usersAddress, tokenContract)
   }
 
   /**
@@ -156,8 +137,8 @@ export class PrizePool {
    * @param usersAddress the address to fetch the deposit allowance for
    * @returns the amount the user has approved for deposits
    */
-  async getUsersDepositAllowance(usersAddress: string) {
-    const errorPrefix = 'PrizePool [getUsersDepositAllowance] | '
+  async getUserDepositAllowance(usersAddress: string) {
+    const errorPrefix = 'PrizePool [getUserDepositAllowance] | '
     await validateAddress(errorPrefix, usersAddress)
     await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
     const tokenContract = await this.getTokenContract()
@@ -173,8 +154,8 @@ export class PrizePool {
    * @param usersAddress the address to fetch the delegate for
    * @returns the address a user has delegated to
    */
-  async getUsersTicketDelegate(usersAddress: string): Promise<string> {
-    const errorPrefix = 'PrizePool [getUsersTicketDelegate] | '
+  async getUserTicketDelegate(usersAddress: string): Promise<string> {
+    const errorPrefix = 'PrizePool [getUserTicketDelegate] | '
     await validateAddress(errorPrefix, usersAddress)
     const ticketContract = await this.getTicketContract()
 
@@ -235,50 +216,6 @@ export class PrizePool {
     return totalSupply
   }
 
-  // NOTE: Gas estimates are commented out as they are quite unreliable.
-
-  /**
-   * Fetches a gas estimate for depositing from the Prize Pool.
-   * @param usersAddress string
-   * @param amount BigNumber
-   * @returns BigNumber
-   */
-  // async getDepositGasEstimate(usersAddress: string, amount: BigNumber): Promise<BigNumber> {
-  //   const errorPrefix = 'PrizePool [getUsersDepositAllowance] | '
-  //   await validateAddress(errorPrefix, usersAddress)
-  //   await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
-
-  //   return await this.prizePoolContract.estimateGas.depositTo(usersAddress, amount)
-  // }
-
-  /**
-   * Fetches a gas estimate for withdrawing from the Prize Pool.
-   * @param usersAddress string
-   * @param amount BigNumber
-   * @returns BigNumber
-   */
-  // async getWithdrawGasEstimate(usersAddress: string, amount: BigNumber): Promise<BigNumber> {
-  //   const errorPrefix = 'PrizePool [getWithdrawGasEstimate] | '
-  //   await validateAddress(errorPrefix, usersAddress)
-  //   await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
-
-  //   return await this.prizePoolContract.estimateGas.withdrawFrom(usersAddress, amount)
-  // }
-
-  /**
-   * Fetches a gas estimate for approving deposits into the Prize Pool.
-   * @param usersAddress string
-   * @returns BigNumber
-   */
-  // async getApprovalGasEstimate(usersAddress: string): Promise<BigNumber> {
-  //   const errorPrefix = 'PrizePool [getApprovalGasEstimate] | '
-  //   await validateAddress(errorPrefix, usersAddress)
-  //   const tokenContract = await this.getTokenContract()
-
-  //   const prizePoolAddress = this.prizePoolMetadata.address
-  //   return await tokenContract.estimateGas.approve(prizePoolAddress, MaxUint256)
-  // }
-
   //////////////////////////// Ethers Contracts Initializers ////////////////////////////
 
   /**
@@ -286,22 +223,11 @@ export class PrizePool {
    * @returns an ethers contract for the ticket
    */
   async getTicketContract(): Promise<Contract> {
-    if (this.ticketContract !== undefined) return this.ticketContract
     const getAddress = async () => {
       const result: Result = await this.prizePoolContract.functions.getTicket()
       return result[0]
     }
-    const ticketAddress = await getAddress()
-    const { contractMetadata: ticketMetadata, contract: ticketContract } = getMetadataAndContract(
-      this.chainId,
-      this.signerOrProvider,
-      ContractType.Ticket,
-      this.contractMetadataList,
-      ticketAddress
-    )
-    this.ticketMetadata = ticketMetadata
-    this.ticketContract = ticketContract
-    return ticketContract
+    return this.getAndSetEthersContract('ticket', ContractType.Ticket, getAddress)
   }
 
   /**
@@ -342,15 +268,9 @@ export function initializePrizePools(
   contractList: ContractList,
   providers: Providers
 ): PrizePool[] {
-  const prizePoolContractLists = sortContractsByContractTypeAndChildren(
-    contractList.contracts,
-    ContractType.YieldSourcePrizePool
-  )
+  const prizePoolMetadatas = getContractsByType(contractList.contracts, ContractType.PrizePool)
   const prizePools: PrizePool[] = []
-  prizePoolContractLists.forEach((contracts) => {
-    const prizePoolMetadata = contracts.find(
-      (contract) => contract.type === ContractType.YieldSourcePrizePool
-    ) as ContractMetadata
+  prizePoolMetadatas.forEach((prizePoolMetadata) => {
     const provider = providers[prizePoolMetadata.chainId]
     try {
       prizePools.push(new PrizePool(prizePoolMetadata, provider, contractList.contracts))

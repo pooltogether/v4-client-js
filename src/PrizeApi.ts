@@ -1,14 +1,17 @@
 import { batch, contract } from '@pooltogether/etherplex'
 import { deserializeBigNumbers, getReadProvider, NETWORK } from '@pooltogether/utilities'
 import {
+  calculateNormalizedBalancePicksFromTotalPicks,
   computeUserWinningPicksForRandomNumber,
   Draw,
+  PrizeConfig,
+  PrizeDistribution,
   utils as V4Utils
 } from '@pooltogether/v4-utils-js'
 import { BigNumber } from 'ethers'
 
 import { PrizeApiStatus } from './constants'
-import { DrawResults, LEGACYDrawResults, Prize, PrizeDistribution } from './types'
+import { DrawResults, LEGACYDrawResults, Prize } from './types'
 import { createEmptyDrawResult } from './utils/createEmptyDrawResult'
 import { formatDrawResultsFromLegacyDrawResults } from './utils/formatDrawResultsFromLegacyDrawResults'
 import { formatDrawResultsFromPrizes } from './utils/formatDrawResultsFromPrizes'
@@ -29,25 +32,27 @@ const PRIZE_API_SUPPORTED_NETWORKS = Object.freeze([
 export class PrizeApi {
   /**
    * Fetches a users DrawResults for the provided draw id
-   * @param chainId the chain id the PrizeDistributor is deployed on
+   * @param chainId the chain id the PrizeDistributorV2 is deployed on
    * @param usersAddress the address of the user to fetch draw results for
-   * @param prizeDistributorAddress the address of the PrizeDistributor to fetch prizes for
+   * @param prizeDistributorAddress the address of the PrizeDistributorV2 to fetch prizes for
    * @param drawId the id of the draw to check
    * @param maxPicksPerUser the maximum number of picks per user
    */
-  static async getUsersDrawResultsByDraw(
+  static async getUserDrawResultsByDraw(
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
     drawId: number,
-    maxPicksPerUser: number
+    maxPicksPerUser: number,
+    ticketAddress?: string
   ): Promise<DrawResults> {
-    const drawResults = await this.getUsersDrawResultsByDraws(
+    const drawResults = await this.getUserDrawResultsByDraws(
       chainId,
       usersAddress,
       prizeDistributorAddress,
       [drawId],
-      [maxPicksPerUser]
+      [maxPicksPerUser],
+      ticketAddress
     )
     return drawResults[drawId]
   }
@@ -55,18 +60,19 @@ export class PrizeApi {
   /**
    * Fetches a users DrawResults for the provided draw ids.
    * Checks the status of the Prize API, falls back to the CloudFlare worker if Prize API status is invalid.
-   * @param chainId the chain id the PrizeDistributor is deployed on
+   * @param chainId the chain id the PrizeDistributorV2 is deployed on
    * @param usersAddress the address of the user to fetch draw results for
-   * @param prizeDistributorAddress the address of the PrizeDistributor to fetch prizes for
+   * @param prizeDistributorAddress the address of the PrizeDistributorV2 to fetch prizes for
    * @param drawIds a list of draw ids to check for prizes
    * @param maxPicksPerUserPerDraw the maximum number of picks per user for each drwa
    */
-  static async getUsersDrawResultsByDraws(
+  static async getUserDrawResultsByDraws(
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
     drawIds: number[],
-    maxPicksPerUserPerDraw: number[]
+    maxPicksPerUserPerDraw: number[],
+    ticketAddress?: string
   ): Promise<{ [drawId: number]: DrawResults }> {
     const drawResults: { [drawId: number]: DrawResults } = {}
 
@@ -81,19 +87,26 @@ export class PrizeApi {
             chainId,
             usersAddress,
             prizeDistributorAddress,
-            drawId
+            drawId,
+            ticketAddress
           )
           drawResults[drawId] = drawResult
         } else {
           // Check if Prize API executed for the draw id requested, if not, use CloudFlare
-          const apiStatus = await this.checkPrizeApiStatus(chainId, prizeDistributorAddress, drawId)
+          const apiStatus = await this.checkPrizeApiStatus(
+            chainId,
+            prizeDistributorAddress,
+            drawId,
+            ticketAddress
+          )
           if (apiStatus) {
             const drawResult = await this.getDrawResultsFromPrizeApi(
               chainId,
               usersAddress,
               prizeDistributorAddress,
               drawId,
-              maxPicksPerUserPerDraw[index]
+              maxPicksPerUserPerDraw[index],
+              ticketAddress
             )
             drawResults[drawId] = drawResult
           } else {
@@ -101,7 +114,8 @@ export class PrizeApi {
               chainId,
               usersAddress,
               prizeDistributorAddress,
-              drawId
+              drawId,
+              ticketAddress
             )
             drawResults[drawId] = drawResult
           }
@@ -133,7 +147,8 @@ export class PrizeApi {
     usersAddress: string,
     prizeDistributorAddress: string,
     drawId: number,
-    maxPicksPerUser: number
+    maxPicksPerUser: number,
+    ticketAddress?: string
   ) {
     if (!PRIZE_API_SUPPORTED_NETWORKS.includes(chainId)) {
       throw new Error(
@@ -141,7 +156,13 @@ export class PrizeApi {
       )
     }
 
-    const url = this.getDrawResultsUrl(chainId, prizeDistributorAddress, usersAddress, drawId)
+    const url = this.getDrawResultsUrl(
+      chainId,
+      prizeDistributorAddress,
+      usersAddress,
+      drawId,
+      ticketAddress
+    )
     const response = await fetch(url)
     // If there is no data in Prize API, they won nothing.
     if (response.status === 404) {
@@ -164,13 +185,15 @@ export class PrizeApi {
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
-    drawId: number
+    drawId: number,
+    ticketAddress?: string
   ) {
     const url = this.getCloudFlareDrawResultsUrl(
       chainId,
       prizeDistributorAddress,
       usersAddress,
-      drawId
+      drawId,
+      ticketAddress
     )
     const response = await fetch(url)
     const drawResultsJson = await response.json()
@@ -185,103 +208,194 @@ export class PrizeApi {
    * @param chainId
    * @param usersAddress
    * @param prizeDistributorAddress
+   * @param ticketAddress
    * @param drawId
    */
   static async computeDrawResults(
     chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
-    drawId: number
+    drawId: number,
+    ticketAddress?: string
   ) {
     const readProvider = getReadProvider(chainId)
 
-    // Get Draw Calculator Timelock address
-    const prizeDistributorContract = contract(
-      prizeDistributorAddress,
-      PartialPrizeDistributorAbi,
-      prizeDistributorAddress
-    )
-    // @ts-ignore
-    let response = await batch(readProvider, prizeDistributorContract.getDrawCalculator())
-    const drawCalculatorTimelockAddress: string =
-      response[prizeDistributorAddress].getDrawCalculator[0]
-
-    // Get Draw Calculator address
-    // It's assumed that the PristDistributor has a DrawCalculatorTimelock set up, if it does not, this second getDrawCalculator call will fail. That means the contract is not a DrawCalculatorTimelock and just a DrawCalculator.
-    const drawCalculatorTimelockContract = contract(
-      drawCalculatorTimelockAddress,
-      PartialDrawCalculatorTimelockAbi,
-      drawCalculatorTimelockAddress
-    )
-    let drawCalculatorAddress: string
-    try {
-      // @ts-ignore
-      response = await batch(readProvider, drawCalculatorTimelockContract.getDrawCalculator())
-      drawCalculatorAddress = response[drawCalculatorTimelockAddress].getDrawCalculator[0]
-    } catch (e) {
-      console.warn(
-        `Prize Distributor at ${prizeDistributorAddress} is not using a DrawCalculatorTimelock`
+    const getV1DrawCalculatorContract = async () => {
+      // Get Draw Calculator Timelock address
+      const prizeDistributorContract = contract(
+        prizeDistributorAddress,
+        PartialPrizeDistributorAbi,
+        prizeDistributorAddress
       )
-      drawCalculatorAddress = drawCalculatorTimelockAddress
+
+      console.log({ readProvider, prizeDistributorContract })
+      // @ts-ignore
+      let response = await batch(readProvider, prizeDistributorContract.getDrawCalculator())
+      let drawCalculatorAddress: string = response[prizeDistributorAddress].getDrawCalculator[0]
+      try {
+        let drawCalculatorTimelockContract = contract(
+          drawCalculatorAddress,
+          PartialDrawCalculatorTimelockAbi,
+          drawCalculatorAddress
+        )
+        const results = await batch(
+          readProvider,
+          // @ts-ignore
+          drawCalculatorTimelockContract.getDrawCalculator()
+        )
+        drawCalculatorAddress = results[drawCalculatorAddress].getDrawCalculator[0]
+      } catch (e) {
+        console.debug('No DrawCalculatorTimelock contract found')
+      }
+      return {
+        drawCalculatorAddress,
+        drawCalculatorContract: contract(
+          drawCalculatorAddress,
+          PartialV1DrawCalculatorAbi,
+          drawCalculatorAddress
+        )
+      }
     }
 
-    // Get Draw Buffer & Prize Distribution Buffer addresses and the users normalized balance
-    const drawCalculatorContract = contract(
-      drawCalculatorAddress,
-      PartialDrawCalculatorAbi,
-      drawCalculatorAddress
-    )
-    response = await batch(
+    const getV2DrawCalculatorContract = async () => {
+      const prizeDistributorContract = contract(
+        prizeDistributorAddress,
+        PartialPrizeDistributorAbi,
+        prizeDistributorAddress
+      )
+      // @ts-ignore
+      let response = await batch(readProvider, prizeDistributorContract.getDrawCalculator())
+      const drawCalculatorAddress = response[prizeDistributorAddress].getDrawCalculator[0]
+      return {
+        drawCalculatorAddress,
+        drawCalculatorContract: contract(
+          drawCalculatorAddress,
+          PartialV2DrawCalculatorAbi,
+          drawCalculatorAddress
+        )
+      }
+    }
+
+    let getDrawCalculatorContract = getV1DrawCalculatorContract
+    if (!!ticketAddress) {
+      getDrawCalculatorContract = getV2DrawCalculatorContract
+    }
+    const { drawCalculatorAddress, drawCalculatorContract } = await getDrawCalculatorContract()
+
+    const getV1PrizeData = async () => {
+      let response = await batch(
+        readProvider,
+        drawCalculatorContract
+          // @ts-ignore
+          .getPrizeDistributionBuffer(drawId)
+      )
+      const prizeDistributionBufferAddress =
+        response[drawCalculatorAddress].getPrizeDistributionBuffer[0]
+
+      const prizeDistributionBufferContract = contract(
+        prizeDistributionBufferAddress,
+        PartialPrizeDistributionBufferAbi,
+        prizeDistributionBufferAddress
+      )
+
+      response = await batch(
+        readProvider,
+        // @ts-ignore
+        prizeDistributionBufferContract.getPrizeDistribution(drawId)
+      )
+
+      const prizeDistribution: PrizeDistribution =
+        response[prizeDistributionBufferAddress].getPrizeDistribution[0]
+
+      return prizeDistribution
+    }
+
+    const getV2PrizeData = async () => {
+      const response = await batch(
+        readProvider,
+        drawCalculatorContract
+          // @ts-ignore
+          .getPrizeConfig(drawId)
+      )
+      const prizeConfig: PrizeConfig = response[drawCalculatorAddress].getPrizeConfig[0]
+      return prizeConfig
+    }
+
+    let getPrizeData:
+      | (() => Promise<PrizeConfig>)
+      | (() => Promise<PrizeDistribution>) = getV1PrizeData
+    if (!!ticketAddress) {
+      getPrizeData = getV2PrizeData
+    }
+    const prizeData = await getPrizeData()
+
+    const getV1UserPickCount = async () => {
+      let response = await batch(
+        readProvider,
+        drawCalculatorContract
+          // @ts-ignore
+          .getNormalizedBalancesForDrawIds(usersAddress, [drawId])
+      )
+      const normalizedBalance: BigNumber =
+        response[drawCalculatorAddress].getNormalizedBalancesForDrawIds[0]
+      return calculateNormalizedBalancePicksFromTotalPicks(
+        // @ts-ignore
+        prizeData.numberOfPicks,
+        normalizedBalance
+      )
+    }
+
+    const getV2UserPickCount = async () => {
+      const response = await batch(
+        readProvider,
+        drawCalculatorContract
+          // @ts-ignore
+          .calculateUserPicks(ticketAddress, usersAddress, [drawId])
+      )
+      const usersPickCount: BigNumber = response[drawCalculatorAddress].calculateUserPicks[0][0]
+      return usersPickCount
+    }
+
+    let getUserPickCount = getV1UserPickCount
+    if (!!ticketAddress) {
+      getUserPickCount = getV2UserPickCount
+    }
+    const usersPickCount = await getUserPickCount()
+
+    console.log('Computing', { drawId, usersPickCount, prizeData, drawCalculatorAddress })
+    // If user had no balance, short circuit
+    if (usersPickCount.isZero()) {
+      return createEmptyDrawResult(drawId)
+    }
+
+    let response = await batch(
       readProvider,
       drawCalculatorContract
         // @ts-ignore
         .getDrawBuffer()
-        .getPrizeDistributionBuffer()
-        .getNormalizedBalancesForDrawIds(usersAddress, [drawId])
+        .getPrizeDistributionBuffer(drawId)
     )
     const drawBufferAddress = response[drawCalculatorAddress].getDrawBuffer[0]
-    const prizeDistributionBufferAddress =
-      response[drawCalculatorAddress].getPrizeDistributionBuffer[0]
-    const normalizedBalance: BigNumber =
-      response[drawCalculatorAddress].getNormalizedBalancesForDrawIds[0][0]
-
-    // If user had no balance, short circuit
-    if (normalizedBalance.isZero()) {
-      return createEmptyDrawResult(drawId)
-    }
-
-    // Get the draw and prize distribution
     const drawBufferContract = contract(drawBufferAddress, PartialDrawBufferAbi, drawBufferAddress)
-    const prizeDistributionBufferContract = contract(
-      prizeDistributionBufferAddress,
-      PartialPrizeDistributionBufferAbi,
-      prizeDistributionBufferAddress
-    )
-
     response = await batch(
       readProvider,
       // @ts-ignore
-      drawBufferContract.getDraw(drawId),
-      // @ts-ignore
-      prizeDistributionBufferContract.getPrizeDistribution(drawId)
+      drawBufferContract.getDraw(drawId)
     )
     const draw: Draw = response[drawBufferAddress].getDraw[0]
-    const prizeDistribution: PrizeDistribution =
-      response[prizeDistributionBufferAddress].getPrizeDistribution[0]
 
     const drawResults = computeUserWinningPicksForRandomNumber(
       draw.winningRandomNumber,
-      prizeDistribution.bitRangeSize,
-      prizeDistribution.matchCardinality,
-      prizeDistribution.numberOfPicks,
-      prizeDistribution.prize,
-      prizeDistribution.tiers,
+      prizeData.bitRangeSize,
+      prizeData.matchCardinality,
+      prizeData.prize,
+      prizeData.tiers,
       usersAddress,
-      normalizedBalance,
+      usersPickCount,
       draw.drawId
     )
 
-    return V4Utils.filterResultsByValue(drawResults, prizeDistribution.maxPicksPerUser)
+    return V4Utils.filterResultsByValue(drawResults, prizeData.maxPicksPerUser)
   }
 
   /**
@@ -294,15 +408,18 @@ export class PrizeApi {
   static async checkPrizeApiStatus(
     chainId: number,
     prizeDistributorAddress: string,
-    drawId: number
+    drawId: number,
+    ticketAddress?: string
   ): Promise<boolean> {
     const response = await fetch(
-      this.getDrawResultsStatusUrl(chainId, prizeDistributorAddress, drawId)
+      this.getDrawResultsStatusUrl(chainId, prizeDistributorAddress, drawId, ticketAddress)
     )
     const requestStatus = response.status
     if (requestStatus !== 200) {
       throw new Error(
-        `PrizeApi | Draw ${drawId} for Prize Distributor ${prizeDistributorAddress} on ${chainId} calculation status not found.`
+        `PrizeApi [checkPrizeApiStatus] | Draw ${drawId} for Prize Distributor ${prizeDistributorAddress}${
+          !!ticketAddress ? `, ticket ${ticketAddress}` : ''
+        } on ${chainId} calculation status not found.`
       )
     }
     const drawResultsStatusJson: {
@@ -320,6 +437,7 @@ export class PrizeApi {
   /**
    * Returns the URL for pre-calculated prizes from the Prize API
    * TODO: Fix the casing functions once Kames fixes the bug
+   * TODO: Make sure the URL path is correct for this Prize API endpoint
    * @param chainId
    * @param prizeDistributorAddress
    * @param usersAddress
@@ -330,13 +448,18 @@ export class PrizeApi {
     chainId: number,
     prizeDistributorAddress: string,
     usersAddress: string,
-    drawId: number
+    drawId: number,
+    ticketAddress?: string
   ): string {
+    if (!!ticketAddress) {
+      return `https://api.pooltogether.com/prizes/${chainId}/${prizeDistributorAddress.toLowerCase()}/${ticketAddress.toLowerCase()}/draw/${drawId}/${usersAddress.toLowerCase()}.json`
+    }
     return `https://api.pooltogether.com/prizes/${chainId}/${prizeDistributorAddress.toLowerCase()}/draw/${drawId}/${usersAddress.toLowerCase()}.json`
   }
 
   /**
    * Returns the URL for the status of the calculations for the draw requested from the Prize API
+   * TODO: Make sure the URL path is correct for this Prize API endpoint
    * @param chainId
    * @param prizeDistributorAddress
    * @param usersAddress
@@ -346,13 +469,18 @@ export class PrizeApi {
   static getDrawResultsStatusUrl(
     chainId: number,
     prizeDistributorAddress: string,
-    drawId: number
+    drawId: number,
+    ticketAddress?: string
   ): string {
+    if (!!ticketAddress) {
+      return `https://api.pooltogether.com/prizes/${chainId}/${prizeDistributorAddress.toLowerCase()}/${ticketAddress.toLowerCase()}/draw/${drawId}/status.json`
+    }
     return `https://api.pooltogether.com/prizes/${chainId}/${prizeDistributorAddress.toLowerCase()}/draw/${drawId}/status.json`
   }
 
   /**
    * Returns the URL that the prizes can be calculated at on CloudFlare
+   * TODO: Make sure the URL path is correct for this Prize API endpoint
    * @param chainId
    * @param prizeDistributorAddress
    * @param usersAddress
@@ -363,8 +491,12 @@ export class PrizeApi {
     chainId: number,
     prizeDistributorAddress: string,
     usersAddress: string,
-    drawId: number
+    drawId: number,
+    ticketAddress?: string
   ): string {
+    if (!!ticketAddress) {
+      return `https://tsunami-prizes-production.pooltogether-api.workers.dev/${chainId}/${prizeDistributorAddress}/${ticketAddress}/prizes/${usersAddress}/${drawId}/`
+    }
     return `https://tsunami-prizes-production.pooltogether-api.workers.dev/${chainId}/${prizeDistributorAddress}/prizes/${usersAddress}/${drawId}/`
   }
 }
@@ -387,23 +519,7 @@ const PartialPrizeDistributorAbi = [
   }
 ]
 
-const PartialDrawCalculatorTimelockAbi = [
-  {
-    inputs: [],
-    name: 'getDrawCalculator',
-    outputs: [
-      {
-        internalType: 'contract IDrawCalculator',
-        name: '',
-        type: 'address'
-      }
-    ],
-    stateMutability: 'view',
-    type: 'function'
-  }
-]
-
-const PartialDrawCalculatorAbi = [
+const PartialV1DrawCalculatorAbi = [
   {
     inputs: [
       {
@@ -456,6 +572,88 @@ const PartialDrawCalculatorAbi = [
   }
 ]
 
+const PartialV2DrawCalculatorAbi = [
+  {
+    inputs: [
+      { internalType: 'contract ITicket', name: '_ticket', type: 'address' },
+      { internalType: 'address', name: '_user', type: 'address' },
+      { internalType: 'uint32[]', name: '_drawIds', type: 'uint32[]' }
+    ],
+    name: 'calculateUserPicks',
+    outputs: [{ internalType: 'uint64[]', name: 'picks', type: 'uint64[]' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'gaugeController',
+    outputs: [{ internalType: 'contract GaugeControllerInterface', name: '', type: 'address' }],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '_user',
+        type: 'address'
+      },
+      {
+        internalType: 'uint32[]',
+        name: '_drawIds',
+        type: 'uint32[]'
+      }
+    ],
+    name: 'getNormalizedBalancesForDrawIds',
+    outputs: [
+      {
+        internalType: 'uint256[]',
+        name: '',
+        type: 'uint256[]'
+      }
+    ],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [],
+    name: 'getDrawBuffer',
+    outputs: [
+      {
+        internalType: 'contract IDrawBuffer',
+        name: '',
+        type: 'address'
+      }
+    ],
+    stateMutability: 'view',
+    type: 'function'
+  },
+  {
+    inputs: [{ internalType: 'uint32', name: 'drawId', type: 'uint32' }],
+    name: 'getPrizeConfig',
+    outputs: [
+      {
+        components: [
+          { internalType: 'uint8', name: 'bitRangeSize', type: 'uint8' },
+          { internalType: 'uint8', name: 'matchCardinality', type: 'uint8' },
+          { internalType: 'uint16', name: 'maxPicksPerUser', type: 'uint16' },
+          { internalType: 'uint32', name: 'drawId', type: 'uint32' },
+          { internalType: 'uint32', name: 'expiryDuration', type: 'uint32' },
+          { internalType: 'uint32', name: 'endTimestampOffset', type: 'uint32' },
+          { internalType: 'uint128', name: 'poolStakeTotal', type: 'uint128' },
+          { internalType: 'uint256', name: 'prize', type: 'uint256' },
+          { internalType: 'uint32[16]', name: 'tiers', type: 'uint32[16]' }
+        ],
+        internalType: 'struct DrawCalculator.PrizeConfig',
+        name: '',
+        type: 'tuple'
+      }
+    ],
+    stateMutability: 'view',
+    type: 'function'
+  }
+]
+
 const PartialDrawBufferAbi = [
   {
     inputs: [
@@ -498,6 +696,22 @@ const PartialDrawBufferAbi = [
         internalType: 'struct IDrawBeacon.Draw',
         name: '',
         type: 'tuple'
+      }
+    ],
+    stateMutability: 'view',
+    type: 'function'
+  }
+]
+
+const PartialDrawCalculatorTimelockAbi = [
+  {
+    inputs: [],
+    name: 'getDrawCalculator',
+    outputs: [
+      {
+        internalType: 'contract IDrawCalculator',
+        name: '',
+        type: 'address'
       }
     ],
     stateMutability: 'view',

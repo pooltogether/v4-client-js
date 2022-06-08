@@ -10,13 +10,14 @@ export async function getTokenData(tokenContract: Contract): Promise<TokenData> 
   const decimalsPromise = tokenContract.functions.decimals() as Promise<Result>
   const results = await Promise.all([namePromise, symbolPromise, decimalsPromise])
   return {
+    address: tokenContract.address,
     name: results[0][0],
     symbol: results[1][0],
     decimals: results[2][0]
   }
 }
 
-export async function getUsersERC20Balance(
+export async function getUserERC20Balance(
   usersAddress: string,
   tokenContract: Contract
 ): Promise<BigNumber> {
@@ -24,7 +25,7 @@ export async function getUsersERC20Balance(
   return result[0]
 }
 
-export async function getUsersTokenAllowance(
+export async function getUserTokenAllowance(
   usersAddress: string,
   spendersAddress: string,
   tokenContract: Contract

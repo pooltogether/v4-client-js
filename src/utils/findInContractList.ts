@@ -1,4 +1,4 @@
-import { Contract, ContractList } from '../types'
+import { Contract } from '../types'
 
 /**
  * Searches through a contract list to find a particular contract keyed by chain id and address
@@ -8,11 +8,11 @@ import { Contract, ContractList } from '../types'
  * @returns
  */
 export const findInContractList = (
-  contractList: ContractList,
+  contracts: Contract[],
   chainId: number,
   address: string
 ): Contract | undefined => {
-  return contractList.contracts.find(
+  return contracts.find(
     (contract: Contract) => contract.chainId === chainId && contract.address === address
   )
 }

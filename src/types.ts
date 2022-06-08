@@ -12,8 +12,9 @@ export {
 
 export {
   Draw,
-  PrizeTier,
   PrizeDistribution,
+  PrizeTier,
+  PrizeConfig,
   Pick,
   DrawResults,
   PrizeAwardable,
@@ -23,6 +24,7 @@ export {
 } from '@pooltogether/v4-utils-js'
 
 export interface TokenData {
+  address: string
   name: string
   symbol: string
   decimals: string
