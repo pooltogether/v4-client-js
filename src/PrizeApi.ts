@@ -19,7 +19,8 @@ import { formatDrawResultsFromPrizes } from './utils/formatDrawResultsFromPrizes
 const PRIZE_API_SUPPORTED_NETWORKS = Object.freeze([
   NETWORK.avalanche,
   NETWORK.mainnet,
-  NETWORK.polygon
+  NETWORK.polygon,
+  NETWORK['optimism-kovan']
 ])
 
 /**
