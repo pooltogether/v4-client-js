@@ -192,6 +192,12 @@ const txResponse: TransactionResponse = await prizeDistributor.claimPrizesByDraw
 
 ## 💻 &nbsp; Developer Experience
 
+### Conventions
+
+A variable ending with `Unformatted` is a BigNumber that includes 0 padding for decimal shifting. You'll need more context to determine the decimals.
+A variable ending with `Normalized` is a BigNumber that includes 0 padding for 18 decimal places.
+For consistency function parameters should begin with primary keys. Primary keys are ordered by what is expected to change the least. Ex. (userAddress, prizePoolAddress, amountUnformatted)
+
 ### Contributing
 
 [Create an Issue](https://github.com/pooltogether/v4-utils-js/issues) to request new features.
