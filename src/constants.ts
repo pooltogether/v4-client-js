@@ -4,6 +4,8 @@ export const HOUR_IN_SECONDS = 3600
 
 export const TIER_DENOMINATION = 9
 
+export const VERSION_1 = { major: 1, minor: 0, patch: 0 }
+
 /**
  * A shortlist of PoolTogether v4 contract names that are used by the classes in this repo.
  */

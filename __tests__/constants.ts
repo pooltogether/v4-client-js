@@ -4,6 +4,7 @@ import { toUtf8Bytes } from '@ethersproject/strings'
 import { parseUnits } from '@ethersproject/units'
 
 import { formatTierToBasePercentage } from '../src/utils/formatTierToBasePercentage'
+import { VERSION_1 } from '../src/constants'
 
 export const CHAIN_ID = 1
 export const ADDRESS_DEAD = '0x000000000000000000000000000000000000dEaD'
@@ -91,13 +92,13 @@ export const PRIZE_DISTRIBUTION_EXAMPLE_INVALID = {
 
 export const contactList = {
   name: 'Mainnet ContractList',
-  version: { major: 1, minor: 0, patch: 0 },
+  version: VERSION_1,
   tags: {},
   contracts: [
     {
       chainId: 1,
       address: '0x000000000000000000000000000000000000dEaD',
-      version: { major: 1, minor: 0, patch: 0 },
+      version: VERSION_1,
       type: 'ContractName',
       abi: []
     }

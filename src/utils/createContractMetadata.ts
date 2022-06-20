@@ -1,6 +1,6 @@
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
 
-import { ContractType } from '../constants'
+import { ContractType, VERSION_1 } from '../constants'
 import { Version } from '../types'
 
 export function createContractMetadata(
@@ -8,11 +8,7 @@ export function createContractMetadata(
   address: string,
   type: ContractType,
   abi: any[],
-  version: Version = {
-    major: 1,
-    minor: 0,
-    patch: 0
-  },
+  version: Version = VERSION_1,
   tags: string[] = [],
   extensions: {
     readonly [key: string]: any
