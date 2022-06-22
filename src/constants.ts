@@ -11,6 +11,7 @@ export const VERSION_1 = { major: 1, minor: 0, patch: 0 }
  */
 export enum ContractType {
   PrizePool = 'PrizePool',
+  YieldSourcePrizePool = 'YieldSourcePrizePool',
   Ticket = 'Ticket',
   Token = 'Token',
   PrizeDistributor = 'PrizeDistributor',
