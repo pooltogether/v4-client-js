@@ -385,8 +385,8 @@ export class PrizeDistributorV1 extends PrizeDistributor {
       numberOfPicks: result[0].numberOfPicks,
       expiryDuration: result[0].expiryDuration,
       prize: result[0].prize,
-      startTimestampOffset: result[0].drawStartTimestampOffset,
-      endTimestampOffset: result[0].drawEndTimestampOffset
+      startTimestampOffset: result[0].startTimestampOffset,
+      endTimestampOffset: result[0].endTimestampOffset
     }
   }
 
