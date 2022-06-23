@@ -1,18 +1,18 @@
-import { MaxUint256 } from '@ethersproject/constants'
 import { Result } from '@ethersproject/abi'
 import { Provider, TransactionResponse } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
+import { MaxUint256 } from '@ethersproject/constants'
 import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
 import { BigNumber, Overrides } from 'ethers'
 
-import { ContractWrapper } from './ContractWrapper'
-import { validateAddress, validateSignerOrProviderNetwork } from './utils/validation'
 import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
-import { createContractMetadata } from './utils/createContractMetadata'
+import { ContractWrapper } from './ContractWrapper'
 import { TokenData } from './types'
 import { getTokenData } from './utils/contractGetters'
+import { createContractMetadata } from './utils/createContractMetadata'
+import { validateAddress, validateSignerOrProviderNetwork } from './utils/validation'
 
 /**
  * A Gauge Controller.
