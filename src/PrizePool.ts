@@ -8,7 +8,7 @@ import { Contract as ContractMetadata, ContractList } from '@pooltogether/contra
 
 import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
-import { PrizePoolTokenBalances, Providers, TokenData } from './types'
+import { PrizePoolTokenBalances, PrizeTier, Providers, TokenData } from './types'
 import {
   sortContractsByContractTypeAndChildren,
   getTokenData,
@@ -31,11 +31,13 @@ export class PrizePool {
 
   // Contract metadata
   readonly prizePoolMetadata: ContractMetadata
+  readonly prizeTierHistoryMetadata: ContractMetadata
   ticketMetadata: ContractMetadata | undefined
   tokenMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizePoolContract: Contract
+  readonly prizeTierHistoryContract: Contract
   ticketContract: Contract | undefined
   tokenContract: Contract | undefined
 
@@ -58,6 +60,16 @@ export class PrizePool {
       signerOrProvider
     )
 
+    // PrizeTierHistory
+    const prizeTierHistoryContractMetadata = contractMetadataList.find(
+      (c) => c.type === ContractType.PrizeTierHistory && c.chainId === prizePoolMetadata.chainId
+    ) as ContractMetadata
+    const prizeTierHistoryContract = new Contract(
+      prizeTierHistoryContractMetadata.address,
+      prizeTierHistoryContractMetadata.abi,
+      signerOrProvider
+    )
+
     // Set data
     this.contractMetadataList = contractMetadataList
     this.signerOrProvider = signerOrProvider
@@ -66,11 +78,13 @@ export class PrizePool {
 
     // Set metadata
     this.prizePoolMetadata = prizePoolMetadata
+    this.prizeTierHistoryMetadata = prizeTierHistoryContractMetadata
     this.ticketMetadata = undefined
     this.tokenMetadata = undefined
 
     // Set ethers contracts
     this.prizePoolContract = prizePoolContract
+    this.prizeTierHistoryContract = prizeTierHistoryContract
     this.ticketContract = undefined
     this.tokenContract = undefined
   }
@@ -84,6 +98,22 @@ export class PrizePool {
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
+
+  /**
+   * Fetches the upcoming prize tier data from the prize tier history contract. This data is used for the next prize distribution that will be added to the Prize Distribution Buffer for the beacon Prize Pool.
+   * @returns the upcoming prize tier
+   */
+  async getUpcomingPrizeTier(): Promise<PrizeTier> {
+    const [drawId]: number[] = await this.prizeTierHistoryContract.functions.getNewestDrawId()
+    const result: Result = await this.prizeTierHistoryContract.functions.getPrizeTier(drawId)
+    return {
+      bitRangeSize: result[0].bitRangeSize,
+      expiryDuration: result[0].expiryDuration,
+      maxPicksPerUser: result[0].maxPicksPerUser,
+      prize: result[0].prize,
+      tiers: result[0].tiers
+    }
+  }
 
   /**
    * Fetches a users balances for the Prize Pool underlying Token and Ticket.
