@@ -1534,15 +1534,15 @@
   dependencies:
     evm-chains "^0.2.0"
 
-"@pooltogether/utilities@^0.3.8":
-  version "0.3.8"
-  resolved "https://registry.yarnpkg.com/@pooltogether/utilities/-/utilities-0.3.8.tgz#f4fa0e9618c97a152e637575560ee226d9e9752d"
-  integrity sha512-+9+Lw7IP6B1wvLXK/Dwi8SPkPetaCd4ayr6fS+xWwJup9xdMZmyRR+sc3VwwF/1whu5GmfhZe2X0OV6FTcXWKw==
+"@pooltogether/utilities@0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@pooltogether/utilities/-/utilities-0.4.0.tgz#6fd342c16250fa2288b9280db28c41f4462ae8d6"
+  integrity sha512-Nwbu7Gx8PKtXgczcPyqCFdaxk4zcgtdwKdbgR8TAAVxa/FayHYz6j8mwi71gVMfabBUHOJweCyKUJ1vbwveD7g==
 
-"@pooltogether/v4-utils-js@1.0.0-beta.1":
-  version "1.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@pooltogether/v4-utils-js/-/v4-utils-js-1.0.0-beta.1.tgz#55a890da748093420175ed70a1fb30692cd80543"
-  integrity sha512-PZe98c655cFh0UbvDaHkRWvgpWkgqsFpYfAjMWQpLSF9TXyGW0hhLl28ewX/ZoeeuebQjUnclfi2UTZr4kkyrA==
+"@pooltogether/v4-utils-js@1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@pooltogether/v4-utils-js/-/v4-utils-js-1.0.0-beta.2.tgz#1a368edebfde4e34722fa6bbd48c7bef11e29301"
+  integrity sha512-y3NzHU7Wb80mOYKeCsEds4/GltWOO4XnTzucsS/CNZgK6ZMFjaqjsFrf2O8Aev4CyISoFfMkfDEEdFyCB/vvrw==
   dependencies:
     "@ethersproject/abi" "^5.5.0"
     "@ethersproject/address" "^5.5.0"

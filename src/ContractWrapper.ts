@@ -1,9 +1,10 @@
-import { Contract } from 'ethers'
 import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
+import { Contract } from 'ethers'
+
 import { ContractType } from './constants'
-import { getMetadataAndContract } from './utils/getMetadataAndContract'
 import { Contract as ContractMetadata } from './types'
+import { getMetadataAndContract } from './utils/getMetadataAndContract'
 import { validateIsSigner, validateSignerNetwork } from './utils/validation'
 
 export class ContractWrapper {

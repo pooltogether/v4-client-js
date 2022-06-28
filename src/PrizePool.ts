@@ -7,6 +7,7 @@ import { Contract as ContractMetadata, ContractList } from '@pooltogether/contra
 
 import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
+import { ContractWrapper } from './ContractWrapper'
 import { PrizePoolTokenBalances, Providers, TokenData } from './types'
 import {
   getTokenData,
@@ -16,7 +17,6 @@ import {
   createContractMetadata,
   getContractsByType
 } from './utils'
-import { ContractWrapper } from './ContractWrapper'
 
 /**
  * A Prize Pool.

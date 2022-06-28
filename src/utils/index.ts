@@ -4,6 +4,7 @@ export { formatTierToBasePercentage } from './formatTierToBasePercentage'
 export { getContractListChainIds } from './getContractListChainIds'
 export { getContractsByType } from './getContractsByType'
 export { getTokenData, getUserERC20Balance, getUserTokenAllowance } from './contractGetters'
+export { sortContractsByChainId } from './sortContractsByChainId'
 export {
   validateAddress,
   validateSignerNetwork,
