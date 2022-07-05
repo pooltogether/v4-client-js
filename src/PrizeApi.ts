@@ -20,6 +20,7 @@ const PRIZE_API_SUPPORTED_NETWORKS = Object.freeze([
   NETWORK.avalanche,
   NETWORK.mainnet,
   NETWORK.polygon,
+  NETWORK.optimism,
   NETWORK['optimism-kovan']
 ])
 
