@@ -1527,10 +1527,10 @@
     lodash.merge "^4.6.2"
     zen-observable-ts "^0.8.20"
 
-"@pooltogether/evm-chains-extended@^0.6.4-beta.1":
-  version "0.6.4-beta.1"
-  resolved "https://registry.yarnpkg.com/@pooltogether/evm-chains-extended/-/evm-chains-extended-0.6.4-beta.1.tgz#dba3a24fe22c2c0832e9cf0eb4af2e5bad5615f0"
-  integrity sha512-wTaR1bJGWDoW/xlvymtuEZOwgQu3N4pDHTdCm00lMFN0AH8JKczyJRijTv5Jef7dhGmiZIMOlyBFCFkMlVU6ew==
+"@pooltogether/evm-chains-extended@^0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@pooltogether/evm-chains-extended/-/evm-chains-extended-0.7.0.tgz#c802ab29e7bc68bde4a9059e1c2565734105de72"
+  integrity sha512-sfq/u3bNUJFsDrroZuUMY6Mtdiaotpw4Lj9e0zscfdu6yksVfQu0lZmItSE4oYs1oRyUyanGBDKJ0D/2DAABxw==
   dependencies:
     evm-chains "^0.2.0"
 
@@ -1539,10 +1539,10 @@
   resolved "https://registry.yarnpkg.com/@pooltogether/utilities/-/utilities-0.4.0.tgz#6fd342c16250fa2288b9280db28c41f4462ae8d6"
   integrity sha512-Nwbu7Gx8PKtXgczcPyqCFdaxk4zcgtdwKdbgR8TAAVxa/FayHYz6j8mwi71gVMfabBUHOJweCyKUJ1vbwveD7g==
 
-"@pooltogether/v4-utils-js@1.0.0-beta.2":
-  version "1.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@pooltogether/v4-utils-js/-/v4-utils-js-1.0.0-beta.2.tgz#1a368edebfde4e34722fa6bbd48c7bef11e29301"
-  integrity sha512-y3NzHU7Wb80mOYKeCsEds4/GltWOO4XnTzucsS/CNZgK6ZMFjaqjsFrf2O8Aev4CyISoFfMkfDEEdFyCB/vvrw==
+"@pooltogether/v4-utils-js@1.0.0-beta.4":
+  version "1.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/@pooltogether/v4-utils-js/-/v4-utils-js-1.0.0-beta.4.tgz#dab11a768f19fd15b9ceefc63d48e9114d99220c"
+  integrity sha512-BW0rXp+Qs6vF92CBz1Ekux9Wzg8ocjn+zRPAkXz8SUDQPQxBP6inEyvnThzldyffnx8X7CVh0YN0AghKBz3BFQ==
   dependencies:
     "@ethersproject/abi" "^5.5.0"
     "@ethersproject/address" "^5.5.0"

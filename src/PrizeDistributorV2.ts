@@ -265,7 +265,7 @@ export class PrizeDistributorV2 extends PrizeDistributor {
       prize: result[0].prize,
       endTimestampOffset: result[0].drawEndTimestampOffset,
       drawId: result[0].drawId,
-      poolStakeTotal: result[0].poolStakeTotal
+      poolStakeCeiling: result[0].poolStakeCeiling
     }
   }
 
@@ -293,7 +293,7 @@ export class PrizeDistributorV2 extends PrizeDistributor {
         expiryDuration: result.expiryDuration,
         endTimestampOffset: result.endTimestampOffset,
         drawId: result.drawId,
-        poolStakeTotal: result.poolStakeTotal
+        poolStakeCeiling: result.poolStakeCeiling
       }
     })
     return prizeConfigs
