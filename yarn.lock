@@ -1539,10 +1539,10 @@
   resolved "https://registry.yarnpkg.com/@pooltogether/utilities/-/utilities-0.4.0.tgz#6fd342c16250fa2288b9280db28c41f4462ae8d6"
   integrity sha512-Nwbu7Gx8PKtXgczcPyqCFdaxk4zcgtdwKdbgR8TAAVxa/FayHYz6j8mwi71gVMfabBUHOJweCyKUJ1vbwveD7g==
 
-"@pooltogether/v4-utils-js@1.0.0-beta.4":
-  version "1.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@pooltogether/v4-utils-js/-/v4-utils-js-1.0.0-beta.4.tgz#dab11a768f19fd15b9ceefc63d48e9114d99220c"
-  integrity sha512-BW0rXp+Qs6vF92CBz1Ekux9Wzg8ocjn+zRPAkXz8SUDQPQxBP6inEyvnThzldyffnx8X7CVh0YN0AghKBz3BFQ==
+"@pooltogether/v4-utils-js@1.0.0-beta.5":
+  version "1.0.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@pooltogether/v4-utils-js/-/v4-utils-js-1.0.0-beta.5.tgz#b9a217b5cdd3f6e011023826c8b53542b537dfda"
+  integrity sha512-y4HnfYbqLKRVXRH2KFKypRwjLs0BceybqqhvbsdOA/tIFt6LgM1bjYbQ/MEclX6/ZGxJlmBwCoEQbBV5vbWVmA==
   dependencies:
     "@ethersproject/abi" "^5.5.0"
     "@ethersproject/address" "^5.5.0"

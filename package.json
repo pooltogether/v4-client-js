@@ -3,7 +3,7 @@
   "author": "PoolTogether Inc.",
   "description": "Client library for simple interactions with PoolTogether V4 contracts.",
   "module": "dist/v4-client-js.esm.js",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -84,7 +84,7 @@
     "@pooltogether/etherplex": "^1.1.4",
     "@pooltogether/evm-chains-extended": "^0.7.0",
     "@pooltogether/utilities": "0.4.0",
-    "@pooltogether/v4-utils-js": "1.0.0-beta.4",
+    "@pooltogether/v4-utils-js": "1.0.0-beta.5",
     "debug": "^4.3.3",
     "ethers": "^5.4.6"
   }
