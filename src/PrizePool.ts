@@ -153,6 +153,24 @@ export class PrizePool {
   /**
    * Fetches a users Ticket TWAB at a specific unix timestamp.
    * @param usersAddress the address to fetch the ticket TWAB for
+   * @param startTimestamp the start timestamp to fetch in seconds
+   * @param endTimestamp the end timestamp to fetch in seconds
+   * @returns the users TWAB between the requested times
+   */
+  async getUsersAverageBalanceBetween(usersAddress: string, startTimestamp: number, endTimestamp: number): Promise<BigNumber> {
+    const errorPrefix = 'PrizePool [getUsersAverageBalanceBetween] | '
+    await validateAddress(errorPrefix, usersAddress)
+    await validateSignerOrProviderNetwork(errorPrefix, this.signerOrProvider, this.chainId)
+    const ticketContract = await this.getTicketContract()
+
+    const result = await ticketContract.functions.getAverageBalanceBetween(usersAddress, startTimestamp, endTimestamp)
+    const twab: BigNumber = result[0]
+    return twab
+  }
+  
+  /**
+   * Fetches a users Ticket TWAB at a specific unix timestamp.
+   * @param usersAddress the address to fetch the ticket TWAB for
    * @param unixTimestamp the unix timestamp to fetch in seconds
    * @returns the users TWAB at the requested time
    */
