@@ -21,7 +21,8 @@ const PRIZE_API_SUPPORTED_NETWORKS = Object.freeze([
   NETWORK.mainnet,
   NETWORK.polygon,
   NETWORK.optimism,
-  NETWORK['optimism-kovan']
+  NETWORK['goerli'],
+  NETWORK['optimism-goerli']
 ])
 
 /**
