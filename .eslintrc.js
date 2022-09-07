@@ -1,23 +1,23 @@
-module.exports ={
-  "overrides": [
+module.exports = {
+  overrides: [
     {
-      "files": ["*.ts"],
-      "rules": {
-        "import/order": [
-          "error",
+      files: ['*.ts'],
+      rules: {
+        'import/order': [
+          'error',
           {
-            "groups": ["builtin", "external", "internal"],
-            "pathGroups": [
+            'groups': ['builtin', 'external', 'internal'],
+            'pathGroups': [
               {
-                "pattern": "react",
-                "group": "external",
-                "position": "before"
+                pattern: 'react',
+                group: 'external',
+                position: 'before'
               }
             ],
-            "newlines-between": "always",
-            "alphabetize": {
-              "order": "asc",
-              "caseInsensitive": true
+            'newlines-between': 'always',
+            'alphabetize': {
+              order: 'asc',
+              caseInsensitive: true
             }
           }
         ]

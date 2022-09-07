@@ -218,19 +218,6 @@ export class PrizeDistributor {
     }
   }
 
-  // NOTE: Events commented out as fetching events on networks other than Ethereum mainnet is unreliable.
-
-  /**
-   * Fetches claimed events for the provided user
-   * @returns Event
-   */
-  // async getClaimedEvents() {
-  //   const errorPrefix = 'PrizeDistributors [getClaimedEvents] |'
-  //   const usersAddress = await this.getUsersAddress(errorPrefix)
-
-  //   return this.getUsersClaimedEvents(usersAddress)
-  // }
-
   //////////////////////////// Ethers read functions ////////////////////////////
 
   /**
