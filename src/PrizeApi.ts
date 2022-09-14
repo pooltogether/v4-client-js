@@ -1,12 +1,12 @@
 import { batch, contract } from '@pooltogether/etherplex'
-import { deserializeBigNumbers, getReadProvider, NETWORK } from '@pooltogether/utilities'
+import { deserializeBigNumbers, NETWORK } from '@pooltogether/utilities'
 import {
   computeUserWinningPicksForRandomNumber,
   Draw,
   utils as V4Utils
 } from '@pooltogether/v4-utils-js'
 import { BigNumber } from 'ethers'
-
+import { Provider } from '@ethersproject/abstract-provider'
 import { PrizeApiStatus } from './constants'
 import { DrawResults, LEGACYDrawResults, Prize, PrizeDistribution } from './types'
 import { createEmptyDrawResult } from './utils/createEmptyDrawResult'
@@ -185,19 +185,17 @@ export class PrizeApi {
   /**
    * Computes the users prizes locally.
    * NOTE: This is a heavy calculation and not recommended on users devices.
-   * @param chainId
    * @param usersAddress
    * @param prizeDistributorAddress
    * @param drawId
+   * @param provider
    */
   static async computeDrawResults(
-    chainId: number,
     usersAddress: string,
     prizeDistributorAddress: string,
-    drawId: number
+    drawId: number,
+    provider: Provider
   ) {
-    const readProvider = getReadProvider(chainId)
-
     // Get Draw Calculator Timelock address
     const prizeDistributorContract = contract(
       prizeDistributorAddress,
@@ -205,7 +203,7 @@ export class PrizeApi {
       prizeDistributorAddress
     )
     // @ts-ignore
-    let response = await batch(readProvider, prizeDistributorContract.getDrawCalculator())
+    let response = await batch(provider, prizeDistributorContract.getDrawCalculator())
     const drawCalculatorTimelockAddress: string =
       response[prizeDistributorAddress].getDrawCalculator[0]
 
@@ -219,7 +217,7 @@ export class PrizeApi {
     let drawCalculatorAddress: string
     try {
       // @ts-ignore
-      response = await batch(readProvider, drawCalculatorTimelockContract.getDrawCalculator())
+      response = await batch(provider, drawCalculatorTimelockContract.getDrawCalculator())
       drawCalculatorAddress = response[drawCalculatorTimelockAddress].getDrawCalculator[0]
     } catch (e) {
       console.warn(
@@ -235,7 +233,7 @@ export class PrizeApi {
       drawCalculatorAddress
     )
     response = await batch(
-      readProvider,
+      provider,
       drawCalculatorContract
         // @ts-ignore
         .getDrawBuffer()
@@ -262,7 +260,7 @@ export class PrizeApi {
     )
 
     response = await batch(
-      readProvider,
+      provider,
       // @ts-ignore
       drawBufferContract.getDraw(drawId),
       // @ts-ignore
