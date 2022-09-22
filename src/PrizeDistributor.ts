@@ -10,13 +10,9 @@ import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
 import { PrizeApi } from './PrizeApi'
 import {
-  Contract as ContractMetadata,
+  Claim, Contract as ContractMetadata,
   ContractList,
-  Draw,
-  PrizeDistribution,
-  DrawResults,
-  Claim,
-  SignersOrProviders,
+  Draw, DrawResults, PrizeDistribution, SignersOrProviders,
   TokenData
 } from './types'
 import {
@@ -532,8 +528,8 @@ export class PrizeDistributor {
       numberOfPicks: result[0].numberOfPicks,
       expiryDuration: result[0].expiryDuration,
       prize: result[0].prize,
-      startTimestampOffset: result[0].drawStartTimestampOffset,
-      endTimestampOffset: result[0].drawEndTimestampOffset
+      startTimestampOffset: result[0].startTimestampOffset,
+      endTimestampOffset: result[0].endTimestampOffset
     }
   }
 
