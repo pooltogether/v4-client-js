@@ -353,6 +353,18 @@ export class PrizeApi {
   }
 
   /**
+   * Returns the URL for the status of the calculations for the draw requested from the Prize API
+   * @param chainId
+   * @param prizeDistributorAddress
+   * @param usersAddress
+   * @param drawId
+   * @returns
+   */
+  static getAllPrizesUrl(chainId: number, prizeDistributorAddress: string, drawId: number): string {
+    return `https://api.pooltogether.com/prizes/${chainId}/${prizeDistributorAddress.toLowerCase()}/draw/${drawId}/prizes.json`
+  }
+
+  /**
    * Returns the URL that the prizes can be calculated at on CloudFlare
    * @param chainId
    * @param prizeDistributorAddress
