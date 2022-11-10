@@ -10,9 +10,13 @@ import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
 import { PrizeApi } from './PrizeApi'
 import {
-  Claim, Contract as ContractMetadata,
+  Claim,
+  Contract as ContractMetadata,
   ContractList,
-  Draw, DrawResults, PrizeDistribution, SignersOrProviders,
+  Draw,
+  DrawResults,
+  PrizeDistribution,
+  SignersOrProviders,
   TokenData
 } from './types'
 import {

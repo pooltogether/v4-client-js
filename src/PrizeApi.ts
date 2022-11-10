@@ -1,3 +1,4 @@
+import { Provider } from '@ethersproject/abstract-provider'
 import { batch, contract } from '@pooltogether/etherplex'
 import { deserializeBigNumbers, NETWORK } from '@pooltogether/utilities'
 import {
@@ -6,7 +7,7 @@ import {
   utils as V4Utils
 } from '@pooltogether/v4-utils-js'
 import { BigNumber } from 'ethers'
-import { Provider } from '@ethersproject/abstract-provider'
+
 import { PrizeApiStatus } from './constants'
 import { DrawResults, LEGACYDrawResults, Prize, PrizeDistribution } from './types'
 import { createEmptyDrawResult } from './utils/createEmptyDrawResult'
