@@ -4,11 +4,11 @@ import { Signer } from '@ethersproject/abstract-signer'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
-// import { MaxUint256 } from '@ethersproject/constants'
+import { PrizeTier } from '@pooltogether/v4-utils-js'
 
 import ERC20Abi from './abis/ERC20Abi'
 import { ContractType } from './constants'
-import { PrizePoolTokenBalances, PrizeTier, Providers, TokenData } from './types'
+import { PrizePoolTokenBalances, Providers, TokenData } from './types'
 import {
   sortContractsByContractTypeAndChildren,
   getTokenData,
@@ -111,7 +111,9 @@ export class PrizePool {
       expiryDuration: result[0].expiryDuration,
       maxPicksPerUser: result[0].maxPicksPerUser,
       prize: result[0].prize,
-      tiers: result[0].tiers
+      tiers: result[0].tiers,
+      endTimestampOffset: result[0].endTimestampOffset,
+      drawId: result[0].drawId
     }
   }
 

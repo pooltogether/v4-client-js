@@ -2,11 +2,12 @@ import { Result } from '@ethersproject/abi'
 import { BigNumber } from '@ethersproject/bignumber'
 import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
+import { PrizeTier } from '@pooltogether/v4-utils-js'
 
 import { ContractType } from './constants'
 import { initializePrizeDistributors, PrizeDistributor } from './PrizeDistributor'
 import { initializePrizePools, PrizePool } from './PrizePool'
-import { Draw, PrizeTier, Providers } from './types'
+import { Draw, Providers } from './types'
 
 /**
  * A Prize Pool Network.
@@ -193,7 +194,9 @@ export class PrizePoolNetwork {
       expiryDuration: result[0].expiryDuration,
       maxPicksPerUser: result[0].maxPicksPerUser,
       prize: result[0].prize,
-      tiers: result[0].tiers
+      tiers: result[0].tiers,
+      endTimestampOffset: result[0].endTimestampOffset,
+      drawId: result[0].drawId
     }
   }
 

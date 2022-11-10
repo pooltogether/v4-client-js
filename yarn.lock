@@ -1527,15 +1527,15 @@
     lodash.merge "^4.6.2"
     zen-observable-ts "^0.8.20"
 
-"@pooltogether/utilities@0.6.2":
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/@pooltogether/utilities/-/utilities-0.6.2.tgz#71a4e6dd56c6f0a03feea95b4f3a1b8eeee04329"
-  integrity sha512-vGqf8wqdKbP3Sk0xsF8W6wkRJgyPEGCIyeH1YM3kPjzNn4mCMAc08tGlBtq0CvjkvaNwWgLAMv2/L7Jh//wbbw==
+"@pooltogether/utilities@^0.6.2":
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/@pooltogether/utilities/-/utilities-0.6.4.tgz#cd453241b36313732aa45d893bd27aef5aea0493"
+  integrity sha512-c4luiQ+x8SWZQzFmhzWZGopiFcY8rPcDhA3dKZaLlaJcpfa5gME0+QiF5Qr3hOyQLteKKNCRHg3ZFjeUNjumbQ==
 
-"@pooltogether/v4-utils-js@^0.1.3":
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/@pooltogether/v4-utils-js/-/v4-utils-js-0.1.3.tgz#c45b4b090a87fc80f80ebf2ae5901297bac45174"
-  integrity sha512-ODecyd1uLWaJd2oVlDe1kVwyhRmOtSndIAYIId3/bIKuejfMHCzF6g+pyJJVYgUOjcWILGbeN6qbst/sHf0LGw==
+"@pooltogether/v4-utils-js@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@pooltogether/v4-utils-js/-/v4-utils-js-0.1.5.tgz#c13d1536019205addb86e670590c2294c94b89c8"
+  integrity sha512-prKWYzogS723ZVnpWIqsy5gjRNBx26V5tiPxysxWhEOlBT2POHvMMN14XaKx/b/E26pfEvC1AL/Q2bo5GQDqvA==
   dependencies:
     "@ethersproject/abi" "^5.5.0"
     "@ethersproject/address" "^5.5.0"

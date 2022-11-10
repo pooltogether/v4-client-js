@@ -12,7 +12,7 @@ export {
 
 export {
   Draw,
-  PrizeTier,
+  PrizeTierConfig,
   PrizeDistribution,
   Pick,
   DrawResults,
