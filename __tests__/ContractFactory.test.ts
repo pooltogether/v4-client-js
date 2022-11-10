@@ -1,15 +1,17 @@
-import { getReadProviders } from '@pooltogether/utilities'
-import { constants } from 'ethers'
+import { constants, providers } from 'ethers'
 
 import { ContractFactory } from '../src/ContractFactory'
 import { ContractList, SignersOrProviders } from '../src/types'
-import { contactList, ADDRESS_DEAD, CHAIN_ID } from './constants'
+import { contactList, ADDRESS_DEAD, CHAIN_ID, READ_PROVIDER } from './constants'
 
 describe('ContractFactory', () => {
   let cf: ContractFactory
 
   beforeAll(() => {
-    cf = new ContractFactory(getReadProviders([CHAIN_ID]), contactList)
+    cf = new ContractFactory(
+      { [CHAIN_ID]: new providers.JsonRpcProvider(READ_PROVIDER, CHAIN_ID) },
+      contactList
+    )
   })
 
   beforeEach(() => {})
@@ -23,7 +25,10 @@ describe('ContractFactory', () => {
 
   it('should throw if no contract list was given.', async () => {
     const t = () => {
-      cf = new ContractFactory(getReadProviders([CHAIN_ID]), (null as unknown) as ContractList)
+      cf = new ContractFactory(
+        { [CHAIN_ID]: new providers.JsonRpcProvider(READ_PROVIDER, CHAIN_ID) },
+        (null as unknown) as ContractList
+      )
     }
     expect(t).toThrow(`contractList is required`)
   })

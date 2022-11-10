@@ -6,6 +6,7 @@ import { parseUnits } from '@ethersproject/units'
 import { formatTierToBasePercentage } from '../src/utils/formatTierToBasePercentage'
 
 export const CHAIN_ID = 1
+export const READ_PROVIDER = ''
 export const ADDRESS_DEAD = '0x000000000000000000000000000000000000dEaD'
 export const BYTES32_ADDRESS_DEAD = keccak256(toUtf8Bytes(ADDRESS_DEAD))
 export const PRIZE_EXAMPLE_ONE = parseUnits('5000', 18)
