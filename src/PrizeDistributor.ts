@@ -3,7 +3,7 @@ import { Provider } from '@ethersproject/abstract-provider'
 import { Signer } from '@ethersproject/abstract-signer'
 import { Contract, Overrides } from '@ethersproject/contracts'
 import { TransactionResponse } from '@ethersproject/providers'
-import { encodeWinningPicks } from '@pooltogether/v4-utils-js'
+import { encodeWinningPicks, PrizeTier, PrizeTierV2 } from '@pooltogether/v4-utils-js'
 import { BigNumber, ethers } from 'ethers'
 
 import ERC20Abi from './abis/ERC20Abi'
@@ -45,6 +45,8 @@ export class PrizeDistributor {
   drawBufferMetadata: ContractMetadata | undefined
   prizeDistributionsBufferMetadata: ContractMetadata | undefined
   tokenMetadata: ContractMetadata | undefined
+  prizeTierHistoryMetadata: ContractMetadata | undefined
+  prizeDistributionFactoryMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizeDistributorContract: Contract
@@ -53,6 +55,8 @@ export class PrizeDistributor {
   drawBufferContract: Contract | undefined
   prizeDistributionsBufferContract: Contract | undefined
   tokenContract: Contract | undefined
+  prizeTierHistoryContract: Contract | undefined
+  prizeDistributionFactoryContract: Contract | undefined
 
   /**
    * Create an instance of a PrizeDistributor by providing the metadata of the PrizeDistributor contract, an ethers Provider or Signer for the network the PrizeDistributor contract is deployed on and a list of contract metadata for the other contracts that make up the PrizeDistributor.
@@ -103,6 +107,8 @@ export class PrizeDistributor {
     this.drawBufferContract = undefined
     this.prizeDistributionsBufferMetadata = undefined
     this.prizeDistributionsBufferContract = undefined
+    this.prizeTierHistoryMetadata = undefined
+    this.prizeTierHistoryContract = undefined
   }
 
   /**
@@ -219,6 +225,29 @@ export class PrizeDistributor {
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
+
+  /**
+   * Fetches the upcoming prize tier data from the prize tier history contract. This data is used for the next prize distribution that will be added to the Prize Distribution Buffer for the beacon Prize Pool.
+   * @returns the upcoming prize tier
+   */
+  async getUpcomingPrizeTier(): Promise<PrizeTier | PrizeTierV2> {
+    const prizeTierHistoryContract = await this.getPrizeTierHistoryContract()
+    const [drawId]: number[] = await prizeTierHistoryContract.functions.getNewestDrawId()
+    const result: Result = await prizeTierHistoryContract.functions.getPrizeTier(drawId)
+
+    const prizeTier: PrizeTier | PrizeTierV2 = {
+      bitRangeSize: result[0].bitRangeSize,
+      expiryDuration: result[0].expiryDuration,
+      maxPicksPerUser: result[0].maxPicksPerUser,
+      prize: result[0].prize,
+      tiers: result[0].tiers,
+      endTimestampOffset: result[0].endTimestampOffset,
+      drawId: result[0].drawId,
+      dpr: result[0].dpr
+    }
+
+    return prizeTier
+  }
 
   /**
    * Fetches decimals, name and symbol for the Token that will be distributed.
@@ -807,6 +836,32 @@ export class PrizeDistributor {
     this.tokenMetadata = tokenMetadata
     this.tokenContract = tokenContract
     return tokenContract
+  }
+
+  async getPrizeDistributionFactoryContract(): Promise<Contract> {
+    const getAddress = async () => {
+      const prizeDistributionBufferContract = await this.getPrizeDistributionsBufferContract()
+      const result: Result = await prizeDistributionBufferContract.functions.manager()
+      return result[0]
+    }
+    return this.getAndSetEthersContract(
+      'prizeDistributionFactory',
+      ContractType.PrizeDistributionFactory,
+      getAddress
+    )
+  }
+
+  async getPrizeTierHistoryContract(): Promise<Contract> {
+    const getAddress = async () => {
+      const prizeDistributionFactoryContract = await this.getPrizeDistributionFactoryContract()
+      const result: Result = await prizeDistributionFactoryContract.functions.prizeTierHistory()
+      return result[0]
+    }
+    return this.getAndSetEthersContract(
+      'prizeTierHistory',
+      ContractType.PrizeTierHistory,
+      getAddress
+    )
   }
 
   //////////////////////////// Methods ////////////////////////////

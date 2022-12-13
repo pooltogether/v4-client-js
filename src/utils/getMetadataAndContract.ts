@@ -7,6 +7,15 @@ import { ContractType } from '../constants'
 import { createContract } from '../utils/createContract'
 import { createInterface } from '../utils/createInterface'
 
+/**
+ * Finds a specific contract in the contract list and returns the metadata and ethers Contract.
+ * @param chainId
+ * @param signerOrProvider
+ * @param contractType
+ * @param contractMetadataList
+ * @param addressOverride
+ * @returns
+ */
 export function getMetadataAndContract(
   chainId: number,
   signerOrProvider: Provider | Signer,
