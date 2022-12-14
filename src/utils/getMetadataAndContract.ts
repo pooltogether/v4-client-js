@@ -9,6 +9,7 @@ import { createInterface } from '../utils/createInterface'
 
 /**
  * Finds a specific contract in the contract list and returns the metadata and ethers Contract.
+ * If an addressOverride is supplied, it will be used to look up the contract in the metadata list. If it is not found, the first contract found in the list of that type regardless of version will be used.
  * @param chainId
  * @param signerOrProvider
  * @param contractType
@@ -23,9 +24,23 @@ export function getMetadataAndContract(
   contractMetadataList: ContractMetadata[],
   addressOverride?: string
 ): { contractMetadata: ContractMetadata; contract: Contract } {
-  const contractMetadata = contractMetadataList.find(
-    (contract) => contract.type === contractType && contract.chainId === chainId
-  )
+  let contractMetadata
+  if (!!addressOverride) {
+    contractMetadata = contractMetadataList.find(
+      (contract) =>
+        contract.type === contractType &&
+        contract.chainId === chainId &&
+        contract.address === addressOverride
+    )
+  }
+
+  // Fallback for no addressOverride provided or found
+  if (!contractMetadata) {
+    contractMetadata = contractMetadataList.find(
+      (contract) => contract.type === contractType && contract.chainId === chainId
+    )
+  }
+
   if (!contractMetadata) {
     throw new Error(`Invalid contract list. Missing ${contractType}.`)
   }
