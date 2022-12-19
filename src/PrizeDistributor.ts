@@ -40,7 +40,7 @@ export class PrizeDistributor {
 
   // Contract metadata
   readonly prizeDistributorMetadata: ContractMetadata
-  readonly drawCalculatorTimelockMetadata: ContractMetadata
+  drawCalculatorTimelockMetadata: ContractMetadata | undefined
   drawCalculatorMetadata: ContractMetadata | undefined
   drawBufferMetadata: ContractMetadata | undefined
   prizeDistributionsBufferMetadata: ContractMetadata | undefined
@@ -50,7 +50,7 @@ export class PrizeDistributor {
 
   // Ethers contracts
   readonly prizeDistributorContract: Contract
-  readonly drawCalculatorTimelockContract: Contract
+  drawCalculatorTimelockContract: Contract | undefined
   drawCalculatorContract: Contract | undefined
   drawBufferContract: Contract | undefined
   prizeDistributionsBufferContract: Contract | undefined
@@ -355,8 +355,10 @@ export class PrizeDistributor {
   async getTimelockDrawId(): Promise<{
     drawId: number
     endTimeSeconds: BigNumber
-  }> {
-    const timelockResult = await this.drawCalculatorTimelockContract.functions.getTimelock()
+  } | null> {
+    const drawCalculatorTimelockContract = await this.getDrawCalculatorTimelockContract()
+    if (!drawCalculatorTimelockContract) return null
+    const timelockResult = await drawCalculatorTimelockContract.functions.getTimelock()
     const [endTimeSeconds, drawId] = timelockResult[0]
     return {
       drawId,
@@ -771,7 +773,12 @@ export class PrizeDistributor {
           contractMetadata.chainId === this.chainId && contractMetadata.address === address
       )
       if (contractMetadata?.type === ContractType.DrawCalculatorTimelock) {
-        result = await this.drawCalculatorTimelockContract.functions.getDrawCalculator()
+        const drawCalculatorTimelockContract = new Contract(
+          address,
+          contractMetadata.abi,
+          this.signerOrProvider
+        )
+        result = await drawCalculatorTimelockContract.functions.getDrawCalculator()
         address = result[0]
         return address
       } else {
@@ -862,6 +869,44 @@ export class PrizeDistributor {
       ContractType.PrizeTierHistory,
       getAddress
     )
+  }
+
+  /*
+   * Fetches the address of the set DrawCalculator on the PrizeDistributor and checks if it is a DrawCalculatorTimelock
+   * @returns an ethers Contract for the DrawCalculator related to this PrizeDistributor
+   */
+  async getDrawCalculatorTimelockContract(): Promise<Contract | null> {
+    if (!!this.drawCalculatorContract) return this.drawCalculatorContract
+
+    const getAddress = async () => {
+      const result: Result = await this.prizeDistributorContract.functions.getDrawCalculator()
+      const address: string = result[0]
+      const contractMetadata = this.contractMetadataList.find(
+        (contractMetadata) =>
+          contractMetadata.chainId === this.chainId && contractMetadata.address === address
+      )
+      if (contractMetadata?.type === ContractType.DrawCalculatorTimelock) {
+        return address
+      } else {
+        return undefined
+      }
+    }
+
+    const contractAddress = await getAddress()
+
+    // DrawCalculatorTimelock is not set or not provided in the contractMetadataList
+    if (!contractAddress) return null
+
+    const { contractMetadata, contract } = getMetadataAndContract(
+      this.chainId,
+      this.signerOrProvider,
+      ContractType.DrawCalculatorTimelock,
+      this.contractMetadataList,
+      contractAddress
+    )
+    this.drawCalculatorTimelockMetadata = contractMetadata
+    this.drawCalculatorContract = contract
+    return contract
   }
 
   //////////////////////////// Methods ////////////////////////////
