@@ -30,11 +30,13 @@ export class PrizePool {
 
   // Contract metadata
   readonly prizePoolMetadata: ContractMetadata
+  readonly eip2612PermitAndDepositMetadata: ContractMetadata | undefined
   ticketMetadata: ContractMetadata | undefined
   tokenMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizePoolContract: Contract
+  readonly eip2612PermitAndDepositContract: Contract | undefined
   ticketContract: Contract | undefined
   tokenContract: Contract | undefined
 
@@ -50,26 +52,37 @@ export class PrizePool {
     signerOrProvider: Provider | Signer,
     contractMetadataList: ContractMetadata[]
   ) {
-    // Get contract metadata & ethers contracts
+
+    // Set basic data
+    this.contractMetadataList = contractMetadataList
+    this.signerOrProvider = signerOrProvider
+    this.chainId = prizePoolMetadata.chainId
+    this.address = prizePoolMetadata.address
+
+    // Get prizePool ethers contract
     const prizePoolContract = new Contract(
       prizePoolMetadata.address,
       prizePoolMetadata.abi,
       signerOrProvider
     )
 
-    // Set data
-    this.contractMetadataList = contractMetadataList
-    this.signerOrProvider = signerOrProvider
-    this.chainId = prizePoolMetadata.chainId
-    this.address = prizePoolMetadata.address
+    // Get eip2612PermitAndDeposit metadata & ethers contracts
+    const eip2612PermitAndDeposit = getMetadataAndContract(
+      this.chainId,
+      this.signerOrProvider,
+      ContractType.EIP2612PermitAndDeposit,
+      this.contractMetadataList
+    )
 
     // Set metadata
     this.prizePoolMetadata = prizePoolMetadata
+    this.eip2612PermitAndDepositMetadata = eip2612PermitAndDeposit.contractMetadata
     this.ticketMetadata = undefined
     this.tokenMetadata = undefined
 
     // Set ethers contracts
     this.prizePoolContract = prizePoolContract
+    this.eip2612PermitAndDepositContract = eip2612PermitAndDeposit.contract
     this.ticketContract = undefined
     this.tokenContract = undefined
   }

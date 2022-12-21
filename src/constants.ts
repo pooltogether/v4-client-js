@@ -18,7 +18,8 @@ export enum ContractType {
   DrawCalculatorTimelock = 'DrawCalculatorTimelock',
   PrizeDistributionBuffer = 'PrizeDistributionBuffer',
   PrizeDistributionFactory = 'PrizeDistributionFactory',
-  PrizeTierHistory = 'PrizeTierHistory'
+  PrizeTierHistory = 'PrizeTierHistory',
+  EIP2612PermitAndDeposit = 'EIP2612PermitAndDeposit'
   // ... more contract types
 }
 
