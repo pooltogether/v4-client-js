@@ -63,9 +63,9 @@ export interface ChildContractAddresses {
 
 // NOTE: This is only required since the `eth-permit` package doesn't export this
 export interface ERC2612PermitMessage {
-  owner: string;
-  spender: string;
-  value: number | string;
-  nonce: number | string;
-  deadline: number | string;
+  owner: string
+  spender: string
+  value: number | string
+  nonce: number | string
+  deadline: number | string
 }

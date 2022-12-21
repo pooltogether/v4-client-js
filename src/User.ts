@@ -6,6 +6,7 @@ import { Overrides } from '@ethersproject/contracts'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
 import { signERC2612Permit } from 'eth-permit'
 import { RSV } from 'eth-permit/dist/rpc'
+
 import { PrizePool } from './PrizePool'
 import { ERC2612PermitMessage } from './types'
 import { validateAddress, validateSignerNetwork } from './utils'
@@ -185,16 +186,23 @@ export class User extends PrizePool {
    * @param amountUnformatted an unformatted and decimal shifted amount to approve for deposits
    * @returns a promise to request a signature
    */
-  async getPermitAndDepositSignaturePromise(amountUnformatted: BigNumber): Promise<(ERC2612PermitMessage & RSV) | undefined> {
+  async getPermitAndDepositSignaturePromise(
+    amountUnformatted: BigNumber
+  ): Promise<(ERC2612PermitMessage & RSV) | undefined> {
     const errorPrefix = 'User [approveDepositsWithSignature]'
     await this.validateSignerNetwork(errorPrefix)
 
-    const usersAddress = await this.signer.getAddress()
     const tokenContract = await this.getTokenContract()
 
-    if(!this.eip2612PermitAndDepositMetadata || !this.eip2612PermitAndDepositContract || !this.tokenMetadata || !this.signer.provider) throw new Error(
-      errorPrefix + ` | Error intitializing contract metadata.`
+    if (
+      !this.eip2612PermitAndDepositMetadata ||
+      !this.eip2612PermitAndDepositContract ||
+      !this.tokenMetadata ||
+      !this.signer.provider
     )
+      throw new Error(errorPrefix + ` | Error intitializing contract metadata.`)
+
+    const usersAddress = await this.signer.getAddress()
 
     const domain = {
       name: 'PoolTogether ControlledToken',
@@ -221,12 +229,13 @@ export class User extends PrizePool {
     return signaturePromise
   }
 
-  async depositWithSignature() {
-    // TODO
+  async getPermitAndDelegateSignaturePromise() {
+    // TODO - need a second signature (_delegateSignature) in order to deposit AND delegate through EIP2612 contract
   }
-  
+
   async depositAndDelegateWithSignature() {
-    // TODO
+    // TODO - need to check for current delegate as to not overrite it with own wallet
+    // TODO - need to call `permitAndDepositToAndDelegate` on EIP2612 contract (https://goerli.etherscan.io/address/0xaaef83B81A8Bd3b8c6C39dFaF74FED8722C5659d#writeContract)
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
