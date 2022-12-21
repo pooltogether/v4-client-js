@@ -4,8 +4,10 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { MaxUint256 } from '@ethersproject/constants'
 import { Overrides } from '@ethersproject/contracts'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
-
+import { signERC2612Permit } from 'eth-permit'
+import { RSV } from 'eth-permit/dist/rpc'
 import { PrizePool } from './PrizePool'
+import { ERC2612PermitMessage } from './types'
 import { validateAddress, validateSignerNetwork } from './utils'
 
 /**
@@ -70,7 +72,7 @@ export class User extends PrizePool {
 
   /**
    * Submits a transaction to deposit a controlled token into the Prize Pool to the Signer.
-   * @param amountUnformatted  an unformatted and decimal shifted amount to deposit from the prize pool
+   * @param amountUnformatted an unformatted and decimal shifted amount to deposit from the prize pool
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
@@ -104,7 +106,7 @@ export class User extends PrizePool {
 
   /**
    * Submits a transaction to set an allowance for deposits into the Prize Pool.
-   * @param amountUnformatted  an unformatted and decimal shifted amount to approve for deposits
+   * @param amountUnformatted an unformatted and decimal shifted amount to approve for deposits
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
@@ -136,9 +138,9 @@ export class User extends PrizePool {
     const prizePoolAddress = this.prizePoolMetadata.address
     const tokenContract = await this.getTokenContract()
     if (Boolean(overrides)) {
-      return tokenContract.approve(prizePoolAddress, 0 || MaxUint256, overrides)
+      return tokenContract.approve(prizePoolAddress, 0, overrides)
     } else {
-      return tokenContract.approve(prizePoolAddress, 0 || MaxUint256)
+      return tokenContract.approve(prizePoolAddress, 0)
     }
   }
 
@@ -176,6 +178,55 @@ export class User extends PrizePool {
     } else {
       return ticketContract.delegate(address)
     }
+  }
+
+  /**
+   * Requests a signature from the user to approve a deposit
+   * @param amountUnformatted an unformatted and decimal shifted amount to approve for deposits
+   * @returns a promise to request a signature
+   */
+  async getPermitAndDepositSignaturePromise(amountUnformatted: BigNumber): Promise<(ERC2612PermitMessage & RSV) | undefined> {
+    const errorPrefix = 'User [approveDepositsWithSignature]'
+    await this.validateSignerNetwork(errorPrefix)
+
+    const usersAddress = await this.signer.getAddress()
+    const tokenContract = await this.getTokenContract()
+
+    if(!this.eip2612PermitAndDepositMetadata || !this.eip2612PermitAndDepositContract || !this.tokenMetadata || !this.signer.provider) throw new Error(
+      errorPrefix + ` | Error intitializing contract metadata.`
+    )
+
+    const domain = {
+      name: 'PoolTogether ControlledToken',
+      version: '1',
+      chainId: this.chainId,
+      verifyingContract: this.tokenMetadata.address
+    }
+
+    // NOTE: Nonce must be passed manually for signERC2612Permit to work with WalletConnect
+    const deadline = (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
+    const response = await tokenContract.functions.nonces(usersAddress)
+    const nonce: BigNumber = response[0]
+
+    const signaturePromise = signERC2612Permit(
+      this.signer,
+      domain,
+      usersAddress,
+      this.eip2612PermitAndDepositMetadata.address,
+      amountUnformatted.toString(),
+      deadline,
+      nonce.toNumber()
+    )
+
+    return signaturePromise
+  }
+
+  async depositWithSignature() {
+    // TODO
+  }
+  
+  async depositAndDelegateWithSignature() {
+    // TODO
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
