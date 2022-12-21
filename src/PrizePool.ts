@@ -52,7 +52,6 @@ export class PrizePool {
     signerOrProvider: Provider | Signer,
     contractMetadataList: ContractMetadata[]
   ) {
-
     // Set basic data
     this.contractMetadataList = contractMetadataList
     this.signerOrProvider = signerOrProvider
