@@ -61,9 +61,9 @@ export class PrizePool {
 
     // Get prizePool ethers contract
     const prizePoolContract = new Contract(
-      prizePoolMetadata.address,
+      this.address,
       prizePoolMetadata.abi,
-      signerOrProvider
+      this.signerOrProvider
     )
 
     // Get eip2612PermitAndDeposit metadata & ethers contracts
