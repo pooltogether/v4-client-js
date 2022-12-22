@@ -242,7 +242,7 @@ export class User extends PrizePool {
     await this.validateSignerNetwork(errorPrefix)
 
     const ticketContract = await this.getTicketContract()
-    
+
     if (
       !this.eip2612PermitAndDepositMetadata ||
       !this.eip2612PermitAndDepositContract ||
