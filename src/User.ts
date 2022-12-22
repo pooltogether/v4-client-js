@@ -206,7 +206,7 @@ export class User extends PrizePool {
     const usersAddress = await this.signer.getAddress()
 
     const domain = {
-      name: 'PoolTogether ControlledToken',
+      name: 'PoolTogether DepositToken',
       version: '1',
       chainId: this.chainId,
       verifyingContract: this.tokenMetadata.address
@@ -230,8 +230,52 @@ export class User extends PrizePool {
     return signaturePromise
   }
 
-  async getPermitAndDelegateSignaturePromise() {
-    // TODO - need a second signature (_delegateSignature) in order to deposit AND delegate through EIP2612 contract
+  /**
+   * Requests a signature from the user to approve a delegation
+   * @param amountUnformatted an unformatted and decimal shifted amount to approve for delegation
+   * @returns a promise to request a signature
+   */
+  async getPermitAndDelegateSignaturePromise(
+    amountUnformatted: BigNumber
+  ): Promise<(ERC2612PermitMessage & RSV) | undefined> {
+    const errorPrefix = 'User [approveDelegationWithSignature]'
+    await this.validateSignerNetwork(errorPrefix)
+
+    const ticketContract = await this.getTicketContract()
+    
+    if (
+      !this.eip2612PermitAndDepositMetadata ||
+      !this.eip2612PermitAndDepositContract ||
+      !this.ticketMetadata ||
+      !this.signer.provider
+    )
+      throw new Error(errorPrefix + ` | Error intitializing contract metadata.`)
+
+    const usersAddress = await this.signer.getAddress()
+
+    const domain = {
+      name: 'PoolTogether ControlledToken',
+      version: '1',
+      chainId: this.chainId,
+      verifyingContract: this.ticketMetadata.address
+    }
+
+    // NOTE: Nonce must be passed manually for signERC2612Permit to work with WalletConnect
+    const deadline = (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
+    const response = await ticketContract.functions.nonces(usersAddress)
+    const nonce: BigNumber = response[0]
+
+    const signaturePromise = signERC2612Permit(
+      this.signer,
+      domain,
+      usersAddress,
+      this.eip2612PermitAndDepositMetadata.address,
+      amountUnformatted.toString(),
+      deadline,
+      nonce.toNumber()
+    )
+
+    return signaturePromise
   }
 
   /**
