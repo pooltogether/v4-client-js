@@ -10,6 +10,7 @@ import { RSV } from 'eth-permit/dist/rpc'
 import { PrizePool } from './PrizePool'
 import { ERC2612PermitMessage } from './types'
 import { validateAddress, validateSignerNetwork } from './utils'
+import { formatEIP2612SignatureTuple } from './utils/formatEIP2612SignatureTuple'
 
 /**
  * A User for a PrizePool.
@@ -233,9 +234,54 @@ export class User extends PrizePool {
     // TODO - need a second signature (_delegateSignature) in order to deposit AND delegate through EIP2612 contract
   }
 
-  async depositAndDelegateWithSignature() {
-    // TODO - need to check for current delegate as to not overrite it with own wallet
-    // TODO - need to call `permitAndDepositToAndDelegate` on EIP2612 contract (https://goerli.etherscan.io/address/0xaaef83B81A8Bd3b8c6C39dFaF74FED8722C5659d#writeContract)
+  /**
+   * Submits a transaction to deposit and delegate a token into the prize pool using signature approvals.
+   * @param amountUnformatted an unformatted and decimal shifted amount to deposit into the prize pool
+   * @param permitSignature an EIP2612 signature to approve the token deposit
+   * @param delegateSignature an EIP2612 signature to approve the token delegation
+   * @param to optional wallet address to delegate to (if empty, delegates to same user)
+   * @param overrides optional overrides for the transaction creation
+   * @returns the transaction response
+   */
+  async depositAndDelegateWithSignature(
+    amountUnformatted: BigNumber,
+    permitSignature: ERC2612PermitMessage & RSV,
+    delegateSignature: ERC2612PermitMessage & RSV,
+    to?: string,
+    overrides?: Overrides
+  ): Promise<TransactionResponse> {
+    const errorPrefix = 'User [depositToAndDelegateWithSignature]'
+    await this.validateSignerNetwork(errorPrefix)
+    if (to) {
+      await validateAddress(errorPrefix, to)
+    }
+
+    const usersAddress = await this.signer.getAddress()
+
+    const formattedPermitSignature = formatEIP2612SignatureTuple(permitSignature)
+    const formattedDelegateSignature = {
+      address: to || usersAddress,
+      signature: formatEIP2612SignatureTuple(delegateSignature)
+    }
+
+    if (Boolean(overrides)) {
+      return this.prizePoolContract.permitAndDepositToAndDelegate(
+        this.address,
+        amountUnformatted,
+        to || usersAddress,
+        formattedPermitSignature,
+        formattedDelegateSignature,
+        overrides
+      )
+    } else {
+      return this.prizePoolContract.permitAndDepositToAndDelegate(
+        this.address,
+        amountUnformatted,
+        to || usersAddress,
+        formattedPermitSignature,
+        formattedDelegateSignature
+      )
+    }
   }
 
   //////////////////////////// Ethers read functions ////////////////////////////
