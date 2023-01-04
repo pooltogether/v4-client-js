@@ -70,16 +70,6 @@ export class PrizeDistributor {
     contractMetadataList: ContractMetadata[]
   ) {
     // Get contract metadata & ethers contracts
-    const {
-      contractMetadata: drawCalculatorTimelockMetadata,
-      contract: drawCalculatorTimelockContract
-    } = getMetadataAndContract(
-      prizeDistributorMetadata.chainId,
-      signerOrProvider,
-      ContractType.DrawCalculatorTimelock,
-      contractMetadataList
-    )
-
     const prizeDistributorContract = new Contract(
       prizeDistributorMetadata.address,
       prizeDistributorMetadata.abi,
@@ -94,13 +84,13 @@ export class PrizeDistributor {
 
     // Set metadata
     this.prizeDistributorMetadata = prizeDistributorMetadata
-    this.drawCalculatorTimelockMetadata = drawCalculatorTimelockMetadata
 
     // Set ethers contracts
     this.prizeDistributorContract = prizeDistributorContract
-    this.drawCalculatorTimelockContract = drawCalculatorTimelockContract
 
     // Initialized later - requires a fetch
+    this.drawCalculatorTimelockMetadata = undefined
+    this.drawCalculatorTimelockContract = undefined
     this.drawCalculatorMetadata = undefined
     this.drawCalculatorContract = undefined
     this.drawBufferMetadata = undefined
@@ -232,7 +222,14 @@ export class PrizeDistributor {
    */
   async getUpcomingPrizeTier(): Promise<PrizeTier | PrizeTierV2> {
     const prizeTierHistoryContract = await this.getPrizeTierHistoryContract()
-    const [drawId]: number[] = await prizeTierHistoryContract.functions.getNewestDrawId()
+
+    let drawId = 0
+    try {
+      const newestDrawIdResult: Result = await prizeTierHistoryContract.functions.getNewestDrawId()
+      drawId = newestDrawIdResult[0]
+    } catch (e) {
+      console.log(e)
+    }
     const result: Result = await prizeTierHistoryContract.functions.getPrizeTier(drawId)
 
     const prizeTier: PrizeTier | PrizeTierV2 = {
@@ -876,20 +873,18 @@ export class PrizeDistributor {
    * @returns an ethers Contract for the DrawCalculator related to this PrizeDistributor
    */
   async getDrawCalculatorTimelockContract(): Promise<Contract | null> {
-    if (!!this.drawCalculatorContract) return this.drawCalculatorContract
+    if (!!this.drawCalculatorTimelockContract) return this.drawCalculatorTimelockContract
 
     const getAddress = async () => {
       const result: Result = await this.prizeDistributorContract.functions.getDrawCalculator()
       const address: string = result[0]
       const contractMetadata = this.contractMetadataList.find(
         (contractMetadata) =>
-          contractMetadata.chainId === this.chainId && contractMetadata.address === address
+          contractMetadata.chainId === this.chainId &&
+          contractMetadata.address === address &&
+          contractMetadata.type === ContractType.DrawCalculatorTimelock
       )
-      if (contractMetadata?.type === ContractType.DrawCalculatorTimelock) {
-        return address
-      } else {
-        return undefined
-      }
+      return contractMetadata?.address
     }
 
     const contractAddress = await getAddress()
