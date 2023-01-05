@@ -193,7 +193,7 @@ export class User extends PrizePool {
     const errorPrefix = 'User [approveDepositsWithSignature]'
     await this.validateSignerNetwork(errorPrefix)
 
-    const tokenContract = await this.getTokenContract()
+    const tokenContract = await this.getTokenContract({ eip2612: true })
 
     if (
       !this.eip2612PermitAndDepositMetadata ||
@@ -206,7 +206,7 @@ export class User extends PrizePool {
     const usersAddress = await this.signer.getAddress()
 
     const domain = {
-      name: 'PoolTogether DepositToken',
+      name: 'PoolTogether Deposit Approval',
       version: '1',
       chainId: this.chainId,
       verifyingContract: this.tokenMetadata.address
@@ -254,7 +254,7 @@ export class User extends PrizePool {
     const usersAddress = await this.signer.getAddress()
 
     const domain = {
-      name: 'PoolTogether ControlledToken',
+      name: 'PoolTogether Delegation Approval',
       version: '1',
       chainId: this.chainId,
       verifyingContract: this.ticketMetadata.address

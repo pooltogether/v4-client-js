@@ -6,6 +6,7 @@ import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
 
 import ERC20Abi from './abis/ERC20Abi'
+import ERC20AbiWithPermit from './abis/ERC20AbiWithPermit'
 import { ContractType } from './constants'
 import { PrizePoolTokenBalances, Providers, TokenData } from './types'
 import {
@@ -343,9 +344,10 @@ export class PrizePool {
 
   /**
    * Fetches the addresses to build an instance of an ethers Contract for the underlying Token
+   * @param options optional settings or toggles
    * @returns an ethers contract for the underlying token
    */
-  async getTokenContract(): Promise<Contract> {
+  async getTokenContract(options?: { eip2612?: boolean }): Promise<Contract> {
     if (this.tokenContract !== undefined) return this.tokenContract
     const getAddress = async () => {
       const result: Result = await this.prizePoolContract.functions.getToken()
@@ -356,7 +358,7 @@ export class PrizePool {
       this.chainId,
       tokenAddress,
       ContractType.Token,
-      ERC20Abi
+      options?.eip2612 ? ERC20AbiWithPermit : ERC20Abi
     )
     const tokenContract = new Contract(
       tokenMetadata.address,
