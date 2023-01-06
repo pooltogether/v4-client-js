@@ -307,7 +307,7 @@ export class User extends PrizePool {
 
     const formattedPermitSignature = formatEIP2612SignatureTuple(permitSignature)
     const formattedDelegateSignature = {
-      address: to || usersAddress,
+      delegate: to || usersAddress,
       signature: formatEIP2612SignatureTuple(delegateSignature)
     }
 
