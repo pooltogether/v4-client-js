@@ -201,7 +201,7 @@ export class User extends PrizePool {
       !this.tokenMetadata ||
       !this.signer.provider
     )
-      throw new Error(errorPrefix + ` | Error intitializing contract metadata.`)
+      throw new Error(errorPrefix + ` | Error initializing contract metadata.`)
 
     const usersAddress = await this.signer.getAddress()
 
@@ -249,7 +249,7 @@ export class User extends PrizePool {
       !this.ticketMetadata ||
       !this.signer.provider
     )
-      throw new Error(errorPrefix + ` | Error intitializing contract metadata.`)
+      throw new Error(errorPrefix + ` | Error initializing contract metadata.`)
 
     const usersAddress = await this.signer.getAddress()
 
@@ -300,6 +300,9 @@ export class User extends PrizePool {
       await validateAddress(errorPrefix, to)
     }
 
+    if (!this.eip2612PermitAndDepositContract)
+      throw new Error(errorPrefix + ` | Error initializing contract.`)
+
     const usersAddress = await this.signer.getAddress()
 
     const formattedPermitSignature = formatEIP2612SignatureTuple(permitSignature)
@@ -309,7 +312,7 @@ export class User extends PrizePool {
     }
 
     if (Boolean(overrides)) {
-      return this.prizePoolContract.permitAndDepositToAndDelegate(
+      return this.eip2612PermitAndDepositContract.permitAndDepositToAndDelegate(
         this.address,
         amountUnformatted,
         to || usersAddress,
@@ -318,7 +321,7 @@ export class User extends PrizePool {
         overrides
       )
     } else {
-      return this.prizePoolContract.permitAndDepositToAndDelegate(
+      return this.eip2612PermitAndDepositContract.permitAndDepositToAndDelegate(
         this.address,
         amountUnformatted,
         to || usersAddress,
