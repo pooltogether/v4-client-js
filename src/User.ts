@@ -5,10 +5,10 @@ import { MaxUint256 } from '@ethersproject/constants'
 import { Overrides } from '@ethersproject/contracts'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
 import { signERC2612Permit } from 'eth-permit'
-import { RSV } from 'eth-permit/dist/rpc'
+import { RSV, signData } from 'eth-permit/dist/rpc'
 
 import { PrizePool } from './PrizePool'
-import { ERC2612PermitMessage } from './types'
+import { EIP712Domain, ERC2612PermitMessage, ERC2612TicketPermitMessage } from './types'
 import { validateAddress, validateSignerNetwork } from './utils'
 import { formatEIP2612SignatureTuple } from './utils/formatEIP2612SignatureTuple'
 
@@ -216,7 +216,8 @@ export class User extends PrizePool {
     }
 
     // NOTE: Nonce must be passed manually for signERC2612Permit to work with WalletConnect
-    const deadline = customDeadline ?? (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
+    const deadline =
+      customDeadline ?? (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
     const response = await tokenContract.functions.nonces(usersAddress)
     const nonce: BigNumber = response[0]
 
@@ -235,19 +236,18 @@ export class User extends PrizePool {
 
   /**
    * Requests a signature from the user to approve a delegation
-   * @param amountUnformatted an unformatted and decimal shifted amount to approve for delegation
+   * @param delegateTo an address to delegate to, if different from the users' wallet
    * @param customDeadline a custom deadline to override the default (5 mins from signature)
    * @returns a promise to request a signature
    */
   async getPermitAndDelegateSignaturePromise(
-    amountUnformatted: BigNumber,
+    delegateTo?: string,
     customDeadline?: number
-  ): Promise<(ERC2612PermitMessage & RSV) | undefined> {
+  ): Promise<(ERC2612TicketPermitMessage & RSV) | undefined> {
     const errorPrefix = 'User [approveDelegationWithSignature]'
     await this.validateSignerNetwork(errorPrefix)
 
     const ticketContract = await this.getTicketContract()
-    const ticketData = await this.getTicketData()
 
     if (
       !this.eip2612PermitAndDepositMetadata ||
@@ -260,23 +260,56 @@ export class User extends PrizePool {
     const usersAddress = await this.signer.getAddress()
 
     const domain = {
-      name: ticketData.name,
-      version: this.ticketMetadata.version.major.toString(),
+      name: 'PoolTogether ControlledToken',
+      version: '1',
       chainId: this.chainId,
       verifyingContract: this.ticketMetadata.address
     }
 
     // NOTE: Nonce must be passed manually for signERC2612Permit to work with WalletConnect
-    const deadline = customDeadline ?? (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
+    const deadline =
+      customDeadline ?? (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
     const response = await ticketContract.functions.nonces(usersAddress)
     const nonce: BigNumber = response[0]
 
-    const signaturePromise = signERC2612Permit(
+    const signERC2612TicketPermit = async (
+      provider: any,
+      domain: EIP712Domain,
+      user: string,
+      delegate: string,
+      deadline: number,
+      nonce: number
+    ): Promise<ERC2612TicketPermitMessage & RSV> => {
+      const message: ERC2612TicketPermitMessage = { user, delegate, nonce, deadline }
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: 'name', type: 'string' },
+            { name: 'version', type: 'string' },
+            { name: 'chainId', type: 'uint256' },
+            { name: 'verifyingContract', type: 'address' }
+          ],
+          Delegate: [
+            { name: 'user', type: 'address' },
+            { name: 'delegate', type: 'address' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'deadline', type: 'uint256' }
+          ]
+        },
+        primaryType: 'Delegate',
+        domain,
+        message
+      }
+      const sig = await signData(provider, user, typedData)
+
+      return { ...sig, ...message }
+    }
+
+    const signaturePromise = signERC2612TicketPermit(
       this.signer,
       domain,
       usersAddress,
-      this.eip2612PermitAndDepositMetadata.address,
-      amountUnformatted.toString(),
+      delegateTo || usersAddress,
       deadline,
       nonce.toNumber()
     )
@@ -296,7 +329,7 @@ export class User extends PrizePool {
   async depositAndDelegateWithSignature(
     amountUnformatted: BigNumber,
     permitSignature: ERC2612PermitMessage & RSV,
-    delegateSignature: ERC2612PermitMessage & RSV,
+    delegateSignature: ERC2612TicketPermitMessage & RSV,
     to?: string,
     overrides?: Overrides
   ): Promise<TransactionResponse> {

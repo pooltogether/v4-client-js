@@ -61,7 +61,7 @@ export interface ChildContractAddresses {
   }
 }
 
-// NOTE: This is only required since the `eth-permit` package doesn't export this
+// NOTE: These are only required since the `eth-permit` package doesn't export all its types
 export interface ERC2612PermitMessage {
   owner: string
   spender: string
@@ -69,10 +69,23 @@ export interface ERC2612PermitMessage {
   nonce: number | string
   deadline: number | string
 }
+export interface EIP712Domain {
+  name: string
+  version: string
+  chainId: number
+  verifyingContract: string
+}
 
 export interface EIP2612SignatureTuple {
   deadline: number
   v: number
   r: string
   s: string
+}
+
+export interface ERC2612TicketPermitMessage {
+  user: string
+  delegate: string
+  nonce: number | string
+  deadline: number | string
 }
