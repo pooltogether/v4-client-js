@@ -185,10 +185,12 @@ export class User extends PrizePool {
   /**
    * Requests a signature from the user to approve a deposit
    * @param amountUnformatted an unformatted and decimal shifted amount to approve for deposits
+   * @param customDeadline a custom deadline to override the default (5 mins from signature)
    * @returns a promise to request a signature
    */
   async getPermitAndDepositSignaturePromise(
-    amountUnformatted: BigNumber
+    amountUnformatted: BigNumber,
+    customDeadline?: number
   ): Promise<(ERC2612PermitMessage & RSV) | undefined> {
     const errorPrefix = 'User [approveDepositsWithSignature]'
     await this.validateSignerNetwork(errorPrefix)
@@ -213,7 +215,7 @@ export class User extends PrizePool {
     }
 
     // NOTE: Nonce must be passed manually for signERC2612Permit to work with WalletConnect
-    const deadline = (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
+    const deadline = customDeadline ?? (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
     const response = await tokenContract.functions.nonces(usersAddress)
     const nonce: BigNumber = response[0]
 
@@ -233,10 +235,12 @@ export class User extends PrizePool {
   /**
    * Requests a signature from the user to approve a delegation
    * @param amountUnformatted an unformatted and decimal shifted amount to approve for delegation
+   * @param customDeadline a custom deadline to override the default (5 mins from signature)
    * @returns a promise to request a signature
    */
   async getPermitAndDelegateSignaturePromise(
-    amountUnformatted: BigNumber
+    amountUnformatted: BigNumber,
+    customDeadline?: number
   ): Promise<(ERC2612PermitMessage & RSV) | undefined> {
     const errorPrefix = 'User [approveDelegationWithSignature]'
     await this.validateSignerNetwork(errorPrefix)
@@ -261,7 +265,7 @@ export class User extends PrizePool {
     }
 
     // NOTE: Nonce must be passed manually for signERC2612Permit to work with WalletConnect
-    const deadline = (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
+    const deadline = customDeadline ?? (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
     const response = await ticketContract.functions.nonces(usersAddress)
     const nonce: BigNumber = response[0]
 
