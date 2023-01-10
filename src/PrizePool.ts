@@ -67,22 +67,28 @@ export class PrizePool {
     )
 
     // Get eip2612PermitAndDeposit metadata & ethers contracts
-    const eip2612PermitAndDeposit = getMetadataAndContract(
-      this.chainId,
-      this.signerOrProvider,
-      ContractType.EIP2612PermitAndDeposit,
-      this.contractMetadataList
+    const eip2612PermitAndDepositContractMetadata = this.contractMetadataList.find(
+      (contract) =>
+        contract.chainId === this.chainId && contract.type === ContractType.EIP2612PermitAndDeposit
     )
+    const eip2612PermitAndDeposit = !!eip2612PermitAndDepositContractMetadata
+      ? getMetadataAndContract(
+          this.chainId,
+          this.signerOrProvider,
+          ContractType.EIP2612PermitAndDeposit,
+          this.contractMetadataList
+        )
+      : undefined
 
     // Set metadata
     this.prizePoolMetadata = prizePoolMetadata
-    this.eip2612PermitAndDepositMetadata = eip2612PermitAndDeposit.contractMetadata
+    this.eip2612PermitAndDepositMetadata = eip2612PermitAndDeposit?.contractMetadata
     this.ticketMetadata = undefined
     this.tokenMetadata = undefined
 
     // Set ethers contracts
     this.prizePoolContract = prizePoolContract
-    this.eip2612PermitAndDepositContract = eip2612PermitAndDeposit.contract
+    this.eip2612PermitAndDepositContract = eip2612PermitAndDeposit?.contract
     this.ticketContract = undefined
     this.tokenContract = undefined
   }
