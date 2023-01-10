@@ -244,7 +244,7 @@ export class User extends PrizePool {
     delegateTo?: string,
     customDeadline?: number
   ): Promise<(ERC2612TicketPermitMessage & RSV) | undefined> {
-    const errorPrefix = 'User [approveDelegationWithSignature]'
+    const errorPrefix = 'User [getPermitAndDelegateSignaturePromise]'
     await this.validateSignerNetwork(errorPrefix)
 
     const ticketContract = await this.getTicketContract()
