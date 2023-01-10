@@ -4,9 +4,13 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { MaxUint256 } from '@ethersproject/constants'
 import { Overrides } from '@ethersproject/contracts'
 import { Contract as ContractMetadata } from '@pooltogether/contract-list-schema'
+import { signERC2612Permit } from 'eth-permit'
+import { RSV, signData } from 'eth-permit/dist/rpc'
 
 import { PrizePool } from './PrizePool'
+import { EIP712Domain, ERC2612PermitMessage, ERC2612TicketPermitMessage } from './types'
 import { validateAddress, validateSignerNetwork } from './utils'
+import { formatEIP2612SignatureTuple } from './utils/formatEIP2612SignatureTuple'
 
 /**
  * A User for a PrizePool.
@@ -70,7 +74,7 @@ export class User extends PrizePool {
 
   /**
    * Submits a transaction to deposit a controlled token into the Prize Pool to the Signer.
-   * @param amountUnformatted  an unformatted and decimal shifted amount to deposit from the prize pool
+   * @param amountUnformatted an unformatted and decimal shifted amount to deposit from the prize pool
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
@@ -104,7 +108,7 @@ export class User extends PrizePool {
 
   /**
    * Submits a transaction to set an allowance for deposits into the Prize Pool.
-   * @param amountUnformatted  an unformatted and decimal shifted amount to approve for deposits
+   * @param amountUnformatted an unformatted and decimal shifted amount to approve for deposits
    * @param overrides optional overrides for the transaction creation
    * @returns the transaction response
    */
@@ -136,9 +140,9 @@ export class User extends PrizePool {
     const prizePoolAddress = this.prizePoolMetadata.address
     const tokenContract = await this.getTokenContract()
     if (Boolean(overrides)) {
-      return tokenContract.approve(prizePoolAddress, 0 || MaxUint256, overrides)
+      return tokenContract.approve(prizePoolAddress, 0, overrides)
     } else {
-      return tokenContract.approve(prizePoolAddress, 0 || MaxUint256)
+      return tokenContract.approve(prizePoolAddress, 0)
     }
   }
 
@@ -175,6 +179,195 @@ export class User extends PrizePool {
       return ticketContract.delegate(address, overrides)
     } else {
       return ticketContract.delegate(address)
+    }
+  }
+
+  /**
+   * Requests a signature from the user to approve a deposit
+   * @param amountUnformatted an unformatted and decimal shifted amount to approve for deposits
+   * @param customDeadline a custom deadline to override the default (5 mins from signature)
+   * @returns a promise to request a signature
+   */
+  async getPermitAndDepositSignaturePromise(
+    amountUnformatted: BigNumber,
+    customDeadline?: number
+  ): Promise<(ERC2612PermitMessage & RSV) | undefined> {
+    const errorPrefix = 'User [getPermitAndDepositSignaturePromise]'
+    await this.validateSignerNetwork(errorPrefix)
+
+    const tokenContract = await this.getTokenContract({ eip2612: true })
+    const tokenData = await this.getTokenData()
+
+    if (
+      !this.eip2612PermitAndDepositMetadata ||
+      !this.eip2612PermitAndDepositContract ||
+      !this.tokenMetadata ||
+      !this.signer.provider
+    )
+      throw new Error(errorPrefix + ` | Error initializing contract metadata.`)
+
+    const usersAddress = await this.signer.getAddress()
+
+    const domain = {
+      name: tokenData.name,
+      version: this.tokenMetadata.version.major.toString(),
+      chainId: this.chainId,
+      verifyingContract: this.tokenMetadata.address
+    }
+
+    // NOTE: Nonce must be passed manually for signERC2612Permit to work with WalletConnect
+    const deadline =
+      customDeadline ?? (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
+    const response = await tokenContract.functions.nonces(usersAddress)
+    const nonce: BigNumber = response[0]
+
+    const signaturePromise = signERC2612Permit(
+      this.signer,
+      domain,
+      usersAddress,
+      this.eip2612PermitAndDepositMetadata.address,
+      amountUnformatted.toString(),
+      deadline,
+      nonce.toNumber()
+    )
+
+    return signaturePromise
+  }
+
+  /**
+   * Requests a signature from the user to approve a delegation
+   * @param delegateTo an address to delegate to, if different from the users' wallet
+   * @param customDeadline a custom deadline to override the default (5 mins from signature)
+   * @returns a promise to request a signature
+   */
+  async getPermitAndDelegateSignaturePromise(
+    delegateTo?: string,
+    customDeadline?: number
+  ): Promise<(ERC2612TicketPermitMessage & RSV) | undefined> {
+    const errorPrefix = 'User [getPermitAndDelegateSignaturePromise]'
+    await this.validateSignerNetwork(errorPrefix)
+
+    const ticketContract = await this.getTicketContract()
+
+    if (
+      !this.eip2612PermitAndDepositMetadata ||
+      !this.eip2612PermitAndDepositContract ||
+      !this.ticketMetadata ||
+      !this.signer.provider
+    )
+      throw new Error(errorPrefix + ` | Error initializing contract metadata.`)
+
+    const usersAddress = await this.signer.getAddress()
+
+    // NOTE: The domain's name and version are hardcoded on the ticket contract and thus should not be changed
+    const domain = {
+      name: 'PoolTogether ControlledToken',
+      version: '1',
+      chainId: this.chainId,
+      verifyingContract: this.ticketMetadata.address
+    }
+
+    // NOTE: Nonce must be passed manually for signERC2612Permit to work with WalletConnect
+    const deadline =
+      customDeadline ?? (await this.signer.provider.getBlock('latest')).timestamp + 5 * 60
+    const response = await ticketContract.functions.nonces(usersAddress)
+    const nonce: BigNumber = response[0]
+
+    const signERC2612TicketPermit = async (
+      provider: any,
+      domain: EIP712Domain,
+      user: string,
+      delegate: string,
+      deadline: number,
+      nonce: number
+    ): Promise<ERC2612TicketPermitMessage & RSV> => {
+      const message: ERC2612TicketPermitMessage = { user, delegate, nonce, deadline }
+      const typedData = {
+        types: {
+          EIP712Domain: [
+            { name: 'name', type: 'string' },
+            { name: 'version', type: 'string' },
+            { name: 'chainId', type: 'uint256' },
+            { name: 'verifyingContract', type: 'address' }
+          ],
+          Delegate: [
+            { name: 'user', type: 'address' },
+            { name: 'delegate', type: 'address' },
+            { name: 'nonce', type: 'uint256' },
+            { name: 'deadline', type: 'uint256' }
+          ]
+        },
+        primaryType: 'Delegate',
+        domain,
+        message
+      }
+      const sig = await signData(provider, user, typedData)
+
+      return { ...sig, ...message }
+    }
+
+    const signaturePromise = signERC2612TicketPermit(
+      this.signer,
+      domain,
+      usersAddress,
+      delegateTo || usersAddress,
+      deadline,
+      nonce.toNumber()
+    )
+
+    return signaturePromise
+  }
+
+  /**
+   * Submits a transaction to deposit and delegate a token into the prize pool using signature approvals.
+   * @param amountUnformatted an unformatted and decimal shifted amount to deposit into the prize pool
+   * @param permitSignature an EIP2612 signature to approve the token deposit
+   * @param delegateSignature an EIP2612 signature to approve the token delegation
+   * @param to optional wallet address to delegate to (if empty, delegates to same user)
+   * @param overrides optional overrides for the transaction creation
+   * @returns the transaction response
+   */
+  async depositAndDelegateWithSignature(
+    amountUnformatted: BigNumber,
+    permitSignature: ERC2612PermitMessage & RSV,
+    delegateSignature: ERC2612TicketPermitMessage & RSV,
+    to?: string,
+    overrides?: Overrides
+  ): Promise<TransactionResponse> {
+    const errorPrefix = 'User [depositToAndDelegateWithSignature]'
+    await this.validateSignerNetwork(errorPrefix)
+    if (to) {
+      await validateAddress(errorPrefix, to)
+    }
+
+    if (!this.eip2612PermitAndDepositContract)
+      throw new Error(errorPrefix + ` | Error initializing contract.`)
+
+    const usersAddress = await this.signer.getAddress()
+
+    const formattedPermitSignature = formatEIP2612SignatureTuple(permitSignature)
+    const formattedDelegateSignature = {
+      delegate: to || usersAddress,
+      signature: formatEIP2612SignatureTuple(delegateSignature)
+    }
+
+    if (Boolean(overrides)) {
+      return this.eip2612PermitAndDepositContract.permitAndDepositToAndDelegate(
+        this.address,
+        amountUnformatted,
+        to || usersAddress,
+        formattedPermitSignature,
+        formattedDelegateSignature,
+        overrides
+      )
+    } else {
+      return this.eip2612PermitAndDepositContract.permitAndDepositToAndDelegate(
+        this.address,
+        amountUnformatted,
+        to || usersAddress,
+        formattedPermitSignature,
+        formattedDelegateSignature
+      )
     }
   }
 

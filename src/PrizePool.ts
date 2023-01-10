@@ -6,6 +6,7 @@ import { Contract } from '@ethersproject/contracts'
 import { Contract as ContractMetadata, ContractList } from '@pooltogether/contract-list-schema'
 
 import ERC20Abi from './abis/ERC20Abi'
+import ERC20AbiWithPermit from './abis/ERC20AbiWithPermit'
 import { ContractType } from './constants'
 import { PrizePoolTokenBalances, Providers, TokenData } from './types'
 import {
@@ -30,11 +31,13 @@ export class PrizePool {
 
   // Contract metadata
   readonly prizePoolMetadata: ContractMetadata
+  readonly eip2612PermitAndDepositMetadata: ContractMetadata | undefined
   ticketMetadata: ContractMetadata | undefined
   tokenMetadata: ContractMetadata | undefined
 
   // Ethers contracts
   readonly prizePoolContract: Contract
+  readonly eip2612PermitAndDepositContract: Contract | undefined
   ticketContract: Contract | undefined
   tokenContract: Contract | undefined
 
@@ -50,26 +53,42 @@ export class PrizePool {
     signerOrProvider: Provider | Signer,
     contractMetadataList: ContractMetadata[]
   ) {
-    // Get contract metadata & ethers contracts
-    const prizePoolContract = new Contract(
-      prizePoolMetadata.address,
-      prizePoolMetadata.abi,
-      signerOrProvider
-    )
-
-    // Set data
+    // Set basic data
     this.contractMetadataList = contractMetadataList
     this.signerOrProvider = signerOrProvider
     this.chainId = prizePoolMetadata.chainId
     this.address = prizePoolMetadata.address
 
+    // Get prizePool ethers contract
+    const prizePoolContract = new Contract(
+      this.address,
+      prizePoolMetadata.abi,
+      this.signerOrProvider
+    )
+
+    // Get eip2612PermitAndDeposit metadata & ethers contracts
+    const eip2612PermitAndDepositContractMetadata = this.contractMetadataList.find(
+      (contract) =>
+        contract.chainId === this.chainId && contract.type === ContractType.EIP2612PermitAndDeposit
+    )
+    const eip2612PermitAndDeposit = !!eip2612PermitAndDepositContractMetadata
+      ? getMetadataAndContract(
+          this.chainId,
+          this.signerOrProvider,
+          ContractType.EIP2612PermitAndDeposit,
+          this.contractMetadataList
+        )
+      : undefined
+
     // Set metadata
     this.prizePoolMetadata = prizePoolMetadata
+    this.eip2612PermitAndDepositMetadata = eip2612PermitAndDeposit?.contractMetadata
     this.ticketMetadata = undefined
     this.tokenMetadata = undefined
 
     // Set ethers contracts
     this.prizePoolContract = prizePoolContract
+    this.eip2612PermitAndDepositContract = eip2612PermitAndDeposit?.contract
     this.ticketContract = undefined
     this.tokenContract = undefined
   }
@@ -331,9 +350,11 @@ export class PrizePool {
 
   /**
    * Fetches the addresses to build an instance of an ethers Contract for the underlying Token
+   * @param options optional settings or toggles
    * @returns an ethers contract for the underlying token
    */
-  async getTokenContract(): Promise<Contract> {
+  async getTokenContract(options?: { eip2612?: boolean }): Promise<Contract> {
+    if (options?.eip2612) this.tokenContract = undefined
     if (this.tokenContract !== undefined) return this.tokenContract
     const getAddress = async () => {
       const result: Result = await this.prizePoolContract.functions.getToken()
@@ -344,7 +365,7 @@ export class PrizePool {
       this.chainId,
       tokenAddress,
       ContractType.Token,
-      ERC20Abi
+      options?.eip2612 ? ERC20AbiWithPermit : ERC20Abi
     )
     const tokenContract = new Contract(
       tokenMetadata.address,
