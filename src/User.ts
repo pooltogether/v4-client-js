@@ -259,6 +259,7 @@ export class User extends PrizePool {
 
     const usersAddress = await this.signer.getAddress()
 
+    // NOTE: The domain's name and version are hardcoded on the ticket contract and thus should not be changed
     const domain = {
       name: 'PoolTogether ControlledToken',
       version: '1',
