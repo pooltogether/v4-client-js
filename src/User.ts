@@ -192,7 +192,7 @@ export class User extends PrizePool {
     amountUnformatted: BigNumber,
     customDeadline?: number
   ): Promise<(ERC2612PermitMessage & RSV) | undefined> {
-    const errorPrefix = 'User [approveDepositsWithSignature]'
+    const errorPrefix = 'User [getPermitAndDepositSignaturePromise]'
     await this.validateSignerNetwork(errorPrefix)
 
     const tokenContract = await this.getTokenContract({ eip2612: true })
