@@ -348,6 +348,7 @@ export class PrizePool {
    * @returns an ethers contract for the underlying token
    */
   async getTokenContract(options?: { eip2612?: boolean }): Promise<Contract> {
+    if (options?.eip2612) this.tokenContract = undefined
     if (this.tokenContract !== undefined) return this.tokenContract
     const getAddress = async () => {
       const result: Result = await this.prizePoolContract.functions.getToken()
