@@ -1,0 +1,55 @@
+
+name: CD
+on:
+  push:
+    branches:
+      - main
+jobs:
+  check:
+    name: Check package.json version
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check version
+        id: check
+        uses: EndBug/version-check@v2
+        with:
+          file-url: https://unpkg.com/@pooltogether/hooks@latest/package.json
+          static-checking: localIsNew
+
+  deploy:
+    name: Deploy new package version to NPM
+    runs-on: ubuntu-latest
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install
+        run: yarn
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Publish
+        run: yarn publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_KEY }}
+
