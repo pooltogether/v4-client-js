@@ -900,7 +900,7 @@ export class PrizeDistributor {
       contractAddress
     )
     this.drawCalculatorTimelockMetadata = contractMetadata
-    this.drawCalculatorContract = contract
+    this.drawCalculatorTimelockContract = contract
     return contract
   }
 
