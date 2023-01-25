@@ -3,7 +3,7 @@
   "author": "PoolTogether Inc.",
   "description": "Client library for simple interactions with PoolTogether V4 contracts.",
   "module": "dist/v4-client-js.esm.js",
-  "version": "1.18.0",
+  "version": "1.18.1",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
